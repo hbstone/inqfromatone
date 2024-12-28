@@ -20,16 +20,16 @@ const world = {
     getAllSockets() {
         return Object.values(this.rooms).reduce((all, room) => all.concat(room.occupants), []);
     },
-    moveToRoom(socket, roomId, direction) {
+    moveToRoom(socket, roomId, direction = null) {
         const currentRoom = this.getCurrentRoom(socket);
         currentRoom.occupants = currentRoom.occupants.filter(client => client !== socket);
         const nextRoom = this.rooms[roomId];
         nextRoom.occupants.push(socket);
         socket.character.currentRoom = roomId;
-        broadcast(currentRoom, `${socket.character.name} leaves ${direction}.`, socket);
-        broadcast(nextRoom, `${socket.character.name} enters from the ${direction}.`, socket);
-        writeToSocket(socket, `You are now in ${nextRoom.name}.
-${nextRoom.description}`);
+        
+        broadcast(currentRoom, `${socket.character.name} leaves${direction ? ` from the ${direction}` : ''}.`, socket);
+        writeToSocket(socket, `You are now in ${nextRoom.name}.\n${nextRoom.description}`);
+        broadcast(nextRoom, `${socket.character.name} enters${direction ? ` from the ${direction}` : ''}.`, socket);
     }
 };
 
