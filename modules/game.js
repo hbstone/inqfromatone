@@ -40,8 +40,7 @@ function handlePassword(socket, input) {
             socket.character = characters[socket.character.name];
             socket.character.stage = null;
             writeToSocket(socket, "Login successful! Welcome back.");
-            world.rooms[1].occupants.push(socket);
-            writeToSocket(socket, `You are now in ${world.rooms[1].name}.\n${world.rooms[1].description}`);
+            world.moveToRoom(socket, 1);
         } else {
             writeToSocket(socket, "Incorrect password. Please try again:");
         }
@@ -61,8 +60,7 @@ function handleDescription(socket, input) {
 
     writeToSocket(socket, "Character creation complete! You are ready to play.");
     socket.character.stage = null;
-    world.rooms[1].occupants.push(socket);
-    writeToSocket(socket, `You are now in ${world.rooms[1].name}.\n${world.rooms[1].description}`);
+    world.moveToRoom(socket, 1);
 }
 
 function handleCommand(socket, input) {
