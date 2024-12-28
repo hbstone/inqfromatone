@@ -3,15 +3,20 @@ const world = {
     rooms: {
         1: {
             name: "The Common Room",
-            description: "A cozy room with a fireplace crackling in the corner.",
+            description: "A cozy medieval tavern with a wooden bar lined with stools, a few sturdy tables scattered about, and shelves stocked with bottles and mugs. A small fireplace in the corner adds a touch of warmth. A storage door to the back hints at the supplies kept out of sight.",
             exits: { east: 2 },
             occupants: [],
+            items: [{
+                keywords: ["mug", "cup"],
+                description: "A simple wooden mug, slightly chipped but functional.",
+            }],
         },
         2: {
             name: "The Garden",
             description: "A lush garden with blooming flowers and buzzing bees.",
             exits: { west: 1 },
             occupants: [],
+            items: [],
         },
     },
     getCurrentRoom(socket) {
