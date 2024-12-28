@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 const path = './data/characters.json';
 
 function loadCharacters() {
@@ -12,4 +12,4 @@ function saveCharacters(characters) {
     fs.writeFileSync(path, JSON.stringify(characters, null, 2));
 }
 
-module.exports = { loadCharacters, saveCharacters };
+export default { loadCharacters, saveCharacters };

@@ -1,7 +1,7 @@
-const { world } = require('./world');
-const { writeToSocket, broadcast } = require('./utils');
-const { loadCharacters, saveCharacters } = require('./data');
-const crypto = require('crypto');
+import { world } from './world';
+import { broadcast, writeToSocket } from './utils';
+import { loadCharacters, saveCharacters } from './data';
+import crypto from 'crypto';
 
 function handleLogin(socket, input) {
     const characters = loadCharacters();
@@ -40,7 +40,8 @@ function handlePassword(socket, input) {
             socket.character = characters[socket.character.name];
             socket.character.stage = null;
             writeToSocket(socket, "Login successful! Welcome back.");
-            world.moveToRoom(socket, 1);
+            world.rooms[1].occupants.push(socket);
+            writeToSocket(socket, `You are now in ${world.rooms[1].name}.\n${world.rooms[1].description}`);
         } else {
             writeToSocket(socket, "Incorrect password. Please try again:");
         }
@@ -60,7 +61,8 @@ function handleDescription(socket, input) {
 
     writeToSocket(socket, "Character creation complete! You are ready to play.");
     socket.character.stage = null;
-    world.moveToRoom(socket, 1);
+    world.rooms[1].occupants.push(socket);
+    writeToSocket(socket, `You are now in ${world.rooms[1].name}.\n${world.rooms[1].description}`);
 }
 
 function handleCommand(socket, input) {
@@ -119,4 +121,4 @@ function handleCommand(socket, input) {
     }
 }
 
-module.exports = { handleCommand, handleLogin, handlePassword, handleDescription };
+export default { handleCommand, handleLogin, handlePassword, handleDescription };

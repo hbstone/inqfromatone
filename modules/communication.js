@@ -1,5 +1,6 @@
-const { handleCommand, handleLogin, handlePassword, handleDescription } = require('./game');
-const { writeToSocket } = require('./utils');
+import { handleCommand, handleLogin, handlePassword, handleDescription } from './game';
+import { world, broadcast } from './world';
+import { writeToSocket } from './utils';
 
 function handleSocket(socket) {
     writeToSocket(socket, "Welcome to the MUD server!");
@@ -30,4 +31,5 @@ function handleSocket(socket) {
     });
 }
 
-module.exports = { handleSocket };
+export default { handleSocket };
+

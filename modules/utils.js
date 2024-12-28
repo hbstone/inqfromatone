@@ -11,4 +11,4 @@ function broadcast(room, message, excludeSocket = null) {
     });
 }
 
-module.exports = { writeToSocket, broadcast };
+export default { writeToSocket, broadcast };
