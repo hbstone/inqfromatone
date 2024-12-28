@@ -1,7 +1,7 @@
 {
-  "name": "mud-project",
+  "name": "inqfromatone",
   "version": "1.0.0",
-  "description": "A minimal MUD server in Node.js",
+  "description": "JavaScript MUD server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
