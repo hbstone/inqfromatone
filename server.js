@@ -1,5 +1,5 @@
-const net = require('net');
-const { handleSocket } = require('./modules/communication');
+import net from 'net';
+import { handleSocket } from './modules/communication';
 
 const server = net.createServer(handleSocket);
 
