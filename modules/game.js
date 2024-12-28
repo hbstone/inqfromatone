@@ -69,7 +69,12 @@ function handleCommand(socket, input) {
         const occupantNames = currentRoom.occupants
             .filter(client => client !== socket)
             .map(client => client.character.name);
-        writeToSocket(socket, `${currentRoom.name}\n${currentRoom.description}\nCharacters here: ${occupantNames.join(', ') || 'None'}`);
+        const itemDescriptions = currentRoom.items.map(item => ` - ${item.description}`);
+        writeToSocket(socket, `${currentRoom.name}
+${currentRoom.description}
+Characters here: ${occupantNames.join(', ') || 'None'}
+Items in the room:
+${itemDescriptions.join('\n') || 'None'}`);
     } else if (input === 'quit') {
         writeToSocket(socket, "Disconnecting...");
         setTimeout(() => {
@@ -77,12 +82,17 @@ function handleCommand(socket, input) {
         }, 500);
     } else if (input.startsWith('look ')) {
         const targetName = input.slice(5).trim();
-        const target = currentRoom.occupants.find(client => client.character.name === targetName);
+        const target = currentRoom.occupants.find(client => client.character.name.toLowerCase() === targetName.toLowerCase());
         if (target) {
             writeToSocket(socket, `You look at ${targetName}: ${target.character.description}`);
             writeToSocket(target, `${socket.character.description} looks at you.`);
         } else {
-            writeToSocket(socket, `You don't see anyone named ${targetName} here.`);
+            const item = currentRoom.items.find(item => item.keywords.some(keyword => keyword.toLowerCase() === targetName.toLowerCase()));
+            if (item) {
+                writeToSocket(socket, `You look at the ${item.description}.`);
+            } else {
+                writeToSocket(socket, `You don't see anyone or anything named ${targetName} here.`);
+            }
         }
     } else if (input.startsWith('say ')) {
         const message = input.slice(4);
@@ -90,20 +100,20 @@ function handleCommand(socket, input) {
     } else if (input.startsWith('tell ')) {
         const [recipientName, ...messageParts] = input.slice(5).split(' ');
         const message = messageParts.join(' ');
-        const recipientSocket = Array.from(world.getAllSockets()).find(client => client.character.name === recipientName);
+        const recipientSocket = Array.from(world.getAllSockets()).find(client => client.character.name.toLowerCase() === recipientName.toLowerCase());
         if (recipientSocket) {
             writeToSocket(recipientSocket, `${socket.character.name} tells you, "${message}"`);
-            writeToSocket(socket, `You tell ${recipientName}, "${message}"`);
+            writeToSocket(socket, `You tell ${recipientSocket.character.name}, "${message}"`);
         } else {
             writeToSocket(socket, `No one named ${recipientName} is currently connected.`);
         }
     } else if (input.startsWith('whisper ')) {
         const [recipientName, ...messageParts] = input.slice(8).split(' ');
         const message = messageParts.join(' ');
-        const recipientSocket = currentRoom.occupants.find(client => client.character.name === recipientName);
+        const recipientSocket = currentRoom.occupants.find(client => client.character.name.toLowerCase() === recipientName.toLowerCase());
         if (recipientSocket) {
             writeToSocket(recipientSocket, `${socket.character.description} whispers to you, "${message}"`);
-            writeToSocket(socket, `You whisper to ${recipientName}, "${message}"`);
+            writeToSocket(socket, `You whisper to ${recipientSocket.character.name}, "${message}"`);
         } else {
             writeToSocket(socket, `You don't see anyone named ${recipientName} here.`);
         }
