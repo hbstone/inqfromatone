@@ -35,7 +35,7 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: eslint -c eslint.config.js . --fix
+        run: npx eslint -c eslint.config.js . --fix
 
       - name: Run Prettier
         run: npm run format
