@@ -1,8 +1,34 @@
 import net from "net";
-import { handleSocket } from "./modules/communication";
+import { handleCommand } from "./modules/game.js";
+import { World } from "./modules/World.js";
+import { writeToSocket } from "./modules/utils.js";
 
-const server = net.createServer(handleSocket);
+const PORT = 8484; // eventually process.env.PORT || 8484
+const world = new World(); // Create the shared World instance
 
-server.listen(8484, () => {
-  console.log("MUD server is listening on port 8484");
+const server = net.createServer((socket) => {
+    socket.character = { isLoggedIn: false }; // Initialize character state
+    writeToSocket(socket, "Welcome to the game! Please enter your character's name:");
+
+    socket.on("data", (data) => {
+        const input = data.toString().trim();
+        const response = handleCommand(socket, input, world); // Pass the World instance
+        if (response) {
+            writeToSocket(socket, response);
+        }
+    });
+
+    socket.on("end", () => {
+        if (socket.character.name) {
+            console.log(`${socket.character.name} has disconnected.`);
+        }
+    });
+
+    socket.on("error", (err) => {
+        console.error("Socket error:", err);
+    });
+});
+
+server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
