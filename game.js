@@ -1,6 +1,5 @@
 import { World } from "./World.js";
 import * as commands from "./commands";
-import { writeToSocket } from "./utils.js";
 import crypto from "crypto";
 import { loadCharacters, saveCharacters } from "./data.js";
 
