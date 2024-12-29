@@ -3,7 +3,7 @@ import { handleCommand } from "./modules/game.js";
 import { World } from "./modules/World.js";
 import { writeToSocket } from "./modules/utils.js";
 
-const PORT = 1234;
+const PORT = 8484; // eventually process.env.PORT || 8484
 const world = new World(); // Create the shared World instance
 
 const server = net.createServer((socket) => {
