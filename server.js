@@ -1,10 +1,8 @@
 import net from "net";
 import { handleCommand } from "./modules/game.js";
-import { World } from "./modules/World.js";
 import { writeToSocket } from "./modules/utils.js";
 
 const PORT = 8484; // eventually process.env.PORT || 8484
-const world = new World(); // Create the shared World instance
 
 const server = net.createServer((socket) => {
     socket.character = { isLoggedIn: false }; // Initialize character state
@@ -12,7 +10,7 @@ const server = net.createServer((socket) => {
 
     socket.on("data", (data) => {
         const input = data.toString().trim();
-        const response = handleCommand(socket, input, world); // Pass the World instance
+        const response = handleCommand(socket, input);
         if (response) {
             writeToSocket(socket, response);
         }
