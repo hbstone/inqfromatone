@@ -1,0 +1,11 @@
+export { drop } from './drop.js';
+export { east } from './east.js';
+export { get } from './get.js';
+export { give } from './give.js';
+export { look } from './look.js';
+export { north } from './north.js';
+export { quit } from './quit.js';
+export { south } from './south.js';
+export { tell } from './tell.js';
+export { west } from './west.js';
+export { whisper } from './whisper.js';

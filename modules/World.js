@@ -57,4 +57,20 @@ export class World {
     getAllRooms() {
         return Array.from(this.rooms.values());
     }
+
+    /**
+     * Find an online character by their name.
+     * @param {string} name - Character name to search for.
+     * @returns {object|null} The character object if found, otherwise null.
+     */
+    getOnlineCharacterByName(name) {
+        const target = name.toLowerCase();
+        for (const room of this.rooms.values()) {
+            const found = room.characters.find(
+                (char) => char.name && char.name.toLowerCase() === target && char.socket
+            );
+            if (found) return found;
+        }
+        return null;
+    }
 }

@@ -1,14 +1,13 @@
-function writeToSocket(socket, message) {
+export function writeToSocket(socket, message) {
   const formattedMessage = message.charAt(0).toUpperCase() + message.slice(1);
   socket.write(formattedMessage + "\n");
 }
 
-function broadcast(room, message, excludeSocket = null) {
-  room.occupants.forEach((client) => {
+export function broadcast(room, message, excludeSocket = null) {
+  const clients = room.characters || room.occupants || [];
+  clients.forEach((client) => {
     if (client !== excludeSocket) {
       writeToSocket(client, message);
     }
   });
 }
-
-export default { writeToSocket, broadcast };
