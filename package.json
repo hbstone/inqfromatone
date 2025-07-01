@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "lint": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "node tests/World.test.js"
   },
   "author": "",
   "license": "MIT",
