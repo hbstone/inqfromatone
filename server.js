@@ -2,7 +2,8 @@ import net from "net";
 import { handleCommand } from "./game.js";
 import { writeToSocket } from "./modules/utils.js";
 
-const PORT = 8484; // eventually process.env.PORT || 8484
+// Allow PORT to be overridden via environment variable for deployment flexibility
+const PORT = process.env.PORT || 8484;
 
 const server = net.createServer((socket) => {
     socket.character = { isLoggedIn: false }; // Initialize character state
