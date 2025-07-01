@@ -11,4 +11,4 @@ function broadcast(room, message, excludeSocket = null) {
   });
 }
 
-export default { writeToSocket, broadcast };
+export { writeToSocket, broadcast };
