@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid"; // For generating unique IDs
+import { randomUUID } from "crypto"; // For generating unique IDs
 
 export class World {
     constructor() {
@@ -12,7 +12,7 @@ export class World {
      * @param {string} [id] - An optional unique ID. If not provided, one will be generated.
      * @returns {string} - The unique ID of the newly added room.
      */
-    addRoom(name, description, id = uuidv4()) {
+    addRoom(name, description, id = randomUUID()) {
         const room = { id, name, description, characters: [], inventory: [], exits: {} };
         this.rooms.set(id, room);
         return id;
