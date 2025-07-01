@@ -1,5 +1,5 @@
-import { World } from "./World.js";
-import * as commands from "./commands";
+import { World } from "./modules/World.js";
+import * as commands from "./modules/commands/index.js";
 import crypto from "crypto";
 import { loadCharacters, saveCharacters } from "./data.js";
 
