@@ -1,5 +1,5 @@
 import net from "net";
-import { handleCommand } from "./modules/game.js";
+import { handleCommand } from "./game.js";
 import { writeToSocket } from "./modules/utils.js";
 
 const PORT = 8484; // eventually process.env.PORT || 8484
