@@ -21,6 +21,25 @@ function readJson(filePath) {
     return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
+// A duplicate key is a data integrity error, not a dangling reference —
+// `World` stores rooms in a Map keyed by `key`, so a repeat would silently
+// clobber the earlier room (and, once exits/items are wired up, merge both
+// entries' content onto whichever one survived) rather than fail visibly.
+// Same idea for items: a repeat would just make the second definition
+// permanently unreachable. Treat both as fatal, same as a JSON parse
+// failure — it's our own core data, so fail loudly at startup rather than
+// silently produce a corrupted world.
+function assertUniqueKeys(entries, label) {
+    const seen = new Set();
+    for (const entry of entries) {
+        if (!entry.key) continue;
+        if (seen.has(entry.key)) {
+            throw new Error(`Duplicate ${label} key "${entry.key}" in content data.`);
+        }
+        seen.add(entry.key);
+    }
+}
+
 /**
  * Load room/item content data into a World.
  * @param {import("../World.js").World} world
@@ -32,6 +51,9 @@ function readJson(filePath) {
 export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
     const rooms = readJson(path.join(contentDir, "rooms.json"));
     const items = readJson(path.join(contentDir, "items.json"));
+
+    assertUniqueKeys(rooms, "room");
+    assertUniqueKeys(items, "item");
 
     let startingRoomKey = null;
 

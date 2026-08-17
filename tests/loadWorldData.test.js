@@ -5,6 +5,17 @@ import path from 'path';
 import { World } from '../modules/World.js';
 import { loadWorldData } from '../modules/content/loadWorldData.js';
 
+function withFixtureDir(roomsData, itemsData, fn) {
+    const fixtureDir = fs.mkdtempSync(path.join(os.tmpdir(), 'load-world-data-'));
+    fs.writeFileSync(path.join(fixtureDir, 'rooms.json'), JSON.stringify(roomsData));
+    fs.writeFileSync(path.join(fixtureDir, 'items.json'), JSON.stringify(itemsData));
+    try {
+        return fn(fixtureDir);
+    } finally {
+        fs.rmSync(fixtureDir, { recursive: true, force: true });
+    }
+}
+
 // Loading the real shipped content/ data should produce a working starting
 // room, a second room connected by a real bidirectional exit, and the
 // seeded item in the right room's inventory. This doubles as a regression
@@ -33,19 +44,6 @@ import { loadWorldData } from '../modules/content/loadWorldData.js';
 // pointing at an unknown item key, should be skipped with a warning rather
 // than throwing or silently dropping everything else.
 {
-    const fixtureDir = fs.mkdtempSync(path.join(os.tmpdir(), 'load-world-data-'));
-    fs.writeFileSync(path.join(fixtureDir, 'rooms.json'), JSON.stringify([
-        {
-            key: 'only-room',
-            name: 'Only Room',
-            description: 'The only room.',
-            isStartingRoom: true,
-            exits: { north: 'nowhere' },
-            items: ['missing-item'],
-        },
-    ]));
-    fs.writeFileSync(path.join(fixtureDir, 'items.json'), JSON.stringify([]));
-
     const world = new World();
     const originalWarn = console.warn;
     const warnings = [];
@@ -53,10 +51,20 @@ import { loadWorldData } from '../modules/content/loadWorldData.js';
 
     let result;
     try {
-        result = loadWorldData(world, fixtureDir);
+        result = withFixtureDir(
+            [{
+                key: 'only-room',
+                name: 'Only Room',
+                description: 'The only room.',
+                isStartingRoom: true,
+                exits: { north: 'nowhere' },
+                items: ['missing-item'],
+            }],
+            [],
+            (fixtureDir) => loadWorldData(world, fixtureDir)
+        );
     } finally {
         console.warn = originalWarn;
-        fs.rmSync(fixtureDir, { recursive: true, force: true });
     }
 
     const onlyRoom = world.getRoomById('only-room');
@@ -65,6 +73,44 @@ import { loadWorldData } from '../modules/content/loadWorldData.js';
     assert.deepStrictEqual(onlyRoom.exits, {}, 'the bad exit reference should be skipped');
     assert.deepStrictEqual(onlyRoom.inventory, [], 'the bad item reference should be skipped');
     assert.ok(warnings.length >= 2, 'both the bad exit and bad item should be warned about');
+}
+
+// Two rooms sharing a key would otherwise silently clobber each other in
+// World's id-keyed Map (and merge their exits/items onto whichever
+// survived) - that's a data integrity error, not a dangling reference, so
+// it must fail loudly instead.
+{
+    const world = new World();
+    assert.throws(
+        () => withFixtureDir(
+            [
+                { key: 'dup', name: 'A Long Hallway', description: 'One.', isStartingRoom: true },
+                { key: 'dup', name: 'Also A Long Hallway', description: 'Two.' },
+            ],
+            [],
+            (fixtureDir) => loadWorldData(world, fixtureDir)
+        ),
+        /Duplicate room key "dup"/,
+        'a duplicate room key should throw rather than silently merge'
+    );
+}
+
+// Same for items: a duplicate key would make the second definition
+// permanently unreachable (items.find always resolves to the first match).
+{
+    const world = new World();
+    assert.throws(
+        () => withFixtureDir(
+            [{ key: 'room-a', name: 'Room A', description: 'A room.', isStartingRoom: true }],
+            [
+                { key: 'dup', name: 'a rusty key', description: 'One.', keywords: ['rusty'] },
+                { key: 'dup', name: 'a shiny key', description: 'Two.', keywords: ['shiny'] },
+            ],
+            (fixtureDir) => loadWorldData(world, fixtureDir)
+        ),
+        /Duplicate item key "dup"/,
+        'a duplicate item key should throw rather than silently shadow'
+    );
 }
 
 console.log('All tests passed');
