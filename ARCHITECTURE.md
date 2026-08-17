@@ -70,9 +70,17 @@ as locked in before it's been used.
    and `onTick` stay unwired until combat (Phase 2) and the game clock
    (Phase 3) exist to emit them — no point guessing at their payload shape
    before the systems that produce them are real.
-3. **Entity component bags** — apply the model above to `Character`, `Item`,
-   `Room`. Most invasive step; done after the registry pattern above is
-   proven rather than inventing both patterns at once.
+3. **Entity component bags** (done) — `Character`/`Item`/`Room` each carry
+   `this.components = {}`. Turned out to be more invasive than "add a
+   field": none of the three classes were actually instantiated anywhere in
+   the running server (`World.addRoom` and the login flow built plain
+   object literals instead), so the bag would've sat on dead code. Fixing
+   that surfaced real bugs from the same root cause — `character.socket`
+   was never assigned (so broadcasts to other players silently no-opped),
+   `character.keywords` was never populated (keyword target-matching was
+   dead), and room membership drifted on movement (`roomId` updated,
+   `room.characters` didn't). All fixed alongside the bags, since wiring up
+   real entities was the actual prerequisite for the bags to mean anything.
 4. **Data-driven definitions** — move room/item/NPC data out of JS into
    pack-owned data files, using the pack layout above.
 

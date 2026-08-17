@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto"; // For generating unique IDs
+import { Room } from "./Room.js";
 
 export class World {
     constructor() {
@@ -13,7 +14,8 @@ export class World {
      * @returns {string} - The unique ID of the newly added room.
      */
     addRoom(name, description, id = randomUUID()) {
-        const room = { id, name, description, characters: [], inventory: [], exits: {} };
+        const room = new Room(name, description);
+        room.id = id;
         this.rooms.set(id, room);
         return id;
     }

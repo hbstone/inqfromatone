@@ -7,7 +7,7 @@
     "start": "node server.js",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
-    "test": "node tests/World.test.js && node tests/events.test.js"
+    "test": "node tests/World.test.js && node tests/events.test.js && node tests/components.test.js"
   },
   "author": "",
   "license": "MIT",
