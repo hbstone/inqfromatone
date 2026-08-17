@@ -4,16 +4,17 @@ export const quit = (world, args, character, socket) => {
     const room = world.getRoomById(character.roomId);
 
     // Broadcast to the room about the disconnection
-    const remainingCharacters = room.characters.filter(char => char !== character);
-    remainingCharacters.forEach(char => 
-        writeToSocket(
-            char.socket,
-            `${character.name} has left the game.`
-        )
-    );
+    room.characters.forEach(char => {
+        if (char !== character && char.socket) {
+            writeToSocket(
+                char.socket,
+                `${character.name} has left the game.`
+            );
+        }
+    });
 
     // Remove the character from the room
-    room.characters = remainingCharacters;
+    room.removeCharacter(character);
 
     // Socket cleanup
     socket.write("Disconnecting..."); // send the closing message separately...

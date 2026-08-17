@@ -26,12 +26,14 @@ export const movePlayer = (world, character, room, direction, opposite) => {
         }
     });
 
-    // Update the character's room ID
-    character.roomId = nextRoom.id;
+    // Move the character between rooms, keeping room.characters and
+    // character.roomId in sync
+    room.removeCharacter(character);
+    nextRoom.addCharacter(character);
 
     // Broadcast the arrival
     nextRoom.characters.forEach(char => {
-        if (char.socket) {
+        if (char !== character && char.socket) {
             writeToSocket(
                 char.socket,
                 `${character.name} arrives from the ${opposite}.`

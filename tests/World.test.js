@@ -1,5 +1,6 @@
 import assert from 'assert/strict';
 import { World } from '../modules/World.js';
+import { Room } from '../modules/Room.js';
 
 const world = new World();
 
@@ -9,14 +10,8 @@ const id2 = world.addRoom('Room B', 'Second room');
 assert.notStrictEqual(id1, id2, 'addRoom should generate unique IDs');
 
 // getRoomById should return the expected room object
-const expectedRoom = {
-    id: id1,
-    name: 'Room A',
-    description: 'First room',
-    characters: [],
-    inventory: [],
-    exits: {}
-};
+const expectedRoom = new Room('Room A', 'First room');
+expectedRoom.id = id1;
 const roomById = world.getRoomById(id1);
 assert.deepStrictEqual(roomById, expectedRoom, 'getRoomById should return the correct room');
 

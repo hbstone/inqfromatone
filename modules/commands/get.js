@@ -1,6 +1,6 @@
-export const get = (game, args, player) => {
+export const get = (world, args, character) => {
     const keyword = args[0];
-    const { room } = player;
+    const room = world.getRoomById(character.roomId);
 
     if (!keyword) {
         return "What do you want to get?";
@@ -15,9 +15,9 @@ export const get = (game, args, player) => {
         return "You can't find that here.";
     }
 
-    // Move the item to the player's inventory
+    // Move the item to the character's inventory
     const [item] = room.inventory.splice(itemIndex, 1);
-    player.inventory.push(item);
+    character.inventory.push(item);
 
     return `You pick up ${item.name}.`;
 };

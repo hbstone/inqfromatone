@@ -22,11 +22,11 @@ function handleLogin(socket, input) {
         }
 
         if (characters[input]) {
-            character.name = input;
+            character.setName(input);
             character.stage = "password";
             return "Enter your password:";
         } else {
-            character.name = input;
+            character.setName(input);
             character.stage = "password";
             character.new = true;
             return "Creating a new character. Enter a password:";
@@ -59,8 +59,7 @@ function handleLogin(socket, input) {
                 startingRoom = world.getRoomById(roomId);
             }
 
-            startingRoom.characters.push(character);
-            character.roomId = startingRoom.id; // Store the room ID in the character
+            startingRoom.addCharacter(character);
 
             return `Welcome back, ${character.name}!`;
         } else {
@@ -86,8 +85,7 @@ function handleLogin(socket, input) {
             startingRoom = world.getRoomById(roomId);
         }
 
-        startingRoom.characters.push(character);
-        character.roomId = startingRoom.id; // Store the room ID in the character
+        startingRoom.addCharacter(character);
 
         return `Welcome, ${character.name}! Your description: "${input}"`;
     }
