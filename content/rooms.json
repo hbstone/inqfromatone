@@ -1,0 +1,20 @@
+[
+  {
+    "key": "starting-room",
+    "name": "Starting Room",
+    "description": "A simple starting room.",
+    "isStartingRoom": true,
+    "exits": {
+      "north": "narrow-hallway"
+    },
+    "items": ["rusty-key"]
+  },
+  {
+    "key": "narrow-hallway",
+    "name": "Narrow Hallway",
+    "description": "A dim, narrow hallway. It leads back south.",
+    "exits": {
+      "south": "starting-room"
+    }
+  }
+]
