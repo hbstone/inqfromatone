@@ -81,8 +81,19 @@ as locked in before it's been used.
    dead), and room membership drifted on movement (`roomId` updated,
    `room.characters` didn't). All fixed alongside the bags, since wiring up
    real entities was the actual prerequisite for the bags to mean anything.
-4. **Data-driven definitions** — move room/item/NPC data out of JS into
-   pack-owned data files, using the pack layout above.
+4. **Data-driven definitions** (done) — room/item data moved out of JS into
+   `content/rooms.json`/`content/items.json`, loaded at startup by
+   `modules/content/loadWorldData.js`. Named `content/`, not `data/` per
+   the pack layout above — `data.js` (character persistence) already owns
+   that name at the repo root. This is "core's" content for now, the same
+   framing already used for `modules/commands/index.js`; it moves under a
+   real pack layout once Phase 4 builds one. NPC data isn't handled here —
+   there's no NPC entity/class yet (Phase 3), so there's nothing real to
+   load a shape for.
+
+Phase 1 is complete as of this step: current game behaves the same, but
+commands, events, entities, and content are all now pluggable rather than
+hardcoded.
 
 Game clock/scheduler is Phase 3 in the roadmap, not part of this list —
 it's needed for NPC brains, not for the engine/content split itself.

@@ -2,10 +2,12 @@ import { World } from "./modules/World.js";
 import { getCommand } from "./modules/commands/registry.js";
 import "./modules/commands/index.js"; // registers the built-in verbs, see index.js
 import { emit } from "./modules/events.js";
+import { loadWorldData } from "./modules/content/loadWorldData.js";
 import crypto from "crypto";
 import { loadCharacters, saveCharacters } from "./data.js";
 
 const world = new World(); // Initialize the world
+const { startingRoomKey } = loadWorldData(world); // Load room/item content data
 const characters = loadCharacters(); // Load saved characters
 
 function hashPassword(password) {
@@ -52,14 +54,7 @@ function handleLogin(socket, input) {
             character.isLoggedIn = true;
             character.stage = null;
 
-            // Retrieve or create the "Starting Room"
-            let startingRoom = world.getRoomByName("Starting Room");
-            if (!startingRoom) {
-                const roomId = world.addRoom("Starting Room", "A simple starting room.");
-                startingRoom = world.getRoomById(roomId);
-            }
-
-            startingRoom.addCharacter(character);
+            world.getRoomById(startingRoomKey).addCharacter(character);
 
             return `Welcome back, ${character.name}!`;
         } else {
@@ -78,14 +73,7 @@ function handleLogin(socket, input) {
         character.isLoggedIn = true;
         character.stage = null;
 
-        // Retrieve or create the "Starting Room"
-        let startingRoom = world.getRoomByName("Starting Room");
-        if (!startingRoom) {
-            const roomId = world.addRoom("Starting Room", "A simple starting room.");
-            startingRoom = world.getRoomById(roomId);
-        }
-
-        startingRoom.addCharacter(character);
+        world.getRoomById(startingRoomKey).addCharacter(character);
 
         return `Welcome, ${character.name}! Your description: "${input}"`;
     }
