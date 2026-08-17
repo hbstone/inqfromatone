@@ -1,6 +1,7 @@
 import { World } from "./modules/World.js";
 import { getCommand } from "./modules/commands/registry.js";
 import "./modules/commands/index.js"; // registers the built-in verbs, see index.js
+import { emit } from "./modules/events.js";
 import crypto from "crypto";
 import { loadCharacters, saveCharacters } from "./data.js";
 
@@ -102,7 +103,9 @@ export const handleCommand = (socket, input) => {
     const [command, ...args] = input.trim().split(/\s+/);
     const handler = getCommand(command);
     if (handler) {
-        return handler(world, args, character, socket);
+        const result = handler(world, args, character, socket);
+        emit("command", { character, command, args, result, world });
+        return result;
     }
 
     return "I don't understand that command.";

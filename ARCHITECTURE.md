@@ -59,12 +59,17 @@ as locked in before it's been used.
 
 ## Build order (Phase 1)
 
-1. **Command registry** — `registerCommand(name, handler)` replacing the
-   static exports in `modules/commands/index.js`. Self-contained, low risk,
-   proves the "theme adds verbs without touching core" story on its own,
-   and previews the event-bus dispatch pattern in miniature.
-2. **Event bus** — `onEnterRoom`, `onCommand`, `onDamage`, `onTick`,
-   `onDeath`, etc.
+1. **Command registry** (done) — `registerCommand(name, handler)` replacing
+   the static exports in `modules/commands/index.js`. Self-contained, low
+   risk, proves the "theme adds verbs without touching core" story on its
+   own, and previews the event-bus dispatch pattern in miniature.
+2. **Event bus** (done) — `modules/events.js` (`on`/`emit`), multiple
+   listeners per event. Wired so far: `command` (after dispatch, in
+   `game.js`) and `enterRoom`/`leaveRoom` (room movement, in
+   `modules/commands/move.js`, shared by the directional commands). `onDamage`
+   and `onTick` stay unwired until combat (Phase 2) and the game clock
+   (Phase 3) exist to emit them — no point guessing at their payload shape
+   before the systems that produce them are real.
 3. **Entity component bags** — apply the model above to `Character`, `Item`,
    `Room`. Most invasive step; done after the registry pattern above is
    proven rather than inventing both patterns at once.
