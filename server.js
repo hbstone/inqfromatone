@@ -6,7 +6,7 @@ import { writeToSocket } from "./modules/utils.js";
 const PORT = process.env.PORT || 8484;
 
 const server = net.createServer((socket) => {
-    socket.character = { isLoggedIn: false }; // Initialize character state
+    socket.character = { isLoggedIn: false, stage: "name" }; // Initialize character state
     writeToSocket(socket, "Welcome to the game! Please enter your character's name:");
 
     socket.on("data", (data) => {
