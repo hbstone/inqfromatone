@@ -1,0 +1,9 @@
+[
+  { "key": "strength", "label": "Strength", "startingValue": 10 },
+  { "key": "dexterity", "label": "Dexterity", "startingValue": 10 },
+  { "key": "constitution", "label": "Constitution", "startingValue": 10 },
+  { "key": "intelligence", "label": "Intelligence", "startingValue": 10 },
+  { "key": "wisdom", "label": "Wisdom", "startingValue": 10 },
+  { "key": "charisma", "label": "Charisma", "startingValue": 10 },
+  { "key": "hp", "label": "Hit Points", "startingValue": 10, "role": "vitality" }
+]

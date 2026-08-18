@@ -122,6 +122,46 @@ disconnect — see `modules/commands/quit.js`'s `disconnectCharacter`,
 shared by both), not continuously. No autosave/checkpointing yet; revisit
 if that becomes a real pain point rather than building it speculatively.
 
+**Stats: mechanism is core, identity is theme.** The D&D sextet isn't any
+more "core" than a from-scratch attribute system — both are theme-specific
+identity choices on top of the same generic need (a character has named,
+numeric, modifiable stats). `modules/stats.js` only knows the *shape* of a
+stat (`{ base, modifiers: [{ tag, operation, amount }] }`) and how to fold
+it into an effective value; it never knows what any stat is called.
+`content/stats/attributes.json` (loaded by
+`modules/content/loadStatDefinitions.js`) supplies the sextet + `hp` as
+real proof data, in its own `content/stats/` subdirectory — not flat in
+`content/` — specifically so a later `content/stats/humors.json` (the
+planned fantasy-specific elemental mapping) sits next to it as an
+obviously separate concern, without building any real pack-composition
+machinery now (no second pack exists yet to design that against — Phase
+4's job).
+
+One exception: **`vitality` is a core-recognized role, not a hardcoded
+stat name.** Combat needs to know "which stat, at its floor, means
+defeated," regardless of what a theme calls it or how it's scaled (a
+gritty theme's 1–3 HP and a high-fantasy theme's 100+ HP are both just
+"the vitality stat" to core). A stat definition can carry a `role` tag;
+core only ever looks up roles by that open string via
+`getStatKeyForRole()`, never a name — adding a second recognized role
+later is a data change, not an engine change. No other role is blessed
+yet; inventing one without a concrete near-term consumer would repeat the
+mistake this split exists to avoid.
+
+The modifier `operation` field (`"add"`, `"multiply"` today) is
+deliberately open-ended, not an exhaustive enum — this is with the
+planned humoral system in mind. When it lands, an elemental "push/pull" on
+an attribute should be a new `operation` case in
+`stats.js`'s `getStatValue`, not a rework of how modifiers are stored or
+stacked. Not built yet: any humoral mapping/shift/gating logic (no
+`eat`/consume command or ability-check command exists to hook it to —
+would be designing blind); time-based modifier expiry (needs the Phase 3
+game clock); dice/randomness (`modules/checks/index.js`'s default
+resolver is a deterministic stat-vs-threshold comparison, proving
+`registerCheckResolver`/`resolveCheck`'s plumbing without inventing a
+dice mechanic nobody's asked for); and migration of characters saved
+before `components.stats` existed.
+
 ## Known gap: no input rate/size limiting
 
 `server.js`'s per-connection line buffer (`modules/utils.js`'s

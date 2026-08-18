@@ -1,14 +1,17 @@
 import { World } from "./modules/World.js";
 import { getCommand } from "./modules/commands/registry.js";
 import "./modules/commands/index.js"; // registers the built-in verbs, see index.js
+import "./modules/checks/index.js"; // registers the default check resolver, see index.js
 import { emit } from "./modules/events.js";
 import { loadWorldData } from "./modules/content/loadWorldData.js";
+import { loadStatDefinitions, initializeCharacterStats } from "./modules/content/loadStatDefinitions.js";
 import { disconnectCharacter } from "./modules/commands/quit.js";
 import crypto from "crypto";
 import { characterExists, loadCharacterState, saveCharacterState } from "./data.js";
 
 const world = new World(); // Initialize the world
 const { startingRoomKey } = loadWorldData(world); // Load room/item content data
+loadStatDefinitions(); // Load stat definitions (which stats exist, starting values, roles)
 
 // Letters and spaces only: character names become part of a filesystem
 // path (see data.js), so this is a real allowlist, not just cosmetic.
@@ -80,6 +83,7 @@ function handleLogin(socket, input) {
         character.description = input;
         character.isLoggedIn = true;
         character.stage = null;
+        initializeCharacterStats(character);
 
         const saved = loadCharacterState(character.name) ?? {};
         saveCharacterState(character.name, { ...saved, ...character.toSaveData() });
