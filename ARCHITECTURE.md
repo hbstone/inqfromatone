@@ -162,6 +162,98 @@ resolver is a deterministic stat-vs-threshold comparison, proving
 dice mechanic nobody's asked for); and migration of characters saved
 before `components.stats` existed.
 
+**Combat: sessions now, round engine and `cemote` parsing planned.** Combat
+is modeled as a session, not a per-character target — target-switching
+mid-fight and multiple simultaneous combatants (one character fighting
+several attackers) rule out storing a single fixed opponent on the
+character itself:
+
+```js
+// core, transient — not persisted across restarts, not a save-state concern
+CombatSession = {
+  id,
+  participants: Map<character, { target, timer }>,
+}
+
+character.components.combat = { sessionId }   // pointer only, like room membership
+```
+
+`resolveAttack(attacker, defender, attackParams)` (`modules/combat/
+resolveAttack.js`) is the core resolution mechanism regardless of how an
+attack gets produced: runs `resolveCheck` (existing checks/stats machinery),
+applies damage to the defender's `vitality`-role stat, emits `attack` (with
+`hit: boolean`) and, on a hit, `damage`. It takes a fully-formed
+`{ statKey, context, damage }` and never asks where that came from — the
+same function will underlie both v1's auto-attack and the planned `cemote`
+parser. *Which* stat keys mean "attacker's roll" and "defender's threshold"
+are core-recognized **roles**, not hardcoded names — `getStatKeyForRole()`
+(already generic, unchanged) is doing the same job it does for `vitality`,
+just for two new role strings (`content/stats/attributes.json` tags
+`strength` as `"offense"`, `dexterity` as `"defense"`). Core's own logic
+(session bookkeeping) never looks these two up itself, unlike `vitality` —
+only the attack producer does, via the same reusable function.
+
+**V1 (built):** unarmed-only — no wielded-weapon concept exists yet (a
+narrow slice of the still-unbuilt equipment/inventory Phase 2 item), so
+`modules/combat/index.js` registers a single always-available unarmed-strike
+producer (`statKey` = the `offense` role, difficulty = the defender's
+`defense` role value, flat 1 damage) via `registerAttackProducer()`
+(`modules/combat/registry.js`, single-slot like the checks resolver).
+`kill <target>` (`modules/commands/kill.js`) starts or joins a session and
+pulls the attacker out of any other fight first (one fight at a time, for
+now); `disengage` removes just the caller (combat continues for whoever's
+left, once m:n is really in play); `flee <north|east|south|west>`
+(`modules/commands/flee.js`) is a disengage plus a move, but only commits to
+either if a valid exit exists that direction — an invalid direction fails
+outright, no disengage happens. A defeated participant (`vitality` role at
+or below 0) is dropped from their session and fires a `defeat` event; the
+session itself ends once fewer than two participants remain alive.
+
+The **round/`pendingActions` engine** described below for the full design
+isn't built yet — v1 simplifies it away because there's nothing to batch or
+wait on: every action is auto-generated, so each participant just gets an
+independent 2-second repeating timer (`modules/combat/session.js`) that
+calls `resolveAttack` directly, instead of a shared round collecting one
+action per side before resolving together. A per-session 5-minute safety
+timeout still exists as a "something's stuck, force-end it" backstop, since
+nothing else guarantees a session terminates. This also means v1 can't
+produce the full design's "mutual knockout in the same round" outcome — each
+timer resolves on its own — that lands with the real round engine, when
+`cemote` needs one anyway to let both sides submit before anything resolves.
+
+The check resolver picked up real (if minimal) randomness for this: a
+uniform -1/0/+1 nudge to the attacker's effective value, meet-or-beat to
+succeed (`modules/checks/index.js`) — with equal stats that's a 2/3 hit
+chance, chosen over a coin-flip because a two-outcome jitter can only ever
+land at 50/50, never the intentionally-uneven split.
+
+*Full design (planned, not built):* `cemote <target> <freeform text>`
+replaces the auto-attack producer for a theme that wants it, submitting into
+the batched round engine described above instead of firing on an
+independent timer. Target is always a structured argument — resolved by
+keyword-match against session participants, the same mechanism `get`/`give`
+already use, defaulting to the sole other participant in a 1:1 fight — and
+is never inferred from the free text. Only the text after the target gets
+scanned, which closes off "matched a keyword near the wrong name" as a bug
+class rather than requiring smarter parsing to work around it. Matching is a
+strict allowlist over whole tokens with explicitly enumerated synonyms
+authored in content (e.g. `"swing"` and `"swings"` recognized, `"swung"`
+deliberately not) rather than stemming — predictable over clever. Verb
+keywords select an attack type; adverb/style keywords apply transient
+modifiers using the existing `{tag, operation, amount}` shape `stats.js`
+already folds. Defense keywords (dodge/block) and utility keywords (stamina
+recovery, etc.) reuse the identical mechanism against a different effect
+target — no new engine concept, just more content.
+
+Not built yet: the round/`pendingActions` batching engine itself; the
+`cemote` lexicon/parser; loot/currency/win-state beyond "combat ends"; a
+wielded-weapon concept (v1 is unarmed-only); m:n-aware re-targeting when
+your target dies mid-fight but others remain (v1 just leaves you idle rather
+than auto-picking a new target — see `session.js`'s note on it); healing/
+regen (a defeated character just stays at 0 `hp` indefinitely, nothing heals
+it back); and room-wide combat spectating (v1's hit/miss/damage messages
+reach only the two combatants directly, not bystanders in the room).
+
 ## Known gap: no input rate/size limiting
 
 `server.js`'s per-connection line buffer (`modules/utils.js`'s

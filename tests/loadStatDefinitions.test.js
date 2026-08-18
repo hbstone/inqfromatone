@@ -33,6 +33,8 @@ function withFixtureDir(attributesData, fn) {
     ]);
 
     assert.equal(getStatKeyForRole('vitality'), 'hp');
+    assert.equal(getStatKeyForRole('offense'), 'strength');
+    assert.equal(getStatKeyForRole('defense'), 'dexterity');
     assert.equal(getStatDefinition('hp').startingValue, 10);
     assert.equal(getStatDefinition('strength').label, 'Strength');
 }

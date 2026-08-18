@@ -1,6 +1,6 @@
 [
-  { "key": "strength", "label": "Strength", "startingValue": 10 },
-  { "key": "dexterity", "label": "Dexterity", "startingValue": 10 },
+  { "key": "strength", "label": "Strength", "startingValue": 10, "role": "offense" },
+  { "key": "dexterity", "label": "Dexterity", "startingValue": 10, "role": "defense" },
   { "key": "constitution", "label": "Constitution", "startingValue": 10 },
   { "key": "intelligence", "label": "Intelligence", "startingValue": 10 },
   { "key": "wisdom", "label": "Wisdom", "startingValue": 10 },

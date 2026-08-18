@@ -3,10 +3,13 @@
 // registerCommand from registry.js and calling it, without touching this
 // file (see ARCHITECTURE.md).
 import { registerCommand } from "./registry.js";
+import { disengage } from "./disengage.js";
 import { drop } from "./drop.js";
 import { east } from "./east.js";
+import { flee } from "./flee.js";
 import { get } from "./get.js";
 import { give } from "./give.js";
+import { kill } from "./kill.js";
 import { look } from "./look.js";
 import { north } from "./north.js";
 import { quit } from "./quit.js";
@@ -16,10 +19,13 @@ import { tell } from "./tell.js";
 import { west } from "./west.js";
 import { whisper } from "./whisper.js";
 
+registerCommand("disengage", disengage);
 registerCommand("drop", drop);
 registerCommand("east", east);
+registerCommand("flee", flee);
 registerCommand("get", get);
 registerCommand("give", give);
+registerCommand("kill", kill);
 registerCommand("look", look);
 registerCommand("north", north);
 registerCommand("quit", quit);
