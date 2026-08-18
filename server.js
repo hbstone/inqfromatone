@@ -1,6 +1,6 @@
 import net from "net";
 import { handleCommand, handleDisconnect } from "./game.js";
-import { writeToSocket } from "./modules/utils.js";
+import { writeToSocket, extractLines } from "./modules/utils.js";
 import { Character } from "./modules/Character.js";
 
 // Allow PORT to be overridden via environment variable for deployment flexibility
@@ -9,13 +9,18 @@ const PORT = process.env.PORT || 8484;
 const server = net.createServer((socket) => {
     socket.character = new Character(); // Initialize character state
     socket.character.socket = socket;
+    socket.lineBuffer = ""; // Not-yet-complete input, see extractLines
     writeToSocket(socket, "Welcome to the game! Please enter your character's name:");
 
     socket.on("data", (data) => {
-        const input = data.toString().trim();
-        const response = handleCommand(socket, input);
-        if (response) {
-            writeToSocket(socket, response);
+        const { lines, remainder } = extractLines(socket.lineBuffer, data.toString());
+        socket.lineBuffer = remainder;
+
+        for (const input of lines) {
+            const response = handleCommand(socket, input);
+            if (response) {
+                writeToSocket(socket, response);
+            }
         }
     });
 
