@@ -97,3 +97,27 @@ hardcoded.
 
 Game clock/scheduler is Phase 3 in the roadmap, not part of this list —
 it's needed for NPC brains, not for the engine/content split itself.
+
+## Phase 2 decisions
+
+**Character persistence: per-entity JSON files, not a DB (yet).** One
+`characters/<name>.json` per character (`data.js`), replacing the old
+single shared `characters.json`. Chosen over an embedded DB because the
+project has otherwise deliberately avoided adding infrastructure before
+real pressure forces it (see the serialization note above); chosen over
+just expanding the single flat file because the roadmap explicitly names
+that as the thing to move past. `data.js` is written as a small storage
+adapter (`characterExists`/`loadCharacterState`/`saveCharacterState`) so a
+future DB swap only touches this one file, not every call site.
+
+**Character names are now a real allowlist** (`/^[A-Za-z][A-Za-z ]{1,31}$/`
+in `game.js`), not just a not-blank check. Necessary once a name becomes
+part of a filesystem path (`data.js`) — otherwise it's a path-traversal
+vector. Filenames are the lowercased name, which also makes account lookup
+case-insensitive for free (no separate duplicate-rejection logic needed;
+"bob" and "Bob" resolve to the same saved record rather than colliding).
+
+**Saves happen at session end** (`quit`, and now also an ungraceful socket
+disconnect — see `modules/commands/quit.js`'s `disconnectCharacter`,
+shared by both), not continuously. No autosave/checkpointing yet; revisit
+if that becomes a real pain point rather than building it speculatively.

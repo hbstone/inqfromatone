@@ -3,12 +3,16 @@ import { getCommand } from "./modules/commands/registry.js";
 import "./modules/commands/index.js"; // registers the built-in verbs, see index.js
 import { emit } from "./modules/events.js";
 import { loadWorldData } from "./modules/content/loadWorldData.js";
+import { disconnectCharacter } from "./modules/commands/quit.js";
 import crypto from "crypto";
-import { loadCharacters, saveCharacters } from "./data.js";
+import { characterExists, loadCharacterState, saveCharacterState } from "./data.js";
 
 const world = new World(); // Initialize the world
 const { startingRoomKey } = loadWorldData(world); // Load room/item content data
-const characters = loadCharacters(); // Load saved characters
+
+// Letters and spaces only: character names become part of a filesystem
+// path (see data.js), so this is a real allowlist, not just cosmetic.
+const NAME_PATTERN = /^[A-Za-z][A-Za-z ]{1,31}$/;
 
 function hashPassword(password) {
     return crypto.createHash("sha256").update(password).digest("hex");
@@ -22,8 +26,11 @@ function handleLogin(socket, input) {
         if (!input) {
             return "Name cannot be blank. Please enter your character's name:";
         }
+        if (!NAME_PATTERN.test(input)) {
+            return "Names may only contain letters and spaces (2-32 characters). Please enter your character's name:";
+        }
 
-        if (characters[input]) {
+        if (characterExists(input)) {
             character.setName(input);
             character.stage = "password";
             return "Enter your password:";
@@ -44,17 +51,19 @@ function handleLogin(socket, input) {
         const hashedPassword = hashPassword(input);
 
         if (character.new) {
-            characters[character.name] = { password: hashedPassword };
-            saveCharacters(characters);
+            saveCharacterState(character.name, { password: hashedPassword });
             character.stage = "description";
             return "Enter a description for your character:";
         }
 
-        if (characters[character.name].password === hashedPassword) {
+        const saved = loadCharacterState(character.name);
+        if (saved && saved.password === hashedPassword) {
             character.isLoggedIn = true;
             character.stage = null;
 
-            world.getRoomById(startingRoomKey).addCharacter(character);
+            character.restoreFrom(saved);
+            const room = world.getRoomById(saved.roomId) ?? world.getRoomById(startingRoomKey);
+            room.addCharacter(character);
 
             return `Welcome back, ${character.name}!`;
         } else {
@@ -68,10 +77,12 @@ function handleLogin(socket, input) {
             return "Description cannot be blank. Please enter a description for your character:";
         }
 
-        characters[character.name].description = input;
-        saveCharacters(characters);
+        character.description = input;
         character.isLoggedIn = true;
         character.stage = null;
+
+        const saved = loadCharacterState(character.name) ?? {};
+        saveCharacterState(character.name, { ...saved, ...character.toSaveData() });
 
         world.getRoomById(startingRoomKey).addCharacter(character);
 
@@ -95,4 +106,14 @@ export const handleCommand = (socket, input) => {
     }
 
     return "I don't understand that command.";
+};
+
+// Called on an ungraceful disconnect (socket "end" without the player
+// typing `quit`) so their state still gets saved and their room still
+// gets cleaned up, instead of leaving a stale entry in room.characters.
+export const handleDisconnect = (socket) => {
+    const character = socket.character;
+    if (character.isLoggedIn) {
+        disconnectCharacter(world, character, `${character.name} has disconnected.`);
+    }
 };

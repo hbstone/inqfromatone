@@ -1,5 +1,5 @@
 import net from "net";
-import { handleCommand } from "./game.js";
+import { handleCommand, handleDisconnect } from "./game.js";
 import { writeToSocket } from "./modules/utils.js";
 import { Character } from "./modules/Character.js";
 
@@ -23,6 +23,7 @@ const server = net.createServer((socket) => {
         if (socket.character.name) {
             console.log(`${socket.character.name} has disconnected.`);
         }
+        handleDisconnect(socket);
     });
 
     socket.on("error", (err) => {
