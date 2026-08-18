@@ -121,3 +121,25 @@ case-insensitive for free (no separate duplicate-rejection logic needed;
 disconnect — see `modules/commands/quit.js`'s `disconnectCharacter`,
 shared by both), not continuously. No autosave/checkpointing yet; revisit
 if that becomes a real pain point rather than building it speculatively.
+
+## Known gap: no input rate/size limiting
+
+`server.js`'s per-connection line buffer (`modules/utils.js`'s
+`extractLines`, added to fix real line-splitting bugs against clients like
+Windows' `telnet.exe`) has no cap on either axis:
+
+- **Command flooding.** A pasted block of many newline-separated commands
+  (e.g. a hundred `north`s) gets fully drained in one synchronous pass of
+  the `"data"` handler's loop — no per-connection rate limit, no cooldown
+  between commands. Functionally identical to sending the same commands
+  one at a time very fast, but without the natural interleaving-with-other-
+  connections that separate packets get from the event loop; a large
+  enough paste can stall the server for everyone during that pass.
+- **Unbounded buffer growth.** Nothing caps how long `socket.lineBuffer`
+  can grow while waiting for a `\n` — a client that sends a large chunk
+  with no newline at all just keeps that string growing.
+
+Deliberately not fixed yet — real user count is 1-2 people who can just be
+careful about what they paste for now. Needs a real design pass (hard cap
+vs. throttle-and-queue, what a client that trips it sees) before opening
+the server up beyond that, not a reflexive fix bolted on here.
