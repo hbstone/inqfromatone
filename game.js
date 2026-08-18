@@ -2,6 +2,7 @@ import { World } from "./modules/World.js";
 import { getCommand } from "./modules/commands/registry.js";
 import "./modules/commands/index.js"; // registers the built-in verbs, see index.js
 import "./modules/checks/index.js"; // registers the default check resolver, see index.js
+import "./modules/combat/index.js"; // registers the unarmed attack producer + combat messages, see index.js
 import { emit } from "./modules/events.js";
 import { loadWorldData } from "./modules/content/loadWorldData.js";
 import { loadStatDefinitions, initializeCharacterStats } from "./modules/content/loadStatDefinitions.js";
