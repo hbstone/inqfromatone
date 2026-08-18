@@ -1,4 +1,4 @@
-name: Lint
+name: CI
 
 on:
   # Trigger the workflow on push or pull request,
@@ -36,6 +36,25 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
-        
+
       - name: Run Prettier
         run: npm run format
+
+  run-tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
