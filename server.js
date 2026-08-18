@@ -1,6 +1,6 @@
 import net from "net";
 import { handleCommand, handleDisconnect } from "./game.js";
-import { writeToSocket, extractLines } from "./modules/utils.js";
+import { writeToSocket, extractLines, stripTelnetNegotiation } from "./modules/utils.js";
 import { Character } from "./modules/Character.js";
 
 // Allow PORT to be overridden via environment variable for deployment flexibility
@@ -13,7 +13,8 @@ const server = net.createServer((socket) => {
     writeToSocket(socket, "Welcome to the game! Please enter your character's name:");
 
     socket.on("data", (data) => {
-        const { lines, remainder } = extractLines(socket.lineBuffer, data.toString());
+        const cleaned = stripTelnetNegotiation(data);
+        const { lines, remainder } = extractLines(socket.lineBuffer, cleaned.toString());
         socket.lineBuffer = remainder;
 
         for (const input of lines) {
