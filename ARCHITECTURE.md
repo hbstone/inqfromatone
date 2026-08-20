@@ -245,14 +245,31 @@ already folds. Defense keywords (dodge/block) and utility keywords (stamina
 recovery, etc.) reuse the identical mechanism against a different effect
 target — no new engine concept, just more content.
 
+**Regen and room-wide messages (built).** `modules/combat/regen.js`'s
+`startRegenTicker(world)` (called once from `game.js`) heals every online
+character's `vitality`-role stat by a flat 1 every 30 seconds, capped at
+that stat's content-defined `startingValue` — the closest thing to a "max
+hp" that exists, since the stats system has no separate current/max split
+(base *is* current). Deliberately unconditional: same rate whether a
+character is mid-fight, defeated, or just standing around, no "resting
+heals faster" concept yet. This is what keeps a defeated character (`hp`
+at 0) from staying there forever.
+
+`modules/combat/index.js`'s attack/damage/defeat listeners now also
+broadcast a third-person version of each message to bystanders in the
+combatants' room (`writeToSocket` to everyone there except the two direct
+participants, who already got their own message). Reaching bystanders
+needs a room lookup by `character.roomId`, which needs `world` — threaded
+in via `setWorld(world)`, called once from `game.js` alongside
+`startRegenTicker`, rather than passed through every call site between a
+timer tick and the listener. Assumes both combatants share a room, true
+for every way v1 can start or continue a fight.
+
 Not built yet: the round/`pendingActions` batching engine itself; the
 `cemote` lexicon/parser; loot/currency/win-state beyond "combat ends"; a
-wielded-weapon concept (v1 is unarmed-only); m:n-aware re-targeting when
-your target dies mid-fight but others remain (v1 just leaves you idle rather
-than auto-picking a new target — see `session.js`'s note on it); healing/
-regen (a defeated character just stays at 0 `hp` indefinitely, nothing heals
-it back); and room-wide combat spectating (v1's hit/miss/damage messages
-reach only the two combatants directly, not bystanders in the room).
+wielded-weapon concept (v1 is unarmed-only); and m:n-aware re-targeting
+when your target dies mid-fight but others remain (v1 just leaves you idle
+rather than auto-picking a new target — see `session.js`'s note on it).
 
 ## Known gap: no input rate/size limiting
 
