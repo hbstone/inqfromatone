@@ -4,12 +4,12 @@ import { writeToSocket } from "../utils.js";
 // which is OOC and direct to one recipient, and `whisper`, which is IC
 // but private to one recipient). Deliberately light-touch on the
 // message itself: the only two mechanical fixups are capitalizing the
-// first letter and adding a trailing period, and only when the message
-// doesn't already end in one - a trailing "?", ",", "&", or anything
-// else typed is left exactly as typed.
+// first letter and adding a trailing period, and only when it ends in a
+// letter or number - a trailing "?", ",", "&", or anything else typed is
+// left exactly as typed.
 function formatMessage(rawMessage) {
     const capitalized = rawMessage.charAt(0).toUpperCase() + rawMessage.slice(1);
-    return /[a-z]$/i.test(capitalized) ? `${capitalized}.` : capitalized;
+    return /[a-z0-9]$/i.test(capitalized) ? `${capitalized}.` : capitalized;
 }
 
 export const say = (world, args, character) => {
