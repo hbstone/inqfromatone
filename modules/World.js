@@ -75,4 +75,14 @@ export class World {
         }
         return null;
     }
+
+    /**
+     * All currently-connected characters, across every room.
+     * @returns {object[]}
+     */
+    getOnlineCharacters() {
+        return Array.from(this.rooms.values()).flatMap(
+            (room) => room.characters.filter((char) => char.socket)
+        );
+    }
 }
