@@ -1,5 +1,6 @@
 import { writeToSocket } from "../utils.js";
 import { resolveItemToken, formatItemList } from "../itemSearch.js";
+import { keywordMatches } from "../keywordMatch.js";
 
 export const give = (world, args, character) => {
     const itemToken = args[0];
@@ -19,9 +20,7 @@ export const give = (world, args, character) => {
     }
 
     // Find the recipient in the current room
-    const recipient = room.characters.find(char =>
-        char.keywords.includes(recipientName.toLowerCase())
-    );
+    const recipient = room.characters.find(char => keywordMatches(char.keywords, recipientName));
 
     if (!recipient) {
         return "You can't find them.";

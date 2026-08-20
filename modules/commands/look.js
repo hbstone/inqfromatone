@@ -1,6 +1,7 @@
 import { writeToSocket } from "../utils.js";
 import { isContainer } from "../containers.js";
 import { resolveItemToken } from "../itemSearch.js";
+import { keywordMatches } from "../keywordMatch.js";
 
 // A container's contents only show up when you look at it directly, not
 // in the room/inventory listing above - keeps that listing from turning
@@ -40,9 +41,7 @@ export const look = (world, args, character) => {
     }
 
     // Look for a character in the room
-    const targetCharacter = room.characters.find(char =>
-        char.keywords.includes(itemToken)
-    );
+    const targetCharacter = room.characters.find(char => keywordMatches(char.keywords, itemToken));
     if (targetCharacter) {
         // Notify the target character
         if (targetCharacter.socket) {

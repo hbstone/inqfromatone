@@ -140,4 +140,14 @@ function setUpRoom() {
     assert.equal(emote(world, ['gathers', '#3*brick'], alice), 'There aren\'t 3 things matching "brick" here.');
 }
 
+// @/# matching is fuzzy (substring) - "@bae" finds Baeron, "#bri" finds
+// a brick
+{
+    const { world, room, alice } = setUpRoom();
+    room.inventory.push(new Item('a 0.5 lb brick', 'A brick.', ['brick', 'half'], { size: 'small', weight: 0.5 }));
+
+    assert.equal(emote(world, ['waves', 'at', '@bae'], alice), 'You waves at Baeron.');
+    assert.equal(emote(world, ['hefts', '#bri'], alice), 'You hefts a 0.5 lb brick.');
+}
+
 console.log('All tests passed');

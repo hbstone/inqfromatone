@@ -1,4 +1,5 @@
 import { writeToSocket } from "../utils.js";
+import { keywordMatches } from "../keywordMatch.js";
 
 export const whisper = (world, args, character) => {
     const recipientName = args[0];
@@ -9,9 +10,7 @@ export const whisper = (world, args, character) => {
         return "Usage: whisper <character> <message>";
     }
 
-    const recipient = room.characters.find(char =>
-        char.keywords.includes(recipientName.toLowerCase())
-    );
+    const recipient = room.characters.find(char => keywordMatches(char.keywords, recipientName));
 
     if (!recipient) {
         return `You don't see ${recipientName} here.`;
