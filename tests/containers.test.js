@@ -1,6 +1,6 @@
 import assert from 'assert/strict';
 import { Item } from '../modules/Item.js';
-import { isContainer, getEffectiveWeight, canContain } from '../modules/containers.js';
+import { isContainer, getEffectiveWeight, canContain, canContainAll } from '../modules/containers.js';
 
 function makePouch() {
     return new Item('a pouch', 'A small pouch.', ['pouch'], {
@@ -101,6 +101,50 @@ function makeItem(size, weight) {
     const backpack = makeBackpack();
     assert.equal(canContain(backpack, makeItem('small', 1)).ok, true);
     assert.equal(canContain(backpack, makePouch()).ok, true, 'a small container fits in a medium one');
+}
+
+// canContainAll: weighs the whole batch cumulatively, not each item
+// against the container's still-empty current state - three 2-weight
+// items individually fit a 5-capacity pouch, but not all three together
+{
+    const pouch = makePouch(); // capacityWeight 5
+    const items = [makeItem('small', 2), makeItem('small', 2), makeItem('small', 2)];
+
+    assert.equal(canContain(pouch, items[0]).ok, true, 'sanity check: one alone fits fine');
+    assert.equal(canContainAll(pouch, items).ok, false, 'but all three together (6) exceed capacity (5)');
+}
+
+// canContainAll: exactly at the cumulative capacity is allowed
+{
+    const pouch = makePouch(); // capacityWeight 5
+    const items = [makeItem('small', 2), makeItem('small', 3)];
+    assert.equal(canContainAll(pouch, items).ok, true);
+}
+
+// canContainAll: existing contents still count against the batch's budget
+{
+    const pouch = makePouch(); // capacityWeight 5
+    pouch.inventory.push(makeItem('small', 4));
+    assert.equal(canContainAll(pouch, [makeItem('small', 1)]).ok, true, 'fills the remaining budget exactly');
+    assert.equal(canContainAll(pouch, [makeItem('small', 0.6), makeItem('small', 0.6)]).ok, false, 'together exceed it');
+}
+
+// canContainAll: one bad item (too big) fails the whole batch, even if
+// the others in it are individually fine
+{
+    const pouch = makePouch();
+    const items = [makeItem('small', 1), makeItem('medium', 1)];
+    const result = canContainAll(pouch, items);
+    assert.equal(result.ok, false);
+    assert.match(result.reason, /too big/);
+}
+
+// canContain is just canContainAll for a single item - same result
+// either way
+{
+    const pouch = makePouch();
+    const item = makeItem('small', 1);
+    assert.deepStrictEqual(canContain(pouch, item), canContainAll(pouch, [item]));
 }
 
 console.log('All tests passed');

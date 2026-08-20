@@ -37,8 +37,8 @@ export function getEffectiveWeight(item) {
 }
 
 // Whether `ancestor` (transitively) already contains `item` - the cycle
-// check canContain needs, since the size/weight checks alone don't rule
-// out e.g. two same-size pouches each being put inside the other.
+// check canContainAll needs, since the size/weight checks alone don't
+// rule out e.g. two same-size pouches each being put inside the other.
 function alreadyContains(ancestor, item) {
     if (!isContainer(ancestor)) {
         return false;
@@ -54,22 +54,42 @@ function alreadyContains(ancestor, item) {
  *   player-facing message, ready to return straight from a command.
  */
 export function canContain(container, item) {
+    return canContainAll(container, [item]);
+}
+
+/**
+ * Whether `container` can accept every item in `items` *together* -
+ * checked cumulatively (a `put 3*brick in pouch` needs to weigh all
+ * three against the pouch's capacity at once, not each brick against the
+ * pouch's current, still-empty state one at a time), so a batch that
+ * individually looks fine per-item can still be rejected as a whole. All
+ * or nothing: the first item that doesn't fit rejects the entire batch,
+ * same as canContain does for one.
+ * @param {object} container
+ * @param {object[]} items
+ * @returns {{ ok: true } | { ok: false, reason: string }}
+ */
+export function canContainAll(container, items) {
     if (!isContainer(container)) {
         return { ok: false, reason: `${container.name} can't hold anything.` };
     }
-    if (container === item) {
-        return { ok: false, reason: "You can't put something inside itself." };
-    }
-    if (sizeRank(item.size) > sizeRank(container.container.maxItemSize)) {
-        return { ok: false, reason: `${item.name} is too big to fit in ${container.name}.` };
-    }
-    if (alreadyContains(item, container)) {
-        return { ok: false, reason: `${item.name} already contains ${container.name}.` };
-    }
 
-    const currentWeight = container.inventory.reduce((sum, contained) => sum + getEffectiveWeight(contained), 0);
-    if (currentWeight + getEffectiveWeight(item) > container.container.capacityWeight) {
-        return { ok: false, reason: `${container.name} doesn't have room for that much more weight.` };
+    let runningWeight = container.inventory.reduce((sum, contained) => sum + getEffectiveWeight(contained), 0);
+    for (const item of items) {
+        if (container === item) {
+            return { ok: false, reason: "You can't put something inside itself." };
+        }
+        if (sizeRank(item.size) > sizeRank(container.container.maxItemSize)) {
+            return { ok: false, reason: `${item.name} is too big to fit in ${container.name}.` };
+        }
+        if (alreadyContains(item, container)) {
+            return { ok: false, reason: `${item.name} already contains ${container.name}.` };
+        }
+
+        runningWeight += getEffectiveWeight(item);
+        if (runningWeight > container.container.capacityWeight) {
+            return { ok: false, reason: `${container.name} doesn't have room for that much more weight.` };
+        }
     }
 
     return { ok: true };

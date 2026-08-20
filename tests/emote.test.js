@@ -96,4 +96,48 @@ function setUpRoom() {
     assert.equal(emote(world, [], alice), 'Emote what?');
 }
 
+// #2.pouch resolves the ordinal by real name
+{
+    const { world, room, alice } = setUpRoom();
+    room.inventory.push(
+        new Item('a red pouch', 'A pouch.', ['pouch'], { size: 'small', weight: 0.5, container: { maxItemSize: 'small', capacityWeight: 5 } }),
+        new Item('a blue pouch', 'A pouch.', ['pouch'], { size: 'small', weight: 0.5, container: { maxItemSize: 'small', capacityWeight: 5 } }),
+    );
+
+    assert.equal(emote(world, ['tucks', 'a', 'hand', 'into', '#2.pouch'], alice), 'You tucks a hand into a blue pouch.');
+}
+
+// #3*brick resolves the cardinal as a grouped "xN" list, same as get/put
+{
+    const { world, room, alice } = setUpRoom();
+    room.inventory.push(
+        new Item('a 0.5 lb brick', 'A brick.', ['brick'], { size: 'small', weight: 0.5 }),
+        new Item('a 0.5 lb brick', 'A brick.', ['brick'], { size: 'small', weight: 0.5 }),
+        new Item('a 0.5 lb brick', 'A brick.', ['brick'], { size: 'small', weight: 0.5 }),
+    );
+
+    assert.equal(emote(world, ['juggles', '#3*brick'], alice), 'You juggles a 0.5 lb brick (x3)', 'ends in ")", so no period is added');
+}
+
+// A qualified # asking for more than exists fails the *whole* emote -
+// nothing broadcasts, the actor gets the "there aren't N..." message,
+// unlike the unqualified soft-fallback case above
+{
+    const { world, room, alice, baeron } = setUpRoom();
+    room.inventory.push(new Item('a pouch', 'A pouch.', ['pouch'], { size: 'small', weight: 0.5, container: { maxItemSize: 'small', capacityWeight: 5 } }));
+    const before = baeron.socket.written.length;
+
+    const result = emote(world, ['tucks', 'a', 'hand', 'into', '#2.pouch'], alice);
+
+    assert.equal(result, 'There aren\'t 2 things matching "pouch" here.');
+    assert.equal(baeron.socket.written.length, before, 'nothing should have been broadcast to the room');
+}
+
+// Same failure with zero matches at all, and with a cardinal qualifier
+{
+    const { world, alice } = setUpRoom();
+    assert.equal(emote(world, ['looks', 'for', '#2.pouch'], alice), 'There aren\'t 2 things matching "pouch" here.');
+    assert.equal(emote(world, ['gathers', '#3*brick'], alice), 'There aren\'t 3 things matching "brick" here.');
+}
+
 console.log('All tests passed');

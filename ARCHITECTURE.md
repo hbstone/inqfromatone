@@ -357,6 +357,52 @@ every command in the codebase already uses for its own actor-facing
 line. Wants its own pass across all of them once it's worth doing, not a
 one-off fix here.
 
+## Item qualifiers: ordinal (2.x) and cardinal (N*x) keyword matching
+
+`modules/itemSearch.js`'s `resolveItemToken` replaces the ad-hoc
+`items.find(i => i.keywords.includes(keyword))` that `get`/`put`/`drop`/
+`give`/`look`/`items`/`emote`'s `#` all used to duplicate, and adds two
+optional qualifiers on top of a plain keyword: `2.pouch` (ordinal - the
+2nd match) and `3*brick` (cardinal - the first 3 matches). Both reduce to
+the same question - "are there at least N matches for this keyword, in
+this search scope?" - so the resolver finds every match once, in the
+same priority order each command already searched in (inventory then
+room, etc.), then either indexes into it or takes its front slice.
+Plain, unqualified keywords are unchanged: first match, same as before.
+
+**Fail the whole command, not a partial one.** Asking for more than
+exists - `2.pouch` with only one around, `3*brick` with only two -
+rejects the entire command with `There aren't N things matching "x"
+here.`, nothing moved. `put` extends this to a batch capacity check:
+`canContainAll` (`modules/containers.js`) weighs the *whole* batch
+cumulatively against a container's budget before moving anything, not
+each item against the container's still-empty current state one at a
+time - three items that individually fit a container can still
+collectively overflow it. `canContain` is now just `canContainAll` for a
+single item, so single-item and batch puts share one code path.
+
+**Grouped `"xN"` phrasing for multi-item messages**, not pluralization:
+`You pick up a 0.5 lb brick (x3).` Item names already carry their own
+article (`a 0.5 lb brick`), which naive pluralization can't handle in
+general (irregular nouns) without content opting in per item, and a
+cardinal match isn't even guaranteed to be N of the *same* item -
+`3*brick` can pull a mix of different brick weights, all matching
+`"brick"`. `formatItemList` groups by name (`a 0.5 lb brick (x2), a 1 lb
+brick, and a pouch`) instead, which stays correct either way.
+
+**Scoped to items only.** `@` character targeting (in `emote`, `give`'s
+recipient, `whisper`) has no ordinal/cardinal support yet - a separate
+decision if it turns out useful, not assumed here.
+
+**One extra wrinkle for `emote`, spelled out because the two look
+similar:** an *unqualified* `#`/`@` that finds nothing still falls back
+to `"something"`/`"someone"` and the emote proceeds - a typo in
+otherwise-fine freeform text shouldn't nuke the whole thing (existing
+behavior, unchanged). A *qualified* `#` that can't be satisfied aborts
+the entire emote instead - nothing broadcasts, same atomic-failure rule
+as everywhere else - because that's a specific, deliberate request that
+plainly can't be met, not a vague reference worth papering over.
+
 ## Known gap: no input rate/size limiting
 
 `server.js`'s per-connection line buffer (`modules/utils.js`'s

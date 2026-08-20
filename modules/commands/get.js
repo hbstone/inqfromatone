@@ -1,37 +1,38 @@
 import { isContainer } from "../containers.js";
+import { resolveItemToken, formatItemList } from "../itemSearch.js";
 
 export const get = (world, args, character) => {
     const room = world.getRoomById(character.roomId);
-    const itemKeyword = args[0];
+    const itemToken = args[0];
 
-    if (!itemKeyword) {
+    if (!itemToken) {
         return "What do you want to get?";
     }
 
     const rest = args.slice(1).join(" ");
     if (!rest) {
-        return getFromRoom(room, character, itemKeyword);
+        return getFromRoom(room, character, itemToken);
     }
 
-    const containerKeyword = rest.replace(/^from /i, "");
-    return getFromContainer(room, character, itemKeyword, containerKeyword);
+    const containerToken = rest.replace(/^from /i, "");
+    return getFromContainer(room, character, itemToken, containerToken);
 };
 
-function getFromRoom(room, character, keyword) {
-    // Search the room's inventory for the item
-    const itemIndex = room.inventory.findIndex(item =>
-        item.keywords.includes(keyword)
-    );
-
-    if (itemIndex === -1) {
+function getFromRoom(room, character, itemToken) {
+    const { matches, error } = resolveItemToken(itemToken, [room.inventory]);
+    if (error) {
+        return error;
+    }
+    if (matches.length === 0) {
         return "You can't find that here.";
     }
 
-    // Move the item to the character's inventory
-    const [item] = room.inventory.splice(itemIndex, 1);
-    character.inventory.push(item);
+    for (const { item, source } of matches) {
+        source.splice(source.indexOf(item), 1);
+        character.inventory.push(item);
+    }
 
-    return `You pick up ${item.name}.`;
+    return `You pick up ${formatItemList(matches.map(m => m.item))}.`;
 }
 
 // `get <item> [from] <container>` - "from" is optional/cosmetic, stripped
@@ -39,23 +40,32 @@ function getFromRoom(room, character, keyword) {
 // keyword in the character's own inventory first, then the room floor,
 // same order look.js already searches in. Doesn't reach into a container
 // that's itself stowed inside another container; take it out first.
-function getFromContainer(room, character, itemKeyword, containerKeyword) {
-    const container = character.inventory.find(i => i.keywords.includes(containerKeyword)) ??
-        room.inventory.find(i => i.keywords.includes(containerKeyword));
-    if (!container) {
+function getFromContainer(room, character, itemToken, containerToken) {
+    const containerResult = resolveItemToken(containerToken, [character.inventory, room.inventory]);
+    if (containerResult.error) {
+        return containerResult.error;
+    }
+    if (containerResult.matches.length === 0) {
         return "You don't see that here.";
     }
+
+    const container = containerResult.matches[0].item;
     if (!isContainer(container)) {
         return `${container.name} can't hold anything.`;
     }
 
-    const itemIndex = container.inventory.findIndex(item => item.keywords.includes(itemKeyword));
-    if (itemIndex === -1) {
+    const { matches, error } = resolveItemToken(itemToken, [container.inventory]);
+    if (error) {
+        return error;
+    }
+    if (matches.length === 0) {
         return `You don't see that in ${container.name}.`;
     }
 
-    const [item] = container.inventory.splice(itemIndex, 1);
-    character.inventory.push(item);
+    for (const { item, source } of matches) {
+        source.splice(source.indexOf(item), 1);
+        character.inventory.push(item);
+    }
 
-    return `You get ${item.name} from ${container.name}.`;
+    return `You get ${formatItemList(matches.map(m => m.item))} from ${container.name}.`;
 }

@@ -1,4 +1,5 @@
 import { isContainer } from "../containers.js";
+import { resolveItemToken } from "../itemSearch.js";
 
 // `items` - testing/debugging aid, not really an in-fiction verb: lists
 // every item's name *and* keywords, room floor first then the
@@ -24,17 +25,24 @@ function formatList(items) {
 
 export const items = (world, args, character) => {
     const room = world.getRoomById(character.roomId);
-    const containerKeyword = args[0];
+    const containerToken = args[0];
 
-    if (!containerKeyword) {
+    if (!containerToken) {
         return `Items in the room:\n${formatList(room.inventory)}\n\nItems in your inventory:\n${formatList(character.inventory)}`;
     }
 
-    const container = character.inventory.find(i => i.keywords.includes(containerKeyword)) ??
-        room.inventory.find(i => i.keywords.includes(containerKeyword));
-    if (!container) {
+    // Supports the same 2.pouch/3*pouch qualifiers get/put do, though a
+    // cardinal match is a moot point here - it always just peeks inside
+    // the first one.
+    const { matches, error } = resolveItemToken(containerToken, [character.inventory, room.inventory]);
+    if (error) {
+        return error;
+    }
+    if (matches.length === 0) {
         return "You don't see that here.";
     }
+
+    const container = matches[0].item;
     if (!isContainer(container)) {
         return `${container.name} can't hold anything.`;
     }
