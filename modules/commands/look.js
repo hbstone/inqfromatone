@@ -1,5 +1,6 @@
 import { writeToSocket } from "../utils.js";
 import { isContainer } from "../containers.js";
+import { resolveItemToken } from "../itemSearch.js";
 
 // A container's contents only show up when you look at it directly, not
 // in the room/inventory listing above - keeps that listing from turning
@@ -15,10 +16,10 @@ function describeItem(item) {
 }
 
 export const look = (world, args, character) => {
-    const keyword = args[0];
+    const itemToken = args[0];
     const room = world.getRoomById(character.roomId);
 
-    if (!keyword) {
+    if (!itemToken) {
         const occupantNames = room.characters
             .filter(c => c !== character)
             .map(c => c.name);
@@ -27,25 +28,20 @@ export const look = (world, args, character) => {
         return `${room.name}\n${room.description}\nCharacters here: ${occupantNames.join(", ") || "None"}\nItems here: ${items}`;
     }
 
-    // Look for an item in the player's inventory
-    const itemInInventory = character.inventory.find(item =>
-        item.keywords.includes(keyword)
-    );
-    if (itemInInventory) {
-        return describeItem(itemInInventory);
+    // Look for an item, in the player's inventory first, then the room -
+    // supports 2.pouch/3*brick qualifiers like get/put do; a cardinal
+    // match describes each one in turn.
+    const { matches, error } = resolveItemToken(itemToken, [character.inventory, room.inventory]);
+    if (error) {
+        return error;
     }
-
-    // Look for an item in the room
-    const itemInRoom = room.inventory.find(item =>
-        item.keywords.includes(keyword)
-    );
-    if (itemInRoom) {
-        return describeItem(itemInRoom);
+    if (matches.length > 0) {
+        return matches.map(m => describeItem(m.item)).join("\n\n");
     }
 
     // Look for a character in the room
     const targetCharacter = room.characters.find(char =>
-        char.keywords.includes(keyword)
+        char.keywords.includes(itemToken)
     );
     if (targetCharacter) {
         // Notify the target character

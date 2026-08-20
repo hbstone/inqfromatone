@@ -1,20 +1,20 @@
 import { writeToSocket } from "../utils.js";
+import { resolveItemToken, formatItemList } from "../itemSearch.js";
 
 export const give = (world, args, character) => {
-    const keyword = args[0];
+    const itemToken = args[0];
     const recipientName = args.slice(1).join(" ").replace(/^to /i, "");
     const room = world.getRoomById(character.roomId);
 
-    if (!keyword || !recipientName) {
+    if (!itemToken || !recipientName) {
         return "Usage: give (keyword) [to] (target)";
     }
 
-    // Find the item in the player's inventory
-    const itemIndex = character.inventory.findIndex(item =>
-        item.keywords.includes(keyword)
-    );
-
-    if (itemIndex === -1) {
+    const { matches, error } = resolveItemToken(itemToken, [character.inventory]);
+    if (error) {
+        return error;
+    }
+    if (matches.length === 0) {
         return "You can't find that.";
     }
 
@@ -27,15 +27,18 @@ export const give = (world, args, character) => {
         return "You can't find them.";
     }
 
-    // Transfer the item
-    const [item] = character.inventory.splice(itemIndex, 1);
-    recipient.inventory.push(item);
+    for (const { item, source } of matches) {
+        source.splice(source.indexOf(item), 1);
+        recipient.inventory.push(item);
+    }
+
+    const message = formatItemList(matches.map(m => m.item));
 
     // Notify the recipient
     if (recipient.socket) {
         writeToSocket(
             recipient.socket,
-            `${character.name} gives you ${item.name}.`
+            `${character.name} gives you ${message}.`
         );
     }
 
@@ -44,10 +47,10 @@ export const give = (world, args, character) => {
         if (char !== character && char !== recipient && char.socket) {
             writeToSocket(
                 char.socket,
-                `${character.name} gives ${item.name} to ${recipient.name}.`
+                `${character.name} gives ${message} to ${recipient.name}.`
             );
         }
     });
 
-    return `You give ${item.name} to ${recipient.name}.`;
+    return `You give ${message} to ${recipient.name}.`;
 };

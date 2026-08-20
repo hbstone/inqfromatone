@@ -1,35 +1,35 @@
 import { writeToSocket } from "../utils.js";
+import { resolveItemToken, formatItemList } from "../itemSearch.js";
 
 export const drop = (world, args, character) => {
-    const keyword = args[0];
+    const itemToken = args[0];
     const room = world.getRoomById(character.roomId);
 
-    if (!keyword) {
+    if (!itemToken) {
         return "What do you want to drop?";
     }
 
-    // Search the player's inventory for the item
-    const itemIndex = character.inventory.findIndex(item =>
-        item.keywords.includes(keyword)
-    );
-
-    if (itemIndex === -1) {
+    const { matches, error } = resolveItemToken(itemToken, [character.inventory]);
+    if (error) {
+        return error;
+    }
+    if (matches.length === 0) {
         return "You can't find that.";
     }
 
-    // Move the item to the room's inventory
-    const [item] = character.inventory.splice(itemIndex, 1);
-    room.inventory.push(item);
+    for (const { item, source } of matches) {
+        source.splice(source.indexOf(item), 1);
+        room.inventory.push(item);
+    }
+
+    const message = formatItemList(matches.map(m => m.item));
 
     // Broadcast the action to the room
     room.characters.forEach(char => {
         if (char !== character && char.socket) {
-            writeToSocket(
-                char.socket,
-                `${character.name} drops ${item.name}.`
-            );
+            writeToSocket(char.socket, `${character.name} drops ${message}.`);
         }
     });
 
-    return `You drop ${item.name}.`;
+    return `You drop ${message}.`;
 };
