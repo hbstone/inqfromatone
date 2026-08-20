@@ -326,6 +326,37 @@ restart (only character inventories persist - see Phase 2's persistence
 note above) - a chest full of loot resets on reboot same as anything
 else on the floor.
 
+## `emote`: inline @/# targeting, separate from the planned `cemote`
+
+`emote <text>` (`modules/commands/emote.js`) is freeform third-person
+action text - `Character <text>.` to the room, `You <text>.` back to the
+actor - with one goodie: a token starting with `@` names a character (by
+keyword, searched in the room), a token starting with `#` names an item
+(by keyword, searched in the actor's inventory then the room floor - same
+order `look`/`put` already search in). Both resolve to that entity's real
+name in the broadcast text; an unresolved `@` falls back to `"someone"`,
+an unresolved `#` to `"something"`, rather than failing the whole emote
+over one bad keyword.
+
+This is a **separate, simpler mechanism** from the `cemote` design
+sketched in the Combat section above - inline references found anywhere
+in free text, not a leading structured target argument plus a
+verb/modifier keyword lexicon. Emote has no attack/defense semantics to
+drive; it only needs "who/what does this word refer to."
+
+Same trailing-period rule as `say` (added only if the text ends in a
+letter or number, everything else left as typed) - but unlike `say`, the
+text is never capitalized. It isn't standing alone in quotes; it's glued
+directly onto the character's name, which already supplies the capital.
+
+Known, deliberately unfixed wart: the actor's own line reuses the same
+text as everyone else's, so third-person verbs read wrong for `You`
+("You tosses..."). Fixing that means conjugating every emote per viewer,
+which isn't specific to `emote` - it's the same `You <verb>` pattern
+every command in the codebase already uses for its own actor-facing
+line. Wants its own pass across all of them once it's worth doing, not a
+one-off fix here.
+
 ## Known gap: no input rate/size limiting
 
 `server.js`'s per-connection line buffer (`modules/utils.js`'s
