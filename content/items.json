@@ -4,5 +4,96 @@
     "name": "a rusty key",
     "description": "An old rusty key. It might open something nearby.",
     "keywords": ["rusty", "key"]
+  },
+  {
+    "key": "pouch",
+    "name": "a pouch",
+    "description": "A small leather pouch, drawn shut with a cord.",
+    "keywords": ["pouch"],
+    "size": "small",
+    "weight": 0.5,
+    "container": { "maxItemSize": "small", "capacityWeight": 5 }
+  },
+  {
+    "key": "backpack",
+    "name": "a backpack",
+    "description": "A sturdy canvas backpack with worn leather straps.",
+    "keywords": ["backpack"],
+    "size": "medium",
+    "weight": 2,
+    "container": { "maxItemSize": "medium", "capacityWeight": 20 }
+  },
+  {
+    "key": "chest",
+    "name": "a chest",
+    "description": "A heavy wooden chest, bound in iron.",
+    "keywords": ["chest"],
+    "size": "large",
+    "weight": 10,
+    "container": { "maxItemSize": "large", "capacityWeight": 100 }
+  },
+  {
+    "key": "cloth-doll",
+    "name": "a small cloth doll",
+    "description": "A hand-stitched cloth doll, soft and light.",
+    "keywords": ["doll", "cloth"],
+    "size": "small",
+    "weight": 0.2
+  },
+  {
+    "key": "jewelry-box",
+    "name": "a wooden jewelry box",
+    "description": "A carved wooden box, empty but for a faint scent of cedar.",
+    "keywords": ["jewelry", "box"],
+    "size": "medium",
+    "weight": 3
+  },
+  {
+    "key": "bronze-bust",
+    "name": "a bronze bust",
+    "description": "A bronze bust of someone nobody remembers anymore. Heavier than it looks.",
+    "keywords": ["bronze", "bust"],
+    "size": "medium",
+    "weight": 18
+  },
+  {
+    "key": "marble-statue",
+    "name": "a marble statue",
+    "description": "A life-sized marble statue. Solid stone, and enormously heavy - too heavy for anything but the floor.",
+    "keywords": ["marble", "statue"],
+    "size": "large",
+    "weight": 150
+  },
+  {
+    "key": "brick-half",
+    "name": "a 0.5 lb brick",
+    "description": "A small, unremarkable brick. Stamped \"0.5 LB\" on one side.",
+    "keywords": ["brick", "half"],
+    "size": "small",
+    "weight": 0.5
+  },
+  {
+    "key": "brick-one",
+    "name": "a 1 lb brick",
+    "description": "A small, unremarkable brick. Stamped \"1 LB\" on one side.",
+    "keywords": ["brick", "one"],
+    "size": "small",
+    "weight": 1
+  },
+  {
+    "key": "brick-five",
+    "name": "a 5 lb brick",
+    "description": "A small, unremarkable brick. Stamped \"5 LB\" on one side.",
+    "keywords": ["brick", "five"],
+    "size": "small",
+    "weight": 5
+  },
+  {
+    "key": "brick-twelve",
+    "name": "a 12 lb brick",
+    "description": "A small, unremarkable brick. Stamped \"12 LB\" on one side.",
+    "keywords": ["brick", "twelve"],
+    "size": "small",
+    "weight": 12
   }
 ]

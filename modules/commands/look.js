@@ -1,4 +1,18 @@
 import { writeToSocket } from "../utils.js";
+import { isContainer } from "../containers.js";
+
+// A container's contents only show up when you look at it directly, not
+// in the room/inventory listing above - keeps that listing from turning
+// into a nested dump, and matches put/get's "explicit container name
+// required" style.
+function describeItem(item) {
+    const base = `You look at ${item.name}: ${item.description}`;
+    if (!isContainer(item)) {
+        return base;
+    }
+    const contents = item.inventory.map(i => i.name).join(", ") || "nothing";
+    return `${base}\nIt contains: ${contents}.`;
+}
 
 export const look = (world, args, character) => {
     const keyword = args[0];
@@ -18,7 +32,7 @@ export const look = (world, args, character) => {
         item.keywords.includes(keyword)
     );
     if (itemInInventory) {
-        return `You look at ${itemInInventory.name}: ${itemInInventory.description}`;
+        return describeItem(itemInInventory);
     }
 
     // Look for an item in the room
@@ -26,7 +40,7 @@ export const look = (world, args, character) => {
         item.keywords.includes(keyword)
     );
     if (itemInRoom) {
-        return `You look at ${itemInRoom.name}: ${itemInRoom.description}`;
+        return describeItem(itemInRoom);
     }
 
     // Look for a character in the room
