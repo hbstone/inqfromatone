@@ -1,20 +1,21 @@
 import { canContain } from "../containers.js";
 
-// `put <item> in <container>` - the one new verb containers need; drop/
+// `put <item> [in] <container>` - the one new verb containers need; drop/
 // give need no changes at all, since a container's contents move with it
 // as part of the same Item object (see ARCHITECTURE.md's Containers
-// section). Both the item and the container are found by keyword in the
+// section). "in" is optional/cosmetic, stripped the same way give.js
+// strips "to" - the container keyword is just everything after the item
+// keyword. Both the item and the container are found by keyword in the
 // character's own inventory first, then the room floor - same order
 // look.js already searches in. Doesn't reach into a container that's
 // itself stowed inside another container; take it out first.
 export const put = (world, args, character) => {
-    const inIndex = args.indexOf("in");
-    if (inIndex < 1 || inIndex === args.length - 1) {
-        return "Usage: put <item> in <container>";
-    }
+    const itemKeyword = args[0];
+    const containerKeyword = args.slice(1).join(" ").replace(/^in /i, "");
 
-    const itemKeyword = args.slice(0, inIndex).join(" ");
-    const containerKeyword = args.slice(inIndex + 1).join(" ");
+    if (!itemKeyword || !containerKeyword) {
+        return "Usage: put <item> [in] <container>";
+    }
 
     const room = world.getRoomById(character.roomId);
     const findByKeyword = keyword =>

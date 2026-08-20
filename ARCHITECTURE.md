@@ -307,13 +307,16 @@ a size class (two backpacks, say), so it's an explicit cycle check.
 empty one, so a container's capacity check weighs incoming items against
 what they actually carry, not just their own base weight.
 
-New verb: `put <item> in <container>` (`modules/commands/put.js`). `get`
-gained an optional `get <item> from <container>` form alongside its
+New verb: `put <item> [in] <container>` (`modules/commands/put.js`). `get`
+gained an optional `get <item> [from] <container>` form alongside its
 existing `get <item>` (room floor); `look <container>` now lists
-contents. All three find the container by keyword in the character's own
-inventory first, then the room floor - same order `look` already
-searched in - and none of them reach into a container that's itself
-stowed inside another container; it has to come out first.
+contents. `in`/`from` are optional/cosmetic, stripped the same way
+`give.js` already strips a leading `to` - the container keyword is just
+whatever comes after the item keyword. All three find the container by
+keyword in the character's own inventory first, then the room floor -
+same order `look` already searched in - and none of them reach into a
+container that's itself stowed inside another container; it has to come
+out first.
 
 Not built yet: character carry-weight/encumbrance (no character-side max
 weight exists, so picking up a chest works exactly like picking up

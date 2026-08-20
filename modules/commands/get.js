@@ -2,19 +2,22 @@ import { isContainer } from "../containers.js";
 
 export const get = (world, args, character) => {
     const room = world.getRoomById(character.roomId);
-    const fromIndex = args.indexOf("from");
+    const itemKeyword = args[0];
 
-    if (fromIndex === -1) {
-        return getFromRoom(room, character, args[0]);
-    }
-    return getFromContainer(world, room, character, args, fromIndex);
-};
-
-function getFromRoom(room, character, keyword) {
-    if (!keyword) {
+    if (!itemKeyword) {
         return "What do you want to get?";
     }
 
+    const rest = args.slice(1).join(" ");
+    if (!rest) {
+        return getFromRoom(room, character, itemKeyword);
+    }
+
+    const containerKeyword = rest.replace(/^from /i, "");
+    return getFromContainer(room, character, itemKeyword, containerKeyword);
+};
+
+function getFromRoom(room, character, keyword) {
     // Search the room's inventory for the item
     const itemIndex = room.inventory.findIndex(item =>
         item.keywords.includes(keyword)
@@ -31,17 +34,12 @@ function getFromRoom(room, character, keyword) {
     return `You pick up ${item.name}.`;
 }
 
-// `get <item> from <container>` - the container itself is found by
+// `get <item> [from] <container>` - "from" is optional/cosmetic, stripped
+// the same way give.js strips "to". The container itself is found by
 // keyword in the character's own inventory first, then the room floor,
 // same order look.js already searches in. Doesn't reach into a container
 // that's itself stowed inside another container; take it out first.
-function getFromContainer(world, room, character, args, fromIndex) {
-    const itemKeyword = args.slice(0, fromIndex).join(" ");
-    const containerKeyword = args.slice(fromIndex + 1).join(" ");
-    if (!itemKeyword || !containerKeyword) {
-        return "Usage: get <item> [from <container>]";
-    }
-
+function getFromContainer(room, character, itemKeyword, containerKeyword) {
     const container = character.inventory.find(i => i.keywords.includes(containerKeyword)) ??
         room.inventory.find(i => i.keywords.includes(containerKeyword));
     if (!container) {
