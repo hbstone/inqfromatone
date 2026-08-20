@@ -42,12 +42,7 @@ export class Character {
         return {
             description: this.description,
             roomId: this.roomId,
-            inventory: this.inventory.map(item => ({
-                name: item.name,
-                description: item.description,
-                keywords: item.keywords,
-                components: item.components,
-            })),
+            inventory: this.inventory.map(item => item.toSaveData()),
             components: this.components,
         };
     }
@@ -61,10 +56,6 @@ export class Character {
     restoreFrom(saveData) {
         this.description = saveData.description ?? null;
         this.components = saveData.components ?? {};
-        this.inventory = (saveData.inventory ?? []).map(data => {
-            const item = new Item(data.name, data.description, data.keywords ?? []);
-            item.components = data.components ?? {};
-            return item;
-        });
+        this.inventory = (saveData.inventory ?? []).map(Item.fromSaveData);
     }
 }

@@ -77,7 +77,11 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
                 console.warn(`Skipping item "${itemKey}" in room "${roomData.key}": no such item defined.`);
                 continue;
             }
-            room.inventory.push(new Item(itemData.name, itemData.description, itemData.keywords ?? []));
+            room.inventory.push(new Item(itemData.name, itemData.description, itemData.keywords ?? [], {
+                size: itemData.size,
+                weight: itemData.weight,
+                container: itemData.container ?? null,
+            }));
         }
     }
 

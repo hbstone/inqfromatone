@@ -271,6 +271,58 @@ wielded-weapon concept (v1 is unarmed-only); and m:n-aware re-targeting
 when your target dies mid-fight but others remain (v1 just leaves you idle
 rather than auto-picking a new target — see `session.js`'s note on it).
 
+## Containers: size gates what fits, weight gates how much
+
+Items can now hold other items - a pouch, a backpack, a chest, all just
+regular `content/items.json` entries, no special-cased item types. Two
+axes, both needed:
+
+- **`size`** (`"small"`/`"medium"`/`"large"`, ordered) gates *what* fits -
+  a container declares the largest item size it accepts.
+- **`weight`** (a plain number) gates *how much* fits in aggregate - a
+  container declares a total weight budget its contents can't exceed.
+
+Every `Item` carries `size`/`weight` (defaulting to `"small"`/`1` if
+content omits them, so existing entries like `rusty-key` didn't need
+edits) and an optional `container: { maxItemSize, capacityWeight }` -
+its *presence* marks the item as a container, the same way
+`character.components.combat`'s presence marks "currently fighting."
+`modules/containers.js` is the generic mechanism (`isContainer`,
+`canContain`, `getEffectiveWeight`) - it knows the shape, never which
+items in content are containers or what they're called, same split as
+`stats.js`/`checks/`. A container's contents live in the item's own
+`inventory` array, the same field `Character`/`Room` already use - which
+means **`drop`/`give` needed zero changes**: moving a container moves
+whatever's inside it, for free, since it's the same object.
+
+One consequence worth calling out: since a chest is `large` and a
+backpack only accepts up to `medium`, **a chest can't be stuffed into a
+backpack or a pouch** - no special-casing, just the same ordinal check
+that rejects any other oversized item. `canContain` also rejects putting
+a container into something it (transitively) already contains - the
+size check alone doesn't catch this once two containers happen to share
+a size class (two backpacks, say), so it's an explicit cycle check.
+
+`getEffectiveWeight` is recursive: a full backpack weighs more than an
+empty one, so a container's capacity check weighs incoming items against
+what they actually carry, not just their own base weight.
+
+New verb: `put <item> in <container>` (`modules/commands/put.js`). `get`
+gained an optional `get <item> from <container>` form alongside its
+existing `get <item>` (room floor); `look <container>` now lists
+contents. All three find the container by keyword in the character's own
+inventory first, then the room floor - same order `look` already
+searched in - and none of them reach into a container that's itself
+stowed inside another container; it has to come out first.
+
+Not built yet: character carry-weight/encumbrance (no character-side max
+weight exists, so picking up a chest works exactly like picking up
+anything else); equipping/wearing. Also unrelated to containers but worth
+repeating here: dropped/placed room items still don't survive a server
+restart (only character inventories persist - see Phase 2's persistence
+note above) - a chest full of loot resets on reboot same as anything
+else on the floor.
+
 ## Known gap: no input rate/size limiting
 
 `server.js`'s per-connection line buffer (`modules/utils.js`'s

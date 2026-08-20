@@ -12,9 +12,31 @@
   {
     "key": "narrow-hallway",
     "name": "Narrow Hallway",
-    "description": "A dim, narrow hallway. It leads back south.",
+    "description": "A dim, narrow hallway. It leads back south, and a doorway to the west opens into a storeroom.",
     "exits": {
-      "south": "starting-room"
+      "south": "starting-room",
+      "west": "storage-room"
     }
+  },
+  {
+    "key": "storage-room",
+    "name": "Storage Room",
+    "description": "A cluttered storeroom, floor to ceiling with sacks, crates, and odd bric-a-brac - about the best place around for testing how much fits in a bag. It leads back east.",
+    "exits": {
+      "east": "narrow-hallway"
+    },
+    "items": [
+      "pouch", "pouch", "pouch",
+      "backpack", "backpack",
+      "chest",
+      "cloth-doll",
+      "jewelry-box",
+      "bronze-bust",
+      "marble-statue",
+      "brick-half", "brick-half", "brick-half", "brick-half", "brick-half",
+      "brick-one", "brick-one", "brick-one", "brick-one", "brick-one",
+      "brick-five", "brick-five", "brick-five", "brick-five", "brick-five",
+      "brick-twelve", "brick-twelve", "brick-twelve", "brick-twelve", "brick-twelve"
+    ]
   }
 ]
