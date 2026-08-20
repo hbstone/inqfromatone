@@ -1,5 +1,6 @@
 import { writeToSocket } from "../utils.js";
 import { resolveItemToken, formatItemList } from "../itemSearch.js";
+import { keywordMatches } from "../keywordMatch.js";
 
 // `emote <text>` - freeform third-person action text: "Character <text>."
 // to the room, "You <text>." back to the actor. Same trailing-period rule
@@ -15,6 +16,8 @@ import { resolveItemToken, formatItemList } from "../itemSearch.js";
 // qualifiers (see itemSearch.js) - "tosses #half" or "tosses #3*brick"
 // both work. Both resolve to the entity's real name (or, for a cardinal
 // #, the same grouped "xN" list get/put use) in the broadcast text.
+// Matching is fuzzy/substring (see keywordMatch.js) - "@bae" or "#bri"
+// work the same as the full keyword would.
 //
 // Two different failure modes for two different mistakes: an unqualified
 // @/# that finds nothing falls back to "someone"/"something" - a typo in
@@ -51,8 +54,8 @@ function resolveToken(token, character, room) {
     const [, sigil, keywordToken, trailing] = match;
 
     if (sigil === "@") {
-        // No ordinal/cardinal for @ yet - plain keyword only.
-        const target = room.characters.find(c => c.keywords.includes(keywordToken.toLowerCase()));
+        // No ordinal/cardinal for @ yet - plain (fuzzy) keyword only.
+        const target = room.characters.find(c => keywordMatches(c.keywords, keywordToken));
         return { text: (target ? target.name : "someone") + trailing };
     }
 

@@ -1,7 +1,9 @@
-// Shared item-keyword resolution, with cardinality/ordinality (see
-// ARCHITECTURE.md). Replaces the ad-hoc `items.find(i =>
-// i.keywords.includes(keyword))` every item-handling command used to
-// duplicate, and adds two optional qualifiers on top of a plain keyword:
+// Shared item-keyword resolution, with fuzzy matching and
+// cardinality/ordinality (see ARCHITECTURE.md). Replaces the ad-hoc
+// `items.find(i => i.keywords.includes(keyword))` every item-handling
+// command used to duplicate. Matching itself is substring-based, via
+// keywordMatch.js - "bri" finds "a brick" the same way "brick" would.
+// On top of that, two optional qualifiers:
 //
 //   pouch      -> the first item matching "pouch" (unchanged behavior)
 //   2.pouch    -> the 2nd item matching "pouch", ordinal
@@ -15,6 +17,8 @@
 // [character.inventory, room.inventory]) - the same "check inventory,
 // then the room" priority every command already used, just generalized
 // to collect N matches across it instead of stopping at the first.
+import { keywordMatches } from "./keywordMatch.js";
+
 const QUALIFIED_TOKEN = /^(?:(\d+)([.*]))?(.+)$/;
 
 /**
@@ -37,15 +41,15 @@ function parseItemToken(rawToken) {
 }
 
 // Every item across `sources` (searched in the given order) whose
-// keywords include `keyword`, paired with the specific array it was
-// found in - callers need that array reference back to splice the item
-// out of the right place, since a cardinal match can span sources (e.g.
-// one brick already held, two more still on the floor).
+// keywords match `keyword`, paired with the specific array it was found
+// in - callers need that array reference back to splice the item out of
+// the right place, since a cardinal match can span sources (e.g. one
+// brick already held, two more still on the floor).
 function findAllMatches(keyword, sources) {
     const matches = [];
     for (const source of sources) {
         for (const item of source) {
-            if (item.keywords.includes(keyword)) {
+            if (keywordMatches(item.keywords, keyword)) {
                 matches.push({ item, source });
             }
         }

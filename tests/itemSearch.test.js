@@ -71,6 +71,15 @@ function makeItem(name, keywords, weight = 1) {
     assert.equal(resolveItemToken('2.KEY', [room]).error, 'There aren\'t 2 things matching "key" here.');
 }
 
+// Matching is fuzzy (substring), not exact - "bri" finds "brick", and it
+// composes with qualifiers too
+{
+    const room = [makeItem('a 0.5 lb brick', ['brick', 'half']), makeItem('a pouch', ['pouch'])];
+    assert.equal(resolveItemToken('bri', [room]).matches[0].item.name, 'a 0.5 lb brick');
+    assert.equal(resolveItemToken('pou', [room]).matches[0].item.name, 'a pouch');
+    assert.equal(resolveItemToken('2.bri', [room]).error, 'There aren\'t 2 things matching "bri" here.');
+}
+
 // formatItemList: single item is just its name
 {
     assert.equal(formatItemList([makeItem('a rusty key', ['key'])]), 'a rusty key');

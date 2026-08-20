@@ -403,6 +403,37 @@ the entire emote instead - nothing broadcasts, same atomic-failure rule
 as everywhere else - because that's a specific, deliberate request that
 plainly can't be met, not a vague reference worth papering over.
 
+## Fuzzy (substring) keyword matching
+
+`modules/keywordMatch.js`'s `keywordMatches(keywords, token)` is the one
+place every item- *and* character-targeting command now checks whether
+what someone typed refers to something: a token matches if it's a
+substring of any one of the entity's keywords, not just an exact match -
+`get bri pou` finds "a brick" in "a pouch" the same way `get brick pouch`
+would. Deliberately no minimum length: even a single character matches
+(`get b p`), at the risk of also matching whatever else happens to share
+it - predictable over clever, and not a fuzziness threshold worth
+inventing before it's actually a problem in play. Composes for free with
+the `2.x`/`N*x` item qualifiers above, since those only ever wrap a
+keyword string, never caring how it gets matched (`2.bri` ordinal-selects
+across every "contains bri" match, same as `2.brick` did before).
+
+Applies everywhere a command already matched by keyword: item lookups
+(`modules/itemSearch.js`, so `get`/`put`/`drop`/`give`/`look`/`items`/
+`emote`'s `#` all get it automatically) and character lookups (`give`'s
+recipient, `whisper`, `kill`, `look`, `emote`'s `@`, and `tell` via
+`World.getOnlineCharacterByName` - which used to be an exact, global
+full-name match; it's now a fuzzy keyword search across every online
+character instead, reusing `getOnlineCharacters()`). Every one of those
+call sites used to hand-roll its own `char.keywords.includes(...)` (one
+of them, `look`'s character fallback, without even lowercasing first -
+a latent bug fixed for free by centralizing this); now there's one
+function that owns both the substring check and the lowercasing.
+
+Not extended to ordinal/cardinal - `2.bae`/`3*bae` for characters isn't
+built, a separate decision if it turns out useful, same as the item
+qualifiers' own scoping note above.
+
 ## Known gap: no input rate/size limiting
 
 `server.js`'s per-connection line buffer (`modules/utils.js`'s

@@ -19,4 +19,17 @@ assert.deepStrictEqual(roomById, expectedRoom, 'getRoomById should return the co
 const roomByName = world.getRoomByName('Room A');
 assert.deepStrictEqual(roomByName, expectedRoom, 'getRoomByName should return the correct room');
 
+// getOnlineCharacterByName: fuzzy (substring) match, across every room,
+// only among characters with a socket
+{
+    const online = { name: 'Alice', keywords: ['alice'], socket: {} };
+    const offline = { name: 'Bob', keywords: ['bob'], socket: null };
+    world.getRoomById(id1).addCharacter(online);
+    world.getRoomById(id2).addCharacter(offline);
+
+    assert.equal(world.getOnlineCharacterByName('ali'), online, 'substring match should find the online character');
+    assert.equal(world.getOnlineCharacterByName('bob'), null, 'an offline character should not be found');
+    assert.equal(world.getOnlineCharacterByName('nobody'), null);
+}
+
 console.log('All tests passed');

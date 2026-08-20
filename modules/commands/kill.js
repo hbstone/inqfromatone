@@ -1,15 +1,16 @@
 import { writeToSocket } from "../utils.js";
 import { engageCombat } from "../combat/session.js";
+import { keywordMatches } from "../keywordMatch.js";
 
 export const kill = (world, args, character) => {
-    const targetName = args.join(" ").toLowerCase();
+    const targetName = args.join(" ");
     if (!targetName) {
         return "Kill whom?";
     }
 
     const room = world.getRoomById(character.roomId);
     const target = room.characters.find(
-        char => char !== character && char.keywords.includes(targetName)
+        char => char !== character && keywordMatches(char.keywords, targetName)
     );
 
     if (!target) {
