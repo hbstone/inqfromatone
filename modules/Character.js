@@ -6,6 +6,7 @@ export class Character {
         this.keywords = [];
         this.description = description;
         this.inventory = [];
+        this.equipment = {}; // slot -> Item, only ever holding equippable items (see modules/equipment.js)
 
         // Connection/session state
         this.isLoggedIn = false;
@@ -43,6 +44,9 @@ export class Character {
             description: this.description,
             roomId: this.roomId,
             inventory: this.inventory.map(item => item.toSaveData()),
+            equipment: Object.fromEntries(
+                Object.entries(this.equipment).map(([slot, item]) => [slot, item.toSaveData()])
+            ),
             components: this.components,
         };
     }
@@ -57,5 +61,8 @@ export class Character {
         this.description = saveData.description ?? null;
         this.components = saveData.components ?? {};
         this.inventory = (saveData.inventory ?? []).map(Item.fromSaveData);
+        this.equipment = Object.fromEntries(
+            Object.entries(saveData.equipment ?? {}).map(([slot, data]) => [slot, Item.fromSaveData(data)])
+        );
     }
 }

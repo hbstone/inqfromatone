@@ -8,8 +8,10 @@ export class Item {
      * @param {number} [options.weight] - Defaults to 1.
      * @param {{maxItemSize: string, capacityWeight: number}|null} [options.container] -
      *   Presence marks this item as a container - see modules/containers.js.
+     * @param {{slot: string}|null} [options.equip] - Presence marks this
+     *   item as equippable into the named slot - see modules/equipment.js.
      */
-    constructor(name, description, keywords, { size = "small", weight = 1, container = null } = {}) {
+    constructor(name, description, keywords, { size = "small", weight = 1, container = null, equip = null } = {}) {
         this.name = name;
         this.description = description;
         this.keywords = keywords;
@@ -17,6 +19,7 @@ export class Item {
         this.weight = weight;
         this.container = container; // { maxItemSize, capacityWeight } | null
         this.inventory = []; // only ever populated when `container` is set
+        this.equip = equip; // { slot } | null
 
         // Theme-owned data (see ARCHITECTURE.md). Core never reads/writes
         // into this for a specific theme's keys.
@@ -37,6 +40,7 @@ export class Item {
             size: this.size,
             weight: this.weight,
             container: this.container,
+            equip: this.equip,
             inventory: this.inventory.map(item => item.toSaveData()),
             components: this.components,
         };
@@ -55,6 +59,7 @@ export class Item {
             size: data.size,
             weight: data.weight,
             container: data.container ?? null,
+            equip: data.equip ?? null,
         });
         item.components = data.components ?? {};
         item.inventory = (data.inventory ?? []).map(Item.fromSaveData);

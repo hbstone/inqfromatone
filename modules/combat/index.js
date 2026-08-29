@@ -4,11 +4,11 @@
 // events) is proven against something, not left theoretical. Moves under
 // a real content pack once Phase 4 builds one.
 //
-// Ships the one attack anyone can throw right now - an unarmed strike -
-// plus the player-facing messages for what an auto-attack did. No
-// wielded-weapon concept yet (see ARCHITECTURE.md's open question on
-// that). Requires setWorld() (called once from game.js) to reach room
-// bystanders - the two combatants get their direct messages regardless.
+// Ships the one attack anyone can throw right now - an unarmed strike, or
+// a wielded weapon's damage if one's equipped - plus the player-facing
+// messages for what an auto-attack did. Requires setWorld() (called once
+// from game.js) to reach room bystanders - the two combatants get their
+// direct messages regardless.
 import { registerAttackProducer } from "./registry.js";
 import { getStatKeyForRole } from "../content/loadStatDefinitions.js";
 import { getStatValue } from "../stats.js";
@@ -17,10 +17,21 @@ import { writeToSocket } from "../utils.js";
 
 const UNARMED_DAMAGE = 1;
 
+// `weapon` is a combat-pack-recognized equipment slot, same status as the
+// `offense`/`defense`/`vitality` stat roles just below - core's equipment
+// mechanism (modules/equipment.js) never enumerates slot names itself,
+// this is the one place that cares what "weapon" means. A weapon's own
+// damage is theme data on the item, `components.weapon.damage` (see
+// ARCHITECTURE.md's component-bag example), not anything equipment.js or
+// this producer's shape needs to know about beyond reading it.
+function getAttackDamage(attacker) {
+    return attacker.equipment?.weapon?.components?.weapon?.damage ?? UNARMED_DAMAGE;
+}
+
 registerAttackProducer((attacker, defender) => ({
     statKey: getStatKeyForRole("offense"),
     context: { difficulty: getStatValue(defender, getStatKeyForRole("defense")) },
-    damage: UNARMED_DAMAGE,
+    damage: getAttackDamage(attacker),
 }));
 
 let world = null;

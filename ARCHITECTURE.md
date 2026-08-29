@@ -193,12 +193,14 @@ just for two new role strings (`content/stats/attributes.json` tags
 (session bookkeeping) never looks these two up itself, unlike `vitality` —
 only the attack producer does, via the same reusable function.
 
-**V1 (built):** unarmed-only — no wielded-weapon concept exists yet (a
-narrow slice of the still-unbuilt equipment/inventory Phase 2 item), so
-`modules/combat/index.js` registers a single always-available unarmed-strike
-producer (`statKey` = the `offense` role, difficulty = the defender's
-`defense` role value, flat 1 damage) via `registerAttackProducer()`
-(`modules/combat/registry.js`, single-slot like the checks resolver).
+**V1 (built):** `modules/combat/index.js` registers a single
+always-available attack producer (`statKey` = the `offense` role,
+difficulty = the defender's `defense` role value) via
+`registerAttackProducer()` (`modules/combat/registry.js`, single-slot like
+the checks resolver). Damage is a flat 1 unarmed, or a wielded weapon's
+`components.weapon.damage` when one's equipped (see the Equipment section
+below) — same producer either way, it just checks `equipment.weapon` each
+time rather than switching producers.
 `kill <target>` (`modules/commands/kill.js`) starts or joins a session and
 pulls the attacker out of any other fight first (one fight at a time, for
 now); `disengage` removes just the caller (combat continues for whoever's
@@ -266,10 +268,10 @@ timer tick and the listener. Assumes both combatants share a room, true
 for every way v1 can start or continue a fight.
 
 Not built yet: the round/`pendingActions` batching engine itself; the
-`cemote` lexicon/parser; loot/currency/win-state beyond "combat ends"; a
-wielded-weapon concept (v1 is unarmed-only); and m:n-aware re-targeting
-when your target dies mid-fight but others remain (v1 just leaves you idle
-rather than auto-picking a new target — see `session.js`'s note on it).
+`cemote` lexicon/parser; loot/currency/win-state beyond "combat ends"; and
+m:n-aware re-targeting when your target dies mid-fight but others remain
+(v1 just leaves you idle rather than auto-picking a new target — see
+`session.js`'s note on it).
 
 ## Containers: size gates what fits, weight gates how much
 
@@ -433,6 +435,67 @@ function that owns both the substring check and the lowercasing.
 Not extended to ordinal/cardinal - `2.bae`/`3*bae` for characters isn't
 built, a separate decision if it turns out useful, same as the item
 qualifiers' own scoping note above.
+
+## Equipment: named slots, closing the wielded-weapon gap
+
+`modules/equipment.js` is the other Phase 2 item the roadmap named
+(alongside stats and containers, both already built) — a character can now
+have items equipped into named slots, not just carried loosely in
+`inventory`. Deliberately mirrors `containers.js`'s split: the engine only
+knows the generic shape and validates (`isEquippable`/`canEquip`), the
+calling command does the actual array/map mutation, same division as
+`canContainAll` vs. `put.js`.
+
+An item is equippable exactly when its `equip` field (`{ slot }`) is set —
+same presence-marks-it convention as `container`. `character.equipment` is
+a plain `slot -> Item` map (not an array; a slot holds at most one item),
+persisted alongside `inventory` in `toSaveData`/`restoreFrom`, recursing
+through `Item.toSaveData`/`fromSaveData` the same way. Slot names are open
+strings core never enumerates — same pattern as a stat's `role` tag — with
+one blessed exception, same status as `vitality`/`offense`/`defense`:
+`modules/combat/index.js` recognizes `weapon` as a slot it cares about,
+because combat is the concrete near-term consumer. No other slot is
+core-recognized; `head` (see `content/items.json`'s `leather-cap`) exists
+purely to prove two independent slots don't interfere with each other, not
+because armor mechanics are built.
+
+**`wear <item>` / `wield <item>`** (`modules/commands/wear.js`) are the
+same mechanism registered under two verbs, purely because which word reads
+naturally depends on the item ("wear a cap", "wield a sword") — there's no
+behavioral difference, so both are thin wrappers around one
+`makeEquipCommand(verb)` factory rather than duplicated logic. Both only
+search the character's own inventory (equipping something across the room
+isn't a thing) via `itemSearch.js`'s `resolveItemToken`, so fuzzy/keyword
+matching applies the same as `get`/`drop`. A cardinal match (`3*ring`) is
+rejected outright — there's no sensible single-slot outcome for equipping
+more than one item in the same command, so it fails rather than silently
+picking one. An already-occupied slot also fails outright (`canEquip`) —
+no auto-swap; `remove` is a separate, explicit step.
+
+**`remove <item>`** (`modules/commands/remove.js`) is the inverse, and
+deliberately doesn't route through `resolveItemToken` — equipment is a
+slot-keyed map, not an array, so there's no `source` array to splice from.
+A plain `keywordMatches` scan across whatever's currently equipped is all
+a handful of slots needs (same reasoning as `look.js`'s character-lookup
+fallback, which also bypasses `itemSearch.js` for the same shape reason).
+
+**Combat integration:** `modules/combat/index.js`'s attack producer reads
+`attacker.equipment?.weapon?.components?.weapon?.damage`, falling back to
+the unarmed flat default when nothing's equipped there. A weapon's damage
+lives in `components.weapon` — theme data on the item, the same
+`components.firearm = { ammo: 6 }`-shaped example ARCHITECTURE.md's
+component-model section already used — not a field `equipment.js` or the
+producer's shape needs to know about beyond reading it once combat cares.
+This closes the gap the Combat section above used to flag explicitly (v1
+was unarmed-only because no wielded-weapon concept existed).
+
+Not built: armor/defense mechanics for non-weapon slots (worn gear exists,
+nothing reads it yet beyond `score`); slot restrictions by character
+type/class (anyone can equip anything with a matching slot); and
+stat modifiers from equipped gear (a `caster`'s ring granting +mana would
+be a `stats.js` modifier applied on equip/removed on unequip — no concrete
+consumer yet, so not built ahead of one, same reasoning as the still-unbuilt
+humoral modifier work in the Stats section above).
 
 ## Known gap: no input rate/size limiting
 
