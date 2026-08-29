@@ -95,5 +95,24 @@
     "keywords": ["brick", "twelve"],
     "size": "small",
     "weight": 12
+  },
+  {
+    "key": "wooden-sword",
+    "name": "a wooden sword",
+    "description": "A blunt wooden practice sword. Better than a fist.",
+    "keywords": ["wooden", "sword"],
+    "size": "small",
+    "weight": 2,
+    "equip": { "slot": "weapon" },
+    "components": { "weapon": { "damage": 3 } }
+  },
+  {
+    "key": "leather-cap",
+    "name": "a leather cap",
+    "description": "A simple boiled-leather cap.",
+    "keywords": ["leather", "cap"],
+    "size": "small",
+    "weight": 0.5,
+    "equip": { "slot": "head" }
   }
 ]

@@ -24,9 +24,11 @@ import { Item } from '../modules/Item.js';
             size: 'small',
             weight: 1,
             container: null,
+            equip: null,
             inventory: [],
             components: { lockpick: { uses: 3 } },
         }],
+        equipment: {},
         components: { caster: { mana: 50 } },
     });
     assert.ok(!('password' in saved), 'toSaveData should never include password');
@@ -62,6 +64,28 @@ import { Item } from '../modules/Item.js';
     assert.equal(character.description, 'Just a description.');
     assert.deepStrictEqual(character.components, {});
     assert.deepStrictEqual(character.inventory, []);
+    assert.deepStrictEqual(character.equipment, {});
+}
+
+// Equipped items round-trip too, as real Item instances keyed by slot -
+// not just the character's own top-level inventory
+{
+    const original = new Character('Explorer');
+    const sword = new Item('a wooden sword', 'A blunt practice sword.', ['wooden', 'sword'], {
+        size: 'small', weight: 2, equip: { slot: 'weapon' },
+    });
+    sword.components.weapon = { damage: 3 };
+    original.equipment.weapon = sword;
+
+    const restored = new Character('Explorer');
+    restored.restoreFrom(original.toSaveData());
+
+    assert.deepStrictEqual(Object.keys(restored.equipment), ['weapon']);
+    const restoredSword = restored.equipment.weapon;
+    assert.ok(restoredSword instanceof Item, 'a restored equipped item should be a real Item instance');
+    assert.equal(restoredSword.name, 'a wooden sword');
+    assert.deepStrictEqual(restoredSword.equip, { slot: 'weapon' });
+    assert.deepStrictEqual(restoredSword.components, { weapon: { damage: 3 } });
 }
 
 // A container's contents round-trip too, recursively - not just the
@@ -100,6 +124,7 @@ import { Item } from '../modules/Item.js';
     assert.equal(key.size, 'small');
     assert.equal(key.weight, 1);
     assert.equal(key.container, null);
+    assert.equal(key.equip, null);
     assert.deepStrictEqual(key.inventory, []);
 }
 
