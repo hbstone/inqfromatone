@@ -21,6 +21,7 @@ export const drop = (world, args, character) => {
         source.splice(source.indexOf(item), 1);
         room.inventory.push(item);
     }
+    room.markDirty(); // matches.length > 0 is guaranteed above, so this always touches the room
 
     const message = formatItemList(matches.map(m => m.item));
 

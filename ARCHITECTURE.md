@@ -497,6 +497,59 @@ be a `stats.js` modifier applied on equip/removed on unequip — no concrete
 consumer yet, so not built ahead of one, same reasoning as the still-unbuilt
 humoral modifier work in the Stats section above).
 
+## Room/world state persistence
+
+Closes the gap the Containers section flagged: dropped/placed room items
+used to reset on every restart, since `loadWorldData` was the only source
+of room inventory. `worldData.js` is a second small storage adapter next
+to `data.js` - same shape (`roomStateExists`/`loadRoomState`/
+`saveRoomState`), one JSON file per room under `rooms/`, keyed by the
+room's content-authored `key` rather than a player-supplied name, so
+there's no path-traversal allowlist concern to replicate from `data.js`.
+Only a room's mutable state is saved - `inventory` and the `components`
+bag `Room` already carried but nothing wrote to yet - never
+name/description/exits, which always come from content.
+
+**Trigger: periodic + graceful-shutdown, not save-on-mutation, for now.**
+Characters save at a clean boundary (quit/disconnect); a room has no
+equivalent single moment; a chest three players filled an hour ago has no
+"session" to end. `modules/worldPersistence.js`'s `startWorldSaveTicker`
+mirrors `combat/regen.js`'s ticker shape - every 60s, save whatever's
+dirty. `server.js` also now handles `SIGINT`/`SIGTERM` to save immediately
+on a graceful stop, so a normal dev `Ctrl+C` doesn't lose the last
+interval. A hard crash can still lose up to one interval's changes -
+accepted for now, same "1-2 real users" reasoning already used elsewhere
+in this doc to defer stronger guarantees.
+
+**Dirty-tracked, not whole-world, writes.** `Room` gained a `dirty` flag
+and `markDirty()`. Command handlers that mutate a room's inventory -
+`drop`, `get` (both the room-floor and from-a-room-floor-container forms),
+`put` - call `room.markDirty()` right after, checking each match's
+`source` against `room.inventory` where a container could belong to
+either the room or the character (see `get.js`/`put.js`). `saveDirtyRooms`
+only writes rooms with the flag set, clearing it after - a tick where
+nothing changed writes nothing, and a tick where one room changed writes
+only that room's file, not a snapshot of the whole world. `give` needed no
+changes; its item source is always the giver's own inventory, never a
+room.
+
+This is deliberately structured as a stepping stone toward save-on-
+mutation, not a dead end: `markDirty()` is already the exact call site a
+future switch would reuse - only what happens *after* `markDirty()` (an
+immediate/debounced save vs. a ticker polling the flag) would change, not
+the command handlers that call it. Chosen over building save-on-mutation
+now because a ticker needed no per-command save-call plumbing beyond the
+dirty flag itself, and de-risks the "does the save/restore shape work at
+all" question before adding a second concern (save timing/coalescing) on
+top of it.
+
+Startup order: `loadWorldData` seeds every room from content as before,
+then `loadRoomStates` overlays any saved state on top, replacing the
+content-seeded inventory/components for rooms that have a save file. A
+room with no save yet (first boot, or a room newly added to content) just
+keeps its content default - same "new vs. existing" split character login
+already uses.
+
 ## Known gap: no input rate/size limiting
 
 `server.js`'s per-connection line buffer (`modules/utils.js`'s
