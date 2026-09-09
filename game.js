@@ -8,14 +8,21 @@ import { emit } from "./modules/events.js";
 import { loadWorldData } from "./modules/content/loadWorldData.js";
 import { loadStatDefinitions, initializeCharacterStats } from "./modules/content/loadStatDefinitions.js";
 import { disconnectCharacter } from "./modules/commands/quit.js";
+import { loadRoomStates, saveDirtyRooms, startWorldSaveTicker } from "./modules/worldPersistence.js";
 import crypto from "crypto";
 import { characterExists, loadCharacterState, saveCharacterState } from "./data.js";
 
 const world = new World(); // Initialize the world
 const { startingRoomKey } = loadWorldData(world); // Load room/item content data
+loadRoomStates(world); // Overlay any saved room state (dropped/placed items) onto the content defaults
 loadStatDefinitions(); // Load stat definitions (which stats exist, starting values, roles)
 setCombatWorld(world); // let combat messages reach room bystanders, not just the two combatants
 startRegenTicker(world); // passive vitality regen for every online character
+startWorldSaveTicker(world); // periodic save of any room whose inventory changed (see worldPersistence.js)
+
+// Called from server.js on SIGINT/SIGTERM so a graceful stop doesn't lose
+// whatever's changed since the last periodic save.
+export const saveWorldOnShutdown = () => saveDirtyRooms(world);
 
 // Letters and spaces only: character names become part of a filesystem
 // path (see data.js), so this is a real allowlist, not just cosmetic.

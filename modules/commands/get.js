@@ -31,6 +31,7 @@ function getFromRoom(room, character, itemToken) {
         source.splice(source.indexOf(item), 1);
         character.inventory.push(item);
     }
+    room.markDirty(); // matches.length > 0 is guaranteed above, so this always touches the room
 
     return `You pick up ${formatItemList(matches.map(m => m.item))}.`;
 }
@@ -65,6 +66,11 @@ function getFromContainer(room, character, itemToken, containerToken) {
     for (const { item, source } of matches) {
         source.splice(source.indexOf(item), 1);
         character.inventory.push(item);
+    }
+    // Only the room's own save is affected here - only when the container
+    // itself is sitting on the room floor, not when it's on the character.
+    if (containerResult.matches[0].source === room.inventory) {
+        room.markDirty();
     }
 
     return `You get ${formatItemList(matches.map(m => m.item))} from ${container.name}.`;

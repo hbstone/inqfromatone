@@ -49,6 +49,13 @@ export const put = (world, args, character) => {
         source.splice(source.indexOf(item), 1);
         container.inventory.push(item);
     }
+    // The room's saved state is affected either if an item left the room
+    // floor, or if the container gaining it is itself sitting there.
+    const touchesRoom = itemResult.matches.some(m => m.source === room.inventory)
+        || containerResult.matches[0].source === room.inventory;
+    if (touchesRoom) {
+        room.markDirty();
+    }
 
     return `You put ${formatItemList(items)} in ${container.name}.`;
 };
