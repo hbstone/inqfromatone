@@ -1,6 +1,6 @@
 import net from "net";
 import { handleCommand, handleDisconnect, saveWorldOnShutdown } from "./game.js";
-import { writeToSocket, extractLines, stripTelnetNegotiation } from "./modules/utils.js";
+import { writeToSocket, writePrompt, extractLines, stripTelnetNegotiation } from "./modules/utils.js";
 import { Character } from "./modules/Character.js";
 
 // Allow PORT to be overridden via environment variable for deployment flexibility
@@ -11,6 +11,7 @@ const server = net.createServer((socket) => {
     socket.character.socket = socket;
     socket.lineBuffer = ""; // Not-yet-complete input, see extractLines
     writeToSocket(socket, "Welcome to the game! Please enter your character's name:");
+    writePrompt(socket);
 
     socket.on("data", (data) => {
         const cleaned = stripTelnetNegotiation(data);
@@ -21,7 +22,10 @@ const server = net.createServer((socket) => {
             const response = handleCommand(socket, input);
             if (response) {
                 writeToSocket(socket, response);
+                writePrompt(socket);
             }
+            // No response (e.g. `quit`, which closes the socket itself) -
+            // no prompt either, since there's nothing left to prompt for.
         }
     });
 

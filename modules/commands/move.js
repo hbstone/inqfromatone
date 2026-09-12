@@ -43,5 +43,5 @@ export const movePlayer = (world, character, room, direction, opposite) => {
 
     emit("enterRoom", { character, room: nextRoom, world });
 
-    return `You move ${direction} to ${nextRoom.name}.\n${nextRoom.description}`;
+    return `You move ${direction} to ${nextRoom.coloredName()}.\n${nextRoom.description}\n${nextRoom.describeExits()}`;
 };

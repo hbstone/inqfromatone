@@ -1,3 +1,12 @@
+import { renderColors, stripColors, capitalizeFirst } from "./color.js";
+
+// A character can turn color off (see modules/commands/color.js); a
+// socket that hasn't reached a real character yet (pre-login) defaults to
+// color on, same as everyone else.
+function isColorEnabled(socket) {
+  return socket.character?.colorEnabled !== false;
+}
+
 const IAC = 0xff; // Telnet "Interpret As Command" marker (RFC 854)
 const SB = 0xfa; // Begin subnegotiation (e.g. NAWS window-size updates)
 const SE = 0xf0; // End subnegotiation
@@ -73,13 +82,45 @@ export function extractLines(buffer, chunk) {
 }
 
 export function writeToSocket(socket, message) {
-  const formattedMessage = message.charAt(0).toUpperCase() + message.slice(1);
+  // Capitalize before color-rendering, not after: renderColors turns a
+  // leading token into raw ANSI escape bytes, which capitalizeFirst can no
+  // longer recognize as "skip this, capitalize what's after it".
+  const formattedMessage = capitalizeFirst(message);
+  const colored = isColorEnabled(socket)
+    ? renderColors(formattedMessage)
+    : stripColors(formattedMessage);
   // CRLF, not bare LF: a raw/telnet-mode terminal (e.g. PuTTY) moves down a
   // line on LF but doesn't return to column 0 without an accompanying CR,
   // producing a "staircase" where each line starts where the last one
   // ended. Normalize any internal \n too (multi-line messages like the
   // room-description text build those directly), not just the trailing one.
-  socket.write(formattedMessage.replace(/\n/g, "\r\n") + "\r\n");
+  //
+  // A leading blank line separates this from whatever was on screen before
+  // it (the player's own typed input, a previous response, another
+  // character's broadcast, ...) so output reads as a clearly separate
+  // block - same idea as writePrompt's leading blank line before "> ".
+  socket.write("\r\n" + colored.replace(/\n/g, "\r\n") + "\r\n");
+}
+
+/**
+ * Write the "ready for input" prompt: a blank line to separate it from
+ * whatever was just written (so it's visually obvious the output has
+ * finished), then a bare "> " with no trailing newline so the player's
+ * typed input continues right after it on the same line. Deliberately a
+ * raw socket.write, not writeToSocket - the trailing \r\n and leading-
+ * capitalization writeToSocket always adds would both work against a
+ * prompt that's meant to sit right before the cursor. Still runs through
+ * the same color on/off decision as writeToSocket (see modules/color.js)
+ * for whenever the prompt itself gains a color token - a no-op today,
+ * since a plain "> " has nothing to render or strip.
+ * @param {net.Socket} socket
+ */
+export function writePrompt(socket) {
+  const prompt = "> ";
+  const colored = isColorEnabled(socket)
+    ? renderColors(prompt)
+    : stripColors(prompt);
+  socket.write("\r\n" + colored);
 }
 
 export function broadcast(room, message, excludeSocket = null) {
