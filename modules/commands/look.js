@@ -1,6 +1,6 @@
 import { writeToSocket } from "../utils.js";
 import { isContainer } from "../containers.js";
-import { resolveItemToken } from "../itemSearch.js";
+import { resolveItemToken, itemDisplayName, previewMatch } from "../itemSearch.js";
 import { keywordMatches } from "../keywordMatch.js";
 
 // A container's contents only show up when you look at it directly, not
@@ -8,11 +8,11 @@ import { keywordMatches } from "../keywordMatch.js";
 // into a nested dump, and matches put/get's "explicit container name
 // required" style.
 function describeItem(item) {
-    const base = `You look at ${item.name}: ${item.description}`;
+    const base = `You look at ${itemDisplayName(item)}: ${item.description}`;
     if (!isContainer(item)) {
         return base;
     }
-    const contents = item.inventory.map(i => i.name).join(", ") || "nothing";
+    const contents = item.inventory.map(itemDisplayName).join(", ") || "nothing";
     return `${base}\nIt contains: ${contents}.`;
 }
 
@@ -24,7 +24,7 @@ export const look = (world, args, character) => {
         const occupantNames = room.characters
             .filter(c => c !== character)
             .map(c => c.name);
-        const items = room.inventory.map(item => item.name).join(", ") || "None";
+        const items = room.inventory.map(itemDisplayName).join(", ") || "None";
 
         return `${room.name}\n${room.description}\nCharacters here: ${occupantNames.join(", ") || "None"}\nItems here: ${items}`;
     }
@@ -37,7 +37,7 @@ export const look = (world, args, character) => {
         return error;
     }
     if (matches.length > 0) {
-        return matches.map(m => describeItem(m.item)).join("\n\n");
+        return matches.map(m => describeItem(previewMatch(m))).join("\n\n");
     }
 
     // Look for a character in the room

@@ -12,6 +12,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { Item } from "../Item.js";
 import { assertUniqueKeys } from "./assertUniqueKeys.js";
+import { addItem } from "../stacking.js";
 
 const DEFAULT_CONTENT_DIR = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -77,10 +78,15 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
                 console.warn(`Skipping item "${itemKey}" in room "${roomData.key}": no such item defined.`);
                 continue;
             }
-            room.inventory.push(new Item(itemData.name, itemData.description, itemData.keywords ?? [], {
+            // addItem (not a raw push) so repeated stackable keys - the
+            // same "list it N times" convention already used for
+            // non-stackable proof content like the bricks - collapse into
+            // one stack at load time instead of staying N separate objects.
+            addItem(room.inventory, new Item(itemData.name, itemData.description, itemData.keywords ?? [], {
                 size: itemData.size,
                 weight: itemData.weight,
                 container: itemData.container ?? null,
+                stackable: itemData.stackable ?? false,
             }));
         }
     }

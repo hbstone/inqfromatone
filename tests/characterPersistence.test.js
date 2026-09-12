@@ -25,6 +25,8 @@ import { Item } from '../modules/Item.js';
             weight: 1,
             container: null,
             equip: null,
+            stackable: false,
+            quantity: 1,
             inventory: [],
             components: { lockpick: { uses: 3 } },
         }],
