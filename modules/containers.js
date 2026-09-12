@@ -24,16 +24,19 @@ export function isContainer(item) {
 
 /**
  * An item's total weight, including - recursively - whatever it
- * contains. A full backpack weighs more than an empty one; this is what
- * a container's own capacity check weighs incoming items against.
+ * contains, and multiplied up for a stack (see modules/stacking.js) of
+ * more than one. A full backpack weighs more than an empty one, and 20
+ * arrows weigh more than 1; this is what a container's own capacity
+ * check weighs incoming items against.
  * @param {object} item
  * @returns {number}
  */
 export function getEffectiveWeight(item) {
+    const ownWeight = item.weight * (item.quantity ?? 1);
     if (!isContainer(item)) {
-        return item.weight;
+        return ownWeight;
     }
-    return item.weight + item.inventory.reduce((sum, contained) => sum + getEffectiveWeight(contained), 0);
+    return ownWeight + item.inventory.reduce((sum, contained) => sum + getEffectiveWeight(contained), 0);
 }
 
 // Whether `ancestor` (transitively) already contains `item` - the cycle

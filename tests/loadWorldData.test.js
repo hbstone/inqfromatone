@@ -75,6 +75,36 @@ function withFixtureDir(roomsData, itemsData, fn) {
     assert.ok(warnings.length >= 2, 'both the bad exit and bad item should be warned about');
 }
 
+// Repeated stackable item keys in a room's item list - the same "list it
+// N times" convention used for non-stackable proof content elsewhere -
+// collapse into one stack at load time instead of staying N separate
+// objects; a non-stackable item repeated the same way stays N objects.
+{
+    const world = new World();
+    withFixtureDir(
+        [{
+            key: 'armory',
+            name: 'Armory',
+            description: 'An armory.',
+            isStartingRoom: true,
+            items: ['arrow', 'arrow', 'arrow', 'brick', 'brick'],
+        }],
+        [
+            { key: 'arrow', name: 'an arrow', description: 'An arrow.', keywords: ['arrow'], stackable: true },
+            { key: 'brick', name: 'a brick', description: 'A brick.', keywords: ['brick'] },
+        ],
+        (fixtureDir) => loadWorldData(world, fixtureDir)
+    );
+
+    const armory = world.getRoomById('armory');
+    const arrows = armory.inventory.filter(item => item.name === 'an arrow');
+    const bricks = armory.inventory.filter(item => item.name === 'a brick');
+
+    assert.equal(arrows.length, 1, 'stackable arrows should merge into one object');
+    assert.equal(arrows[0].quantity, 3);
+    assert.equal(bricks.length, 2, 'non-stackable bricks should stay separate objects');
+}
+
 // Two rooms sharing a key would otherwise silently clobber each other in
 // World's id-keyed Map (and merge their exits/items onto whichever
 // survived) - that's a data integrity error, not a dangling reference, so

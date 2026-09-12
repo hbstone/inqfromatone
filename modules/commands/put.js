@@ -1,5 +1,6 @@
 import { canContainAll } from "../containers.js";
-import { resolveItemToken, formatItemList } from "../itemSearch.js";
+import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
+import { moveMatches } from "../stacking.js";
 
 // `put <item> [in] <container>` - drop/give need no changes at all, since
 // a container's contents move with it as part of the same Item object
@@ -38,17 +39,20 @@ export const put = (world, args, character) => {
     }
 
     const container = containerResult.matches[0].item;
-    const items = itemResult.matches.map(m => m.item);
+    // Previews (whole objects for a full claim, a lightweight clone
+    // holding just the claimed amount for a partial one - see
+    // itemSearch.js's previewMatch) so the capacity check weighs what
+    // would actually move, not an object's full current quantity when
+    // only part of it is going in - and so nothing gets split below
+    // before we know the whole put will succeed.
+    const previews = itemResult.matches.map(previewMatch);
 
-    const result = canContainAll(container, items);
+    const result = canContainAll(container, previews);
     if (!result.ok) {
         return result.reason;
     }
 
-    for (const { item, source } of itemResult.matches) {
-        source.splice(source.indexOf(item), 1);
-        container.inventory.push(item);
-    }
+    moveMatches(itemResult.matches, container.inventory);
     // The room's saved state is affected either if an item left the room
     // floor, or if the container gaining it is itself sitting there.
     const touchesRoom = itemResult.matches.some(m => m.source === room.inventory)
@@ -57,5 +61,5 @@ export const put = (world, args, character) => {
         room.markDirty();
     }
 
-    return `You put ${formatItemList(items)} in ${container.name}.`;
+    return `You put ${formatItemList(previews)} in ${container.name}.`;
 };

@@ -39,6 +39,12 @@ function makeItem(size, weight) {
     assert.equal(getEffectiveWeight(backpack), 5.5);
 }
 
+// getEffectiveWeight: a stack's quantity multiplies its per-unit weight
+{
+    const arrow = new Item('an arrow', 'An arrow.', ['arrow'], { size: 'small', weight: 0.05, stackable: true, quantity: 20 });
+    assert.equal(getEffectiveWeight(arrow), 1);
+}
+
 // canContain: a non-container refuses everything
 {
     const notAContainer = makeItem('small', 1);

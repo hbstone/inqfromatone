@@ -489,13 +489,30 @@ producer's shape needs to know about beyond reading it once combat cares.
 This closes the gap the Combat section above used to flag explicitly (v1
 was unarmed-only because no wielded-weapon concept existed).
 
-Not built: armor/defense mechanics for non-weapon slots (worn gear exists,
-nothing reads it yet beyond `score`); slot restrictions by character
-type/class (anyone can equip anything with a matching slot); and
-stat modifiers from equipped gear (a `caster`'s ring granting +mana would
-be a `stats.js` modifier applied on equip/removed on unequip — no concrete
-consumer yet, so not built ahead of one, same reasoning as the still-unbuilt
-humoral modifier work in the Stats section above).
+**Stat modifiers from equipped gear (built).** `item.components.equipStats
+= { modifiers: [{ key, operation, amount }] }` — theme data, same
+convention as a weapon's `components.weapon.damage`, not a field
+`equipment.js` itself knows about. `wear`/`wield` apply each modifier via
+`stats.js`'s existing `setModifier(character, key, tag, operation,
+amount)` on equip; `remove` strips them via `removeModifier` using the
+same tag. The tag is `equip:<slot>` — one slot only ever holds one item,
+so tagging by slot (not item identity) is enough for `remove` to find and
+strip exactly what that item applied, however many stats it touched.
+`leather-cap` now grants `+2 dexterity` (the `defense`-role stat) as the
+real consumer.
+
+**`equipStats` is entirely optional — no `+0` placeholder needed.**
+Purely decorative wearables (`fancy-hat`, same `head` slot as
+`leather-cap`, an alternative rather than a strict upgrade) just omit the
+component; `wear`/`remove` loop over `?? []` and no-op. This was a choice
+over requiring an explicit zero-amount modifier per costume: less content
+boilerplate, and "no consumer, no data" is the same convention already
+used for `container`/`equip` themselves.
+
+Not built: armor/defense mechanics beyond a flat stat bump (no
+damage-reduction/absorption concept, just modifying the same `defense`
+role combat already reads); slot restrictions by character type/class
+(anyone can equip anything with a matching slot).
 
 ## Room/world state persistence
 
@@ -571,3 +588,125 @@ Deliberately not fixed yet — real user count is 1-2 people who can just be
 careful about what they paste for now. Needs a real design pass (hard cap
 vs. throttle-and-queue, what a client that trips it sees) before opening
 the server up beyond that, not a reflexive fix bolted on here.
+
+## Currency/economy: deferred to Phase 3, decision notes for later
+
+Discussed but not built. Most of Phase 2's list (combat, stats, equipment,
+containers, persistence) is done; currency/economy is the one item pushed
+out, since it doesn't mean much without something to spend it on — there's
+no NPC/vendor yet (Phase 3), and "combat drops currency" is a real but
+separate small piece (see the still-unbuilt "loot/currency/win-state"
+note in the Combat section above).
+
+- **Source of truth is a ledger component, not physical `Item`s.**
+  `character.components.currency = { amount }`, mirroring the
+  `caster.mana`/`firearm.ammo` component examples earlier in this doc, not
+  N gold-coin `Item` objects. This persists for free through the existing
+  `components` serialization in `Character.toSaveData`/`restoreFrom` — no
+  new plumbing needed for that part. Content supplies the display name
+  ("gold", "credits", whatever a theme wants), same identity-vs-mechanism
+  split as stats.
+- **Single scalar, not denominations, until something needs otherwise.**
+  Copper/silver/gold conversion is real MUD flavor but pure overhead
+  (conversion rates, "making change") with no current consumer — same
+  "don't build ahead of a concrete need" call already made for the
+  humoral stat system and equipment slot restrictions above.
+- **Physical coins, if wanted, are generated on demand, not stored.**
+  Dropping money or putting it in a container should still work without
+  making the ledger and physical coins two parallel sources of truth for
+  the same value: converting N off the ledger materializes an `Item` (or
+  stack) placed in the room/container, and picking it back up converts it
+  back into the ledger. The ledger stays canonical either way.
+- **No longer blocked on stacking mechanics** — item stacking (below) now
+  covers both merging and splitting, so a physical coin pile could
+  accumulate, move, and have part of it peeled off. Still nothing to
+  actually build here until currency/economy itself is picked back up
+  (see the top of this section) — this bullet is just noting the
+  prerequisite is no longer the reason to wait.
+
+## Item stacking (built): merging and splitting, deliberately no max size
+
+Raised independent of currency — arrows, food, and anything else that's
+"many of the same small thing" hit the same wall `content/items.json`'s
+five separate `brick-one` entries paper over: every unit used to be its
+own `Item` object. `modules/stacking.js` is the generic mechanism, same
+one-small-file-per-mechanism split as `containers.js`/`equipment.js`: an
+item is stackable exactly when its `stackable` field is `true` (opt-in —
+existing proof content like the bricks/pouches is left unmarked, keeping
+its original "N separate objects" behavior unchanged), and
+`addItem(destination, item)` merges a stackable item into a same-named
+existing stack in that array instead of appending a second entry.
+`Item` gained a `quantity` field (default 1) alongside it, persisted the
+same way `size`/`weight`/etc. already are. `get`/`drop`/`give`/`put` all
+call `addItem` instead of a raw `.push()` for the item(s) they move, and
+`loadWorldData` does too — so content can seed a starting pile by
+repeating a stackable key in a room's `items` list (`content/items.json`'s
+`arrow`, ten of them in the storage room), the same convention already
+used for the non-stackable bricks, and it collapses into one stack at
+load instead of staying ten objects.
+
+**Identity is `name` equality, not a new field.** Two stackable items
+merge when they share a `name` — the same thing `itemSearch.js`'s
+`formatItemList` already treats as "the same kind of item" for display
+grouping, so this isn't a new notion of sameness, just reusing the
+existing one. `getEffectiveWeight` (`containers.js`) and `formatItemList`
+were both updated to multiply/sum by `quantity` rather than assuming 1
+per object — the latter means a single 20-arrow stack and twenty separate
+identically-named objects render identically (`an arrow (x20)`), so nothing
+downstream needs to care which shape produced the count.
+
+**No max stack size.** The classic reason one exists (99-per-slot, spill
+into a second stack) comes from grid-inventory UIs rationing slots — this
+is a text MUD with no slot concept, so that pressure doesn't exist here.
+Weight/container capacity already provides a real, non-arbitrary ceiling
+(a container's `capacityWeight` budget rejects further adds once a stack
+gets heavy enough) via the same mechanism every other item already uses,
+rather than inventing a parallel cap. If a concrete reason shows up later
+(a themed "a quiver holds 40 arrows" rule, say), that's a `maxQuantity`
+field for `addItem` to enforce — additive, not a redesign — not something
+to build ahead of an actual need.
+
+**Stack splitting (built): cardinal now counts units, not objects.**
+`itemSearch.js`'s `N*keyword` qualifier used to mean "N distinct
+matching objects" — meaningless once `addItem` merges same-named
+stackables down to one object, since `5*arrow` against a single 20-arrow
+stack found only one object and failed with "there aren't 5 things
+matching arrow." It now means N *units*: `resolveItemToken`'s cardinal
+path sums each match's `quantity` (1 for anything non-stackable, so
+existing content's behavior is unchanged — object-counting and
+unit-counting coincide when every object holds exactly 1) and walks
+matches in order, taking a whole object while there's enough count left
+and, for whichever object would otherwise overshoot, recording a
+*partial* claim (a `quantity` less than that object's own) instead.
+
+**The split itself is deferred to the moment a command commits.**
+`resolveItemToken` stays read-only — a partial claim is just a number
+attached to the still-whole, unmutated object, not a completed split.
+`modules/stacking.js` gained `takeMatch` (turns one match into the actual
+item to move — the real object for a full claim, or a fresh split-off
+`Item` via a new internal `splitStack`, decrementing the original in
+place, for a partial one) and `moveMatches` (the shared move-and-merge
+step get/drop/give/put now all call, replacing their previous hand-rolled
+splice-then-push loops). Splitting only ever happens inside `takeMatch`,
+so a command that resolves matches but bails out before moving anything
+(put.js's capacity check failing) or a purely read-only command
+(look, items, emote's `#`) never mutates a stack it only inspected.
+
+**`previewMatch` (itemSearch.js) is the read-only stand-in for "what a
+match would actually be."** Returns the real object, identity intact, for
+a full claim — necessary because `canContainAll`'s self/cycle checks
+compare object identity — or a shallow clone carrying just the claimed
+quantity for a partial one. Every display (`formatItemList`,
+`describeItem`) and pre-move validation (put's `canContainAll`) that
+used to read `match.item` directly now goes through this first, so a
+message or a weight check reflects the actual claimed amount instead of
+the whole (not-yet-split) object's current quantity.
+
+**Deliberately still asymmetric: plain `get arrow` takes the whole
+stack, not one unit.** The intuitive-looking equivalence "`get arrow`
+== `get 1*arrow`" was considered and explicitly deferred — plain-keyword
+matching keeps meaning "the whole matched object," same as it always
+has for any item, stacked or not. `1*arrow` does now peel off exactly
+one unit (cardinal's unit-counting applies at N=1 same as any other N),
+so the two forms are deliberately *not* the same command right now; revisit
+once it's clear from play which default actually feels right.

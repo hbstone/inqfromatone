@@ -1,5 +1,5 @@
 import { writeToSocket } from "../utils.js";
-import { resolveItemToken, formatItemList } from "../itemSearch.js";
+import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
 import { keywordMatches } from "../keywordMatch.js";
 
 // `emote <text>` - freeform third-person action text: "Character <text>."
@@ -66,7 +66,7 @@ function resolveToken(token, character, room) {
     if (matches.length === 0) {
         return { text: "something" + trailing };
     }
-    return { text: formatItemList(matches.map(m => m.item)) + trailing };
+    return { text: formatItemList(matches.map(previewMatch)) + trailing };
 }
 
 function addTrailingPeriod(text) {

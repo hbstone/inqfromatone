@@ -1,6 +1,7 @@
 import { writeToSocket } from "../utils.js";
-import { resolveItemToken, formatItemList } from "../itemSearch.js";
+import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
 import { keywordMatches } from "../keywordMatch.js";
+import { moveMatches } from "../stacking.js";
 
 export const give = (world, args, character) => {
     const itemToken = args[0];
@@ -26,12 +27,8 @@ export const give = (world, args, character) => {
         return "You can't find them.";
     }
 
-    for (const { item, source } of matches) {
-        source.splice(source.indexOf(item), 1);
-        recipient.inventory.push(item);
-    }
-
-    const message = formatItemList(matches.map(m => m.item));
+    const message = formatItemList(matches.map(previewMatch));
+    moveMatches(matches, recipient.inventory);
 
     // Notify the recipient
     if (recipient.socket) {

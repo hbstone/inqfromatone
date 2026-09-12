@@ -3,6 +3,7 @@ import { Character } from '../modules/Character.js';
 import { Item } from '../modules/Item.js';
 import { wear, wield } from '../modules/commands/wear.js';
 import { remove } from '../modules/commands/remove.js';
+import { initStat, getStatValue } from '../modules/stats.js';
 
 function makeSword() {
     return new Item('a sword', 'A sword.', ['sword'], { size: 'small', weight: 2, equip: { slot: 'weapon' } });
@@ -10,6 +11,12 @@ function makeSword() {
 
 function makeCap() {
     return new Item('a cap', 'A cap.', ['cap'], { size: 'small', weight: 0.5, equip: { slot: 'head' } });
+}
+
+function makeArmoredCap() {
+    const cap = makeCap();
+    cap.components.equipStats = { modifiers: [{ key: 'dexterity', operation: 'add', amount: 2 }] };
+    return cap;
 }
 
 // wear: moves an equippable item from inventory into its slot
@@ -99,6 +106,49 @@ function makeCap() {
 {
     const character = new Character('Tester');
     assert.equal(remove(null, [], character), 'What do you want to remove?');
+}
+
+// wear: an item with equipStats applies its modifiers to the wearer
+{
+    const character = new Character('Tester');
+    initStat(character, 'dexterity', 10);
+    character.inventory.push(makeArmoredCap());
+
+    wear(null, ['cap'], character);
+    assert.equal(getStatValue(character, 'dexterity'), 12);
+}
+
+// remove: strips exactly the modifiers this item applied
+{
+    const character = new Character('Tester');
+    initStat(character, 'dexterity', 10);
+    character.equipment.head = makeArmoredCap();
+    character.components.stats.dexterity.modifiers.push({ tag: 'equip:head', operation: 'add', amount: 2 });
+
+    remove(null, ['cap'], character);
+    assert.equal(getStatValue(character, 'dexterity'), 10);
+}
+
+// wear: a purely decorative item (no equipStats) equips fine with no stat effect
+{
+    const character = new Character('Tester');
+    initStat(character, 'dexterity', 10);
+    character.inventory.push(makeCap());
+
+    const result = wear(null, ['cap'], character);
+    assert.equal(result, 'You wear a cap.');
+    assert.equal(getStatValue(character, 'dexterity'), 10);
+}
+
+// remove: a decorative item removes fine with no modifiers to strip
+{
+    const character = new Character('Tester');
+    initStat(character, 'dexterity', 10);
+    character.equipment.head = makeCap();
+
+    const result = remove(null, ['cap'], character);
+    assert.equal(result, 'You remove a cap.');
+    assert.equal(getStatValue(character, 'dexterity'), 10);
 }
 
 console.log('All tests passed');

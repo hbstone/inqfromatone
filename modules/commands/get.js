@@ -1,5 +1,6 @@
 import { isContainer } from "../containers.js";
-import { resolveItemToken, formatItemList } from "../itemSearch.js";
+import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
+import { moveMatches } from "../stacking.js";
 
 export const get = (world, args, character) => {
     const room = world.getRoomById(character.roomId);
@@ -27,13 +28,11 @@ function getFromRoom(room, character, itemToken) {
         return "You can't find that here.";
     }
 
-    for (const { item, source } of matches) {
-        source.splice(source.indexOf(item), 1);
-        character.inventory.push(item);
-    }
+    const message = formatItemList(matches.map(previewMatch));
+    moveMatches(matches, character.inventory);
     room.markDirty(); // matches.length > 0 is guaranteed above, so this always touches the room
 
-    return `You pick up ${formatItemList(matches.map(m => m.item))}.`;
+    return `You pick up ${message}.`;
 }
 
 // `get <item> [from] <container>` - "from" is optional/cosmetic, stripped
@@ -63,15 +62,13 @@ function getFromContainer(room, character, itemToken, containerToken) {
         return `You don't see that in ${container.name}.`;
     }
 
-    for (const { item, source } of matches) {
-        source.splice(source.indexOf(item), 1);
-        character.inventory.push(item);
-    }
+    const message = formatItemList(matches.map(previewMatch));
+    moveMatches(matches, character.inventory);
     // Only the room's own save is affected here - only when the container
     // itself is sitting on the room floor, not when it's on the character.
     if (containerResult.matches[0].source === room.inventory) {
         room.markDirty();
     }
 
-    return `You get ${formatItemList(matches.map(m => m.item))} from ${container.name}.`;
+    return `You get ${message} from ${container.name}.`;
 }

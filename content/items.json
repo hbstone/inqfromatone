@@ -113,6 +113,25 @@
     "keywords": ["leather", "cap"],
     "size": "small",
     "weight": 0.5,
+    "equip": { "slot": "head" },
+    "components": { "equipStats": { "modifiers": [{ "key": "dexterity", "operation": "add", "amount": 2 }] } }
+  },
+  {
+    "key": "fancy-hat",
+    "name": "a fancy feathered hat",
+    "description": "A wide-brimmed hat with a jaunty feather. Purely for show.",
+    "keywords": ["fancy", "feathered", "hat"],
+    "size": "small",
+    "weight": 0.3,
     "equip": { "slot": "head" }
+  },
+  {
+    "key": "arrow",
+    "name": "an arrow",
+    "description": "A fletched wooden arrow.",
+    "keywords": ["arrow"],
+    "size": "small",
+    "weight": 0.05,
+    "stackable": true
   }
 ]
