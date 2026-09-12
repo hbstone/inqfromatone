@@ -47,11 +47,17 @@ function handleLogin(socket, input) {
         // pasted with color codes in it still goes through, just without
         // them, instead of failing on a confusing "letters and spaces only"
         // error.
-        const name = stripColors(input);
+        const stripped = stripColors(input);
 
-        if (!name) {
+        if (!stripped) {
             return "Name cannot be blank. Please enter your character's name:";
         }
+
+        // Only the first letter - "rhaehan" becomes "Rhaehan", but a
+        // deliberately-lowercase second word (e.g. a last name) is left
+        // exactly as typed, not title-cased.
+        const name = stripped.charAt(0).toUpperCase() + stripped.slice(1);
+
         if (!NAME_PATTERN.test(name)) {
             return "Names may only contain letters and spaces (2-32 characters). Please enter your character's name:";
         }
