@@ -1,5 +1,7 @@
 import { World } from "./modules/World.js";
 import { getCommand } from "./modules/commands/registry.js";
+import { look } from "./modules/commands/look.js";
+import { stripColors } from "./modules/color.js";
 import "./modules/commands/index.js"; // registers the built-in verbs, see index.js
 import "./modules/checks/index.js"; // registers the default check resolver, see index.js
 import { setWorld as setCombatWorld } from "./modules/combat/index.js"; // registers the unarmed attack producer + combat messages, see index.js
@@ -37,19 +39,35 @@ function handleLogin(socket, input) {
 
     // Handle name input
     if (character.stage === "name") {
-        if (!input) {
+        // Color codes are welcome in most input/output (see modules/color.js),
+        // but not here: the name becomes a filename and a keyword-matching
+        // key (data.js, Character#setName), so it needs to stay within
+        // NAME_PATTERN's plain letters-and-spaces allowlist. Stripping
+        // first - rather than rejecting outright - means a name typed or
+        // pasted with color codes in it still goes through, just without
+        // them, instead of failing on a confusing "letters and spaces only"
+        // error.
+        const stripped = stripColors(input);
+
+        if (!stripped) {
             return "Name cannot be blank. Please enter your character's name:";
         }
-        if (!NAME_PATTERN.test(input)) {
+
+        // Only the first letter - "rhaehan" becomes "Rhaehan", but a
+        // deliberately-lowercase second word (e.g. a last name) is left
+        // exactly as typed, not title-cased.
+        const name = stripped.charAt(0).toUpperCase() + stripped.slice(1);
+
+        if (!NAME_PATTERN.test(name)) {
             return "Names may only contain letters and spaces (2-32 characters). Please enter your character's name:";
         }
 
-        if (characterExists(input)) {
-            character.setName(input);
+        if (characterExists(name)) {
+            character.setName(name);
             character.stage = "password";
             return "Enter your password:";
         } else {
-            character.setName(input);
+            character.setName(name);
             character.stage = "password";
             character.new = true;
             return "Creating a new character. Enter a password:";
@@ -79,7 +97,7 @@ function handleLogin(socket, input) {
             const room = world.getRoomById(saved.roomId) ?? world.getRoomById(startingRoomKey);
             room.addCharacter(character);
 
-            return `Welcome back, ${character.name}!`;
+            return `Welcome back, ${character.name}!\n\n${look(world, [], character)}`;
         } else {
             return "Incorrect password. Try again:";
         }
@@ -101,7 +119,7 @@ function handleLogin(socket, input) {
 
         world.getRoomById(startingRoomKey).addCharacter(character);
 
-        return `Welcome, ${character.name}! Your description: "${input}"`;
+        return `Welcome, ${character.name}! Your description: "${input}"\n\n${look(world, [], character)}`;
     }
 }
 

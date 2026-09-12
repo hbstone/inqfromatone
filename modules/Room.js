@@ -56,6 +56,37 @@ export class Room {
         this.components = saveData.components ?? {};
     }
 
+    /**
+     * Exit directions available from this room, for display (e.g. "Exits:
+     * north, south" in look/movePlayer) - just the keys of `exits`, in
+     * declaration order.
+     * @returns {string[]}
+     */
+    exitNames() {
+        return Object.keys(this.exits);
+    }
+
+    /**
+     * This room's name, wrapped in a color token (see modules/color.js) so
+     * it stands out from the description text under it - one place to
+     * retune the color, shared by look and movePlayer rather than each
+     * picking their own.
+     * @returns {string}
+     */
+    coloredName() {
+        return `{C${this.name}{x`;
+    }
+
+    /**
+     * The "Exits: ..." display line, colored the same way as look's other
+     * field labels (Characters here:/Items here:) - see modules/color.js.
+     * @returns {string}
+     */
+    describeExits() {
+        const exits = this.exitNames().join(", ") || "None";
+        return `{YExits:{x ${exits}`;
+    }
+
     addCharacter(character) {
         this.characters.push(character);
         character.roomId = this.id;

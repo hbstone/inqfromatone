@@ -31,9 +31,25 @@ import { Item } from '../modules/Item.js';
             components: { lockpick: { uses: 3 } },
         }],
         equipment: {},
+        colorEnabled: true,
         components: { caster: { mana: 50 } },
     });
     assert.ok(!('password' in saved), 'toSaveData should never include password');
+}
+
+// colorEnabled round-trips too (see modules/commands/color.js), and
+// defaults to true for a pre-color save record that never set it
+{
+    const original = new Character('Explorer');
+    original.colorEnabled = false;
+
+    const restored = new Character('Explorer');
+    restored.restoreFrom(original.toSaveData());
+    assert.equal(restored.colorEnabled, false);
+
+    const defaulted = new Character('Explorer');
+    defaulted.restoreFrom({ description: 'Old save, no colorEnabled field.' });
+    assert.equal(defaulted.colorEnabled, true);
 }
 
 // restoreFrom round-trips onto a fresh instance: description, components,

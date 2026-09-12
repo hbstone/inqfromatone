@@ -7,6 +7,7 @@ export class Character {
         this.description = description;
         this.inventory = [];
         this.equipment = {}; // slot -> Item, only ever holding equippable items (see modules/equipment.js)
+        this.colorEnabled = true; // see modules/commands/color.js and modules/color.js
 
         // Connection/session state
         this.isLoggedIn = false;
@@ -47,6 +48,7 @@ export class Character {
             equipment: Object.fromEntries(
                 Object.entries(this.equipment).map(([slot, item]) => [slot, item.toSaveData()])
             ),
+            colorEnabled: this.colorEnabled,
             components: this.components,
         };
     }
@@ -59,6 +61,7 @@ export class Character {
      */
     restoreFrom(saveData) {
         this.description = saveData.description ?? null;
+        this.colorEnabled = saveData.colorEnabled ?? true;
         this.components = saveData.components ?? {};
         this.inventory = (saveData.inventory ?? []).map(Item.fromSaveData);
         this.equipment = Object.fromEntries(

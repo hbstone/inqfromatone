@@ -12,8 +12,9 @@ function makeCharacter(name) {
 }
 
 function lastMessage(character) {
-    // writeToSocket appends a trailing CRLF - strip it for comparison.
-    return character.socket.written[character.socket.written.length - 1].replace(/\r\n$/, '');
+    // writeToSocket wraps the message in a leading + trailing CRLF - strip
+    // both for comparison.
+    return character.socket.written[character.socket.written.length - 1].replace(/^\r\n/, '').replace(/\r\n$/, '');
 }
 
 function setUpRoom() {
