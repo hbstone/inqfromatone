@@ -1,5 +1,5 @@
 import assert from 'assert/strict';
-import { resolveCommand, getCommand, registerCommand } from '../modules/commands/registry.js';
+import { resolveCommand, getCommand, registerCommand, explainCommand } from '../modules/commands/registry.js';
 import '../modules/commands/index.js'; // the real core verbs, in their real priority order
 
 const resolve = (typed) => resolveCommand(typed)?.name;
@@ -19,7 +19,7 @@ const resolve = (typed) => resolveCommand(typed)?.name;
         gi: 'give', p: 'put', r: 'remove',
         we: 'west', wea: 'wear', wi: 'wield', wh: 'whisper',
         sa: 'say', sc: 'score', t: 'tell', em: 'emote',
-        k: 'kill', f: 'flee', di: 'disengage', c: 'color',
+        f: 'flee', di: 'disengage', c: 'color',
         N: 'north', SOU: 'south',
     };
     for (const [typed, name] of Object.entries(expected)) {
@@ -27,8 +27,11 @@ const resolve = (typed) => resolveCommand(typed)?.name;
     }
 }
 
-// quit requires the full word
+// quit and kill require the full word
 {
+    assert.equal(resolve('k'), undefined);
+    assert.equal(resolve('kil'), undefined);
+    assert.equal(resolve('kill'), 'kill');
     assert.equal(resolve('q'), undefined);
     assert.equal(resolve('qui'), undefined);
     assert.equal(resolve('quit'), 'quit');
@@ -53,9 +56,25 @@ const resolve = (typed) => resolveCommand(typed)?.name;
     assert.equal(resolve('no'), 'north', 'still north - registered first');
     assert.equal(resolve('nod'), 'nod');
 
-    registerCommand('ki', noop);
-    assert.equal(resolve('ki'), 'ki', 'an exact match beats kill');
-    assert.equal(resolve('k'), 'kill');
+    registerCommand('lo', noop);
+    assert.equal(resolve('lo'), 'lo', 'an exact match beats look, registered earlier');
+    assert.equal(resolve('l'), 'look', 'look keeps the shorter prefix');
+
+    // A full-word-only core verb doesn't block a pack verb's prefix
+    registerCommand('kick', noop);
+    assert.equal(resolve('k'), 'kick', 'kill needs its full name, so k falls through to kick');
+    assert.equal(resolve('kill'), 'kill');
+}
+
+// explainCommand: what a typed verb would run, echoing what was typed
+{
+    assert.equal(explainCommand('n'), '"n" is north.');
+    assert.equal(explainCommand('N'), '"N" is north.');
+    assert.equal(explainCommand('look'), '"look" is look.');
+    assert.equal(explainCommand('xyzzy'), `"xyzzy" doesn't match any command.`);
+    assert.equal(explainCommand('q'), `"q" doesn't match any command. (quit must be typed in full.)`);
+    assert.equal(explainCommand('kil'), `"kil" doesn't match any command. (kill must be typed in full.)`);
+    assert.match(explainCommand(''), /followed by \? to see/);
 }
 
 // Duplicate names are rejected case-insensitively

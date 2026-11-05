@@ -71,7 +71,11 @@ as locked in before it's been used.
    `{ abbreviate: false }` requires the full word (`quit`). The `command`
    event carries the canonical name, not what was typed. Note `i` currently
    lands on `items` (a debug listing) since there's no `inventory` verb; one
-   registered ahead of `items` would take `i` over.
+   registered ahead of `items` would take `i` over. A `?` in the first word
+   (`n?`, `n? anything`) runs nothing and reports what that word would
+   resolve to (`explainCommand`), including when it's the start of a
+   full-word-only command (`k?` → kill must be typed in full). The `command`
+   event doesn't fire for these, since nothing ran.
 2. **Event bus** (done) — `modules/events.js` (`on`/`emit`), multiple
    listeners per event. Wired so far: `command` (after dispatch, in
    `game.js`) and `enterRoom`/`leaveRoom` (room movement, in

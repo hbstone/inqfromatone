@@ -1,5 +1,5 @@
 import { World } from "./modules/World.js";
-import { resolveCommand } from "./modules/commands/registry.js";
+import { resolveCommand, explainCommand } from "./modules/commands/registry.js";
 import "./modules/commands/index.js"; // registers the built-in verbs, see index.js
 import "./modules/checks/index.js"; // registers the default check resolver, see index.js
 import { setWorld as setCombatWorld } from "./modules/combat/index.js"; // registers the unarmed attack producer + combat messages, see index.js
@@ -46,6 +46,15 @@ export const handleCommand = (socket, input) => {
     }
 
     const [typed, ...args] = input.trim().split(/\s+/);
+
+    // `n?` (or `n?anything`, `n? more words`): say what the first word
+    // would run, without running it - see explainCommand. Only a `?` in
+    // the first word counts, so `say really?` is still just a say.
+    const questionMark = typed.indexOf("?");
+    if (questionMark !== -1) {
+        return explainCommand(typed.slice(0, questionMark));
+    }
+
     // Case-insensitive, abbreviations allowed (`n`, `L`) - see registry.js.
     const resolved = resolveCommand(typed);
     if (resolved) {

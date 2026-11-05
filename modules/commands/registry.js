@@ -58,6 +58,36 @@ export function resolveCommand(input) {
 }
 
 /**
+ * Describe what a typed verb would run, without running it - the `n?`
+ * lookup (see game.js). Also says when the word is the start of a command
+ * that has to be typed in full, so `k?` explains why `k` alone does
+ * nothing.
+ * @param {string} typed - The verb as the player typed it. Echoed back in
+ *   quotes, which also keeps writeToSocket's capitalize-the-first-letter
+ *   from turning `n` into `N`.
+ * @returns {string}
+ */
+export function explainCommand(typed) {
+    if (!typed) {
+        return "Type a command followed by ? to see what it would run, e.g. n?";
+    }
+
+    const resolved = resolveCommand(typed);
+    if (resolved) {
+        return `"${typed}" is ${resolved.name}.`;
+    }
+
+    const lower = typed.toLowerCase();
+    const fullWordOnly = Array.from(commands.entries())
+        .filter(([name, entry]) => !entry.abbreviate && name.startsWith(lower))
+        .map(([name]) => name);
+    if (fullWordOnly.length > 0) {
+        return `"${typed}" doesn't match any command. (${fullWordOnly.join(", ")} must be typed in full.)`;
+    }
+    return `"${typed}" doesn't match any command.`;
+}
+
+/**
  * Look up the handler for what a player typed - see resolveCommand.
  * @param {string} input
  * @returns {Function|undefined}
