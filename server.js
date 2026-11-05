@@ -34,7 +34,7 @@ const server = net.createServer((socket) => {
     // cleanly, while a connection that dies with an error (reset, timeout)
     // may skip straight to "close" - which always fires, either way.
     socket.on("close", () => guard("socket close", () => {
-        if (socket.character.name && socket.character.socket === socket) {
+        if (socket.character.name && !socket.character.stage && socket.character.socket === socket) {
             console.log(`${socket.character.name} has disconnected.`);
         }
         handleDisconnect(socket);

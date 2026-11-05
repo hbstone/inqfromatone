@@ -27,7 +27,7 @@ export function writeJsonAtomic(filePath, data) {
  * @returns {object|null} The parsed record, or null if the file doesn't
  *   exist. A file that exists but won't parse is logged and also returns
  *   null - callers that need to tell "missing" from "corrupt" apart check
- *   existence separately (see game.js's login and saveCharacter in
+ *   existence separately (see modules/login.js and saveCharacter in
  *   modules/worldPersistence.js).
  */
 export function readJsonFile(filePath) {

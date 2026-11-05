@@ -16,7 +16,7 @@ const DEFAULT_CHARACTERS_DIR = path.join(
 );
 
 // Filenames are the lowercased character name directly. This is only safe
-// because every name reaching this module has already passed game.js's
+// because every name reaching this module has already passed modules/login.js's
 // letters-and-spaces-only allowlist — no path-traversal characters are
 // possible by the time a name gets here. Lowercasing also closes a
 // case-collision bug that per-file storage would otherwise introduce on

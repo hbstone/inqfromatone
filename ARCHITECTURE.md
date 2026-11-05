@@ -111,7 +111,7 @@ adapter (`characterExists`/`loadCharacterState`/`saveCharacterState`) so a
 future DB swap only touches this one file, not every call site.
 
 **Character names are now a real allowlist** (`/^[A-Za-z][A-Za-z ]{1,31}$/`
-in `game.js`), not just a not-blank check. Necessary once a name becomes
+in `modules/login.js`), not just a not-blank check. Necessary once a name becomes
 part of a filesystem path (`data.js`) — otherwise it's a path-traversal
 vector. Filenames are the lowercased name, which also makes account lookup
 case-insensitive for free (no separate duplicate-rejection logic needed;
@@ -590,6 +590,39 @@ SIGTERM, and a best-effort save on a fatal error.
 - NPCs, once they can get/drop/craft on their own, belong in `saveWorld`
   for the same reason characters do.
 
+## Login and passwords
+
+The login conversation (name → password → description for new
+characters) lives in `modules/login.js`, built per-world by
+`createLoginHandler` so tests can drive it against a throwaway World and
+save directory instead of `game.js`'s real one.
+
+**Passwords: scrypt, salted, self-describing.** `modules/auth.js` stores
+`scrypt$N$r$p$salt$hash`, replacing unsalted SHA-256. Node built-in, so
+no dependency. Cost parameters live in the stored string, so they can be
+raised later: `verifyPassword` reports `needsRehash` for a legacy SHA-256
+hash or weaker-than-current parameters, and login rewrites the hash in
+place on the next successful login. Comparisons are constant-time.
+`scryptSync` blocks the event loop for tens of ms per login - fine at this
+scale, and the command pipeline is synchronous anyway; revisit with async
+scrypt if login volume ever makes that noticeable.
+
+**Nothing is written until creation finishes.** The new character's hash
+is held in memory (`pendingPasswordHash`) until the description step, so a
+dropped connection mid-creation leaves no half-made save. Since nothing
+reserves the name on disk, two connections can both be creating the same
+name; whoever finishes first gets it, and the other is sent back to the
+name prompt. A password-only save from before this change resumes at the
+description step instead of logging in a character with no stats.
+
+**Three wrong passwords closes the connection** - a cheap brake on scripted
+guessing, not real rate limiting (see "Known gap: no input rate/size
+limiting" below).
+
+Not done: passwords still echo on screen as typed. Hiding them needs
+telnet `IAC WILL ECHO` negotiation, which this server doesn't speak yet
+(see `stripTelnetNegotiation` in `modules/utils.js`).
+
 ## Connections: logging in twice takes over
 
 Logging into a character who's already in the world moves that live
@@ -613,7 +646,7 @@ sessionId that no longer resolves (sessions are in-memory only).
 ## Error isolation
 
 `modules/guard.js` wraps everything the engine runs on a player's behalf:
-command handlers and login (`game.js`), timer ticks (combat auto-attack,
+command handlers and login (`game.js`, `modules/login.js`), timer ticks (combat auto-attack,
 regen, the world-save ticker), socket handlers, and each per-entity save.
 A throw costs that one action - logged, and the player gets a generic
 error message - instead of crashing the process. Same reasoning
