@@ -19,6 +19,7 @@ import { getStatValue } from "../stats.js";
 import { produceAttack } from "./registry.js";
 import { resolveAttack } from "./resolveAttack.js";
 import { emit } from "../events.js";
+import { guard, guardedInterval } from "../guard.js";
 
 const AUTO_ATTACK_INTERVAL_MS = 2000;
 // A safety net against a stuck session, not a real combat timer - should
@@ -33,10 +34,10 @@ function isAlive(character) {
 
 function createSession() {
     const session = { id: randomUUID(), participants: new Map() };
-    session.safetyTimer = setTimeout(() => {
+    session.safetyTimer = setTimeout(() => guard("combat session safety timeout", () => {
         console.error(`Combat session ${session.id} hit its safety timeout - force-ending.`);
         endSession(session);
-    }, SESSION_SAFETY_TIMEOUT_MS);
+    }), SESSION_SAFETY_TIMEOUT_MS);
     sessions.set(session.id, session);
     return session;
 }
@@ -47,7 +48,17 @@ function createSession() {
  */
 export function getSession(character) {
     const sessionId = character.components.combat?.sessionId;
-    return sessionId ? sessions.get(sessionId) : undefined;
+    if (!sessionId) {
+        return undefined;
+    }
+    const session = sessions.get(sessionId);
+    if (!session) {
+        // A sessionId with no live session behind it - e.g. saved to disk
+        // by a world checkpoint mid-fight and restored after a restart.
+        // Sessions only exist in memory, so it can never resolve again.
+        delete character.components.combat;
+    }
+    return session;
 }
 
 function removeParticipant(session, character) {
@@ -64,7 +75,11 @@ function addParticipant(session, character, target) {
     character.components.combat = { sessionId: session.id };
     const entry = { target, timer: null };
     session.participants.set(character, entry);
-    entry.timer = setInterval(() => performAutoAttack(session, character), AUTO_ATTACK_INTERVAL_MS);
+    entry.timer = guardedInterval(
+        `auto-attack for "${character.name}"`,
+        () => performAutoAttack(session, character),
+        AUTO_ATTACK_INTERVAL_MS
+    );
 }
 
 function performAutoAttack(session, character) {
