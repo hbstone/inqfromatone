@@ -20,6 +20,12 @@ const server = net.createServer((socket) => {
         socket.lineBuffer = remainder;
 
         for (const input of lines) {
+            // A bare Enter in-game just re-prompts. (During login it still
+            // goes through, so "Name cannot be blank" etc. get said.)
+            if (!input && socket.character.isLoggedIn) {
+                writePrompt(socket);
+                continue;
+            }
             const response = handleCommand(socket, input);
             if (response) {
                 writeToSocket(socket, response);

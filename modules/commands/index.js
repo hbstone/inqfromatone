@@ -2,6 +2,11 @@
 // content packs will register their own verbs the same way, by importing
 // registerCommand from registry.js and calling it, without touching this
 // file (see ARCHITECTURE.md).
+//
+// Registration order is deliberate, not alphabetical: it's the priority
+// order for ambiguous abbreviations (see registry.js). Movement first, so
+// n/s/e/w are directions (not say/emote/wear); then the most-used verbs, so
+// `l`, `g`, `d`, `i` land where players expect.
 import { registerCommand } from "./registry.js";
 import { color } from "./color.js";
 import { disengage } from "./disengage.js";
@@ -26,26 +31,35 @@ import { wear, wield } from "./wear.js";
 import { west } from "./west.js";
 import { whisper } from "./whisper.js";
 
-registerCommand("color", color);
-registerCommand("disengage", disengage);
-registerCommand("drop", drop);
-registerCommand("east", east);
-registerCommand("emote", emote);
-registerCommand("flee", flee);
-registerCommand("get", get);
-registerCommand("give", give);
-registerCommand("items", items);
-registerCommand("kill", kill);
-registerCommand("look", look);
+// Movement
 registerCommand("north", north);
-registerCommand("put", put);
-registerCommand("quit", quit);
-registerCommand("remove", remove);
-registerCommand("say", say);
-registerCommand("score", score);
 registerCommand("south", south);
-registerCommand("tell", tell);
-registerCommand("wear", wear);
+registerCommand("east", east);
 registerCommand("west", west);
-registerCommand("whisper", whisper);
+
+// Looking and items
+registerCommand("look", look);
+registerCommand("get", get);
+registerCommand("drop", drop);
+registerCommand("give", give);
+registerCommand("put", put);
+registerCommand("items", items);
+registerCommand("wear", wear);
 registerCommand("wield", wield);
+registerCommand("remove", remove);
+
+// Communication
+registerCommand("say", say);
+registerCommand("tell", tell);
+registerCommand("whisper", whisper);
+registerCommand("emote", emote);
+
+// Combat
+registerCommand("kill", kill, { abbreviate: false }); // be sure
+registerCommand("flee", flee);
+registerCommand("disengage", disengage);
+
+// Character and settings
+registerCommand("score", score);
+registerCommand("color", color);
+registerCommand("quit", quit, { abbreviate: false }); // a stray `q` shouldn't log you out
