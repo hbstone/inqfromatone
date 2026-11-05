@@ -55,7 +55,7 @@ registerCommand("whisper", whisper);
 registerCommand("emote", emote);
 
 // Combat
-registerCommand("kill", kill);
+registerCommand("kill", kill, { abbreviate: false }); // be sure
 registerCommand("flee", flee);
 registerCommand("disengage", disengage);
 
