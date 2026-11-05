@@ -19,7 +19,8 @@ const resolve = (typed) => resolveCommand(typed)?.name;
         gi: 'give', p: 'put', r: 'remove',
         we: 'west', wea: 'wear', wi: 'wield', wh: 'whisper',
         sa: 'say', sc: 'score', t: 'tell', em: 'emote',
-        f: 'flee', di: 'disengage', c: 'color',
+        f: 'flee', di: 'disengage', c: 'color', co: 'color', com: 'commands',
+        who: 'who',
         N: 'north', SOU: 'south',
     };
     for (const [typed, name] of Object.entries(expected)) {

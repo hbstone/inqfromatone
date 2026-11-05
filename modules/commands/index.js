@@ -9,6 +9,7 @@
 // `l`, `g`, `d`, `i` land where players expect.
 import { registerCommand } from "./registry.js";
 import { color } from "./color.js";
+import { commands } from "./commands.js";
 import { disengage } from "./disengage.js";
 import { drop } from "./drop.js";
 import { east } from "./east.js";
@@ -30,6 +31,7 @@ import { tell } from "./tell.js";
 import { wear, wield } from "./wear.js";
 import { west } from "./west.js";
 import { whisper } from "./whisper.js";
+import { who } from "./who.js";
 
 // Movement
 registerCommand("north", north);
@@ -62,4 +64,6 @@ registerCommand("disengage", disengage);
 // Character and settings
 registerCommand("score", score);
 registerCommand("color", color);
+registerCommand("commands", commands); // after color, so c/co stay color; com is commands
+registerCommand("who", who); // wh stays whisper (registered earlier); who is exact
 registerCommand("quit", quit, { abbreviate: false }); // a stray `q` shouldn't log you out

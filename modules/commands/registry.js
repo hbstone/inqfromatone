@@ -88,6 +88,16 @@ export function explainCommand(typed) {
 }
 
 /**
+ * Every registered command, alphabetical - for the `commands` listing.
+ * @returns {{ name: string, abbreviate: boolean }[]}
+ */
+export function listCommands() {
+    return Array.from(commands.entries())
+        .map(([name, entry]) => ({ name, abbreviate: entry.abbreviate }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
  * Look up the handler for what a player typed - see resolveCommand.
  * @param {string} input
  * @returns {Function|undefined}
