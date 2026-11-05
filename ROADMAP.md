@@ -199,8 +199,10 @@ knowledge store, and the "generate routine → demote to Tier 1" cost-saving
 loop. Apply the guardrails above as this ships, not after.
 
 **Phase 7 — Polish / open it up**
-Admin/world-building tooling, docs for theme-pack authors, a second real
-theme built by someone else as the actual validation of the whole premise.
+Admin/world-building tooling, docs for theme-pack authors, an in-game
+helpfile system (the `commands` listing is a stand-in until then), a second
+real theme built by someone else as the actual validation of the whole
+premise.
 
 Realistically, for solo/part-time work, Phases 1-4 are the bulk of the
 calendar time and determine whether Phases 5-6 are pleasant or painful. Avoid
