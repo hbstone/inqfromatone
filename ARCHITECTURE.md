@@ -63,6 +63,15 @@ as locked in before it's been used.
    the static exports in `modules/commands/index.js`. Self-contained, low
    risk, proves the "theme adds verbs without touching core" story on its
    own, and previews the event-bus dispatch pattern in miniature.
+   Lookup is case-insensitive and takes abbreviations (`n`, `l`): a prefix
+   resolves to the first-registered command it matches, so registration
+   order in `index.js` is the priority order (movement first, so `s` is
+   south, not say). Packs register after core, so they can't take over a
+   core abbreviation; an exact name always beats a prefix. `registerCommand`'s
+   `{ abbreviate: false }` requires the full word (`quit`). The `command`
+   event carries the canonical name, not what was typed. Note `i` currently
+   lands on `items` (a debug listing) since there's no `inventory` verb; one
+   registered ahead of `items` would take `i` over.
 2. **Event bus** (done) — `modules/events.js` (`on`/`emit`), multiple
    listeners per event. Wired so far: `command` (after dispatch, in
    `game.js`) and `enterRoom`/`leaveRoom` (room movement, in
