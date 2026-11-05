@@ -10,7 +10,10 @@ import { emit } from "./modules/events.js";
 import { loadWorldData } from "./modules/content/loadWorldData.js";
 import { loadStatDefinitions, initializeCharacterStats } from "./modules/content/loadStatDefinitions.js";
 import { disconnectCharacter } from "./modules/commands/quit.js";
-import { loadRoomStates, saveDirtyRooms, startWorldSaveTicker } from "./modules/worldPersistence.js";
+import { loadRoomStates, saveWorld, startWorldSaveTicker } from "./modules/worldPersistence.js";
+import { findInWorldCharacter, takeOverConnection } from "./modules/connection.js";
+import { guard } from "./modules/guard.js";
+import { writeToSocket } from "./modules/utils.js";
 import crypto from "crypto";
 import { characterExists, loadCharacterState, saveCharacterState } from "./data.js";
 
@@ -20,11 +23,20 @@ loadRoomStates(world); // Overlay any saved room state (dropped/placed items) on
 loadStatDefinitions(); // Load stat definitions (which stats exist, starting values, roles)
 setCombatWorld(world); // let combat messages reach room bystanders, not just the two combatants
 startRegenTicker(world); // passive vitality regen for every online character
-startWorldSaveTicker(world); // periodic save of any room whose inventory changed (see worldPersistence.js)
+startWorldSaveTicker(world); // periodic checkpoint: dirty rooms + every in-world character (see worldPersistence.js)
 
-// Called from server.js on SIGINT/SIGTERM so a graceful stop doesn't lose
-// whatever's changed since the last periodic save.
-export const saveWorldOnShutdown = () => saveDirtyRooms(world);
+/**
+ * Called from server.js when the process is about to exit - a graceful
+ * SIGINT/SIGTERM, or a fatal error - so whatever's changed since the last
+ * periodic checkpoint isn't lost. Tells everyone online first.
+ * @param {string} message - What to tell connected players.
+ */
+export const saveWorldOnShutdown = (message) => {
+    for (const character of world.getOnlineCharacters()) {
+        guard("shutdown notice", () => writeToSocket(character.socket, message));
+    }
+    saveWorld(world);
+};
 
 // Letters and spaces only: character names become part of a filesystem
 // path (see data.js), so this is a real allowlist, not just cosmetic.
@@ -89,7 +101,24 @@ function handleLogin(socket, input) {
         }
 
         const saved = loadCharacterState(character.name);
-        if (saved && saved.password === hashedPassword) {
+        if (!saved) {
+            // characterExists said yes at the name stage, so the file's
+            // there but unreadable - say so, rather than "Incorrect
+            // password" forever.
+            console.error(`Login failed for "${character.name}": save file unreadable.`);
+            character.stage = "name";
+            return "Your character's save file couldn't be loaded - please let an admin know. Enter a name:";
+        }
+        if (saved.password === hashedPassword) {
+            // Already online (another connection, or a dropped one the
+            // server hasn't noticed yet)? Take that live character over
+            // rather than loading a second copy from disk.
+            const online = findInWorldCharacter(world, character.name);
+            if (online) {
+                takeOverConnection(online, socket);
+                return `Reconnected as ${online.name}.\n\n${look(world, [], online)}`;
+            }
+
             character.isLoggedIn = true;
             character.stage = null;
 
@@ -123,17 +152,21 @@ function handleLogin(socket, input) {
     }
 }
 
+const COMMAND_ERROR = "Something went wrong running that command. It's been logged.";
+
 export const handleCommand = (socket, input) => {
     const character = socket.character;
 
     if (!character.isLoggedIn) {
-        return handleLogin(socket, input);
+        return guard(`login for socket ${socket.remoteAddress ?? "?"}`, () => handleLogin(socket, input), COMMAND_ERROR);
     }
 
     const [command, ...args] = input.trim().split(/\s+/);
     const handler = getCommand(command);
     if (handler) {
-        const result = handler(world, args, character, socket);
+        // A bug in one command costs that one command, not the server -
+        // see modules/guard.js.
+        const result = guard(`command "${input}" from ${character.name}`, () => handler(world, args, character, socket), COMMAND_ERROR);
         emit("command", { character, command, args, result, world });
         return result;
     }
@@ -141,12 +174,14 @@ export const handleCommand = (socket, input) => {
     return "I don't understand that command.";
 };
 
-// Called on an ungraceful disconnect (socket "end" without the player
-// typing `quit`) so their state still gets saved and their room still
-// gets cleaned up, instead of leaving a stale entry in room.characters.
+// Called whenever a socket closes. For an ungraceful disconnect (no
+// `quit`) this still saves the character and cleans up their room,
+// instead of leaving a stale entry in room.characters. Skipped if the
+// character has since moved to another connection (see
+// modules/connection.js) - this socket closing doesn't mean they left.
 export const handleDisconnect = (socket) => {
     const character = socket.character;
-    if (character.isLoggedIn) {
+    if (character.isLoggedIn && character.socket === socket) {
         disconnectCharacter(world, character, `${character.name} has disconnected.`);
     }
 };

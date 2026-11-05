@@ -10,6 +10,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { readJsonFile, writeJsonAtomic } from "./modules/atomicWrite.js";
 
 const DEFAULT_ROOMS_DIR = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -34,19 +35,16 @@ export function roomStateExists(key, dir = DEFAULT_ROOMS_DIR) {
  * Load a room's saved state.
  * @param {string} key
  * @param {string} [dir]
- * @returns {object|null} The saved record, or null if none exists.
+ * @returns {object|null} The saved record, or null if none exists (or
+ *   it exists but is unreadable - see modules/atomicWrite.js).
  */
 export function loadRoomState(key, dir = DEFAULT_ROOMS_DIR) {
-    try {
-        const raw = fs.readFileSync(filePathFor(key, dir), "utf8");
-        return JSON.parse(raw);
-    } catch {
-        return null;
-    }
+    return readJsonFile(filePathFor(key, dir));
 }
 
 /**
- * Save a room's state, overwriting any previous save for that room. Only
+ * Save a room's state, atomically replacing any previous save
+ * for that room (see modules/atomicWrite.js). Only
  * ever called for a room that's actually marked dirty (see
  * modules/worldPersistence.js) - callers are responsible for not writing
  * unchanged rooms.
@@ -55,6 +53,5 @@ export function loadRoomState(key, dir = DEFAULT_ROOMS_DIR) {
  * @param {string} [dir]
  */
 export function saveRoomState(key, state, dir = DEFAULT_ROOMS_DIR) {
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(filePathFor(key, dir), JSON.stringify(state, null, 2));
+    writeJsonAtomic(filePathFor(key, dir), state);
 }

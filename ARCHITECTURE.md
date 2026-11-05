@@ -117,10 +117,11 @@ vector. Filenames are the lowercased name, which also makes account lookup
 case-insensitive for free (no separate duplicate-rejection logic needed;
 "bob" and "Bob" resolve to the same saved record rather than colliding).
 
-**Saves happen at session end** (`quit`, and now also an ungraceful socket
-disconnect — see `modules/commands/quit.js`'s `disconnectCharacter`,
-shared by both), not continuously. No autosave/checkpointing yet; revisit
-if that becomes a real pain point rather than building it speculatively.
+**Saves happen at world checkpoints**, not just at session end. Originally
+characters only saved on `quit`/disconnect, which turned out to duplicate
+or lose items across a restart once rooms started saving on their own
+schedule (see "Room/world state persistence" below). Characters now save
+in the same `saveWorld` pass as rooms - see "World checkpoints" below.
 
 **Stats: mechanism is core, identity is theme.** The D&D sextet isn't any
 more "core" than a from-scratch attribute system — both are theme-specific
@@ -528,9 +529,9 @@ bag `Room` already carried but nothing wrote to yet - never
 name/description/exits, which always come from content.
 
 **Trigger: periodic + graceful-shutdown, not save-on-mutation, for now.**
-Characters save at a clean boundary (quit/disconnect); a room has no
-equivalent single moment; a chest three players filled an hour ago has no
-"session" to end. `modules/worldPersistence.js`'s `startWorldSaveTicker`
+A room has no single "session end" moment the way a character does; a
+chest three players filled an hour ago has no session to end. (Characters
+now join rooms in the same checkpoint - see "World checkpoints" below.) `modules/worldPersistence.js`'s `startWorldSaveTicker`
 mirrors `combat/regen.js`'s ticker shape - every 60s, save whatever's
 dirty. `server.js` also now handles `SIGINT`/`SIGTERM` to save immediately
 on a graceful stop, so a normal dev `Ctrl+C` doesn't lose the last
@@ -566,6 +567,60 @@ content-seeded inventory/components for rooms that have a save file. A
 room with no save yet (first boot, or a room newly added to content) just
 keeps its content default - same "new vs. existing" split character login
 already uses.
+
+## World checkpoints: rooms and characters save together
+
+`saveWorld` (`modules/worldPersistence.js`) saves every dirty room *and*
+every in-world character in one synchronous pass. Saving them on separate
+schedules is how state diverged: a player drops a sword, the room saves
+with it, the server restarts before the player's next save, and the sword
+now exists in both. Or the reverse, and it's gone. Triggers: the 60s
+ticker, any character leaving the world (`disconnectCharacter`), SIGINT/
+SIGTERM, and a best-effort save on a fatal error.
+
+- Characters aren't dirty-tracked: their state changes constantly (regen
+  alone), and one small file per online player is cheap at this scale.
+- `saveCharacter` merges over the existing record to keep the password
+  hash, and refuses to write if that record exists but won't parse -
+  merging over `{}` would silently lock the account.
+- Each file write is atomic (`modules/atomicWrite.js`: temp file + rename),
+  so a crash mid-write can't leave truncated JSON. The checkpoint as a
+  whole isn't transactional across files - a kill partway through the pass
+  can still split it. Accepted at this scale.
+- NPCs, once they can get/drop/craft on their own, belong in `saveWorld`
+  for the same reason characters do.
+
+## Connections: logging in twice takes over
+
+Logging into a character who's already in the world moves that live
+character onto the new socket (`modules/connection.js`) instead of loading
+a second copy from disk - two live copies of one character is a
+duplication exploit, and the live state is newer than any save anyway. The
+old socket is told, closed, and handed a placeholder character so further
+input on it is ignored and its close event doesn't disconnect the
+character who moved on (`handleDisconnect` checks `character.socket ===
+socket`). Same path covers a dropped connection the server hasn't noticed
+yet. `server.js` cleans up on `"close"`, not `"end"`, since a connection
+that dies with an error may never fire `"end"`.
+
+Leaving the world mid-fight auto-disengages (`disconnectCharacter`); if
+that leaves an opponent alone, the session ends for them too and they're
+told. A deliberate `quit` is refused mid-fight - linkdeath can't be
+prevented, but `quit` shouldn't be a free escape. Combat session ids live
+in `components.combat`, so a checkpoint can save one; `getSession` clears a
+sessionId that no longer resolves (sessions are in-memory only).
+
+## Error isolation
+
+`modules/guard.js` wraps everything the engine runs on a player's behalf:
+command handlers and login (`game.js`), timer ticks (combat auto-attack,
+regen, the world-save ticker), socket handlers, and each per-entity save.
+A throw costs that one action - logged, and the player gets a generic
+error message - instead of crashing the process. Same reasoning
+`events.js` already applied per listener. `uncaughtException`/
+`unhandledRejection` are the last resort: best-effort `saveWorld`, then
+exit(1) for a supervisor to restart, per Node's guidance that the process
+isn't safe to keep running.
 
 ## Known gap: no input rate/size limiting
 

@@ -8,6 +8,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { readJsonFile, writeJsonAtomic } from "./modules/atomicWrite.js";
 
 const DEFAULT_CHARACTERS_DIR = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -45,25 +46,21 @@ export function characterExists(name, dir = DEFAULT_CHARACTERS_DIR) {
  * Load a character's saved state.
  * @param {string} name
  * @param {string} [dir]
- * @returns {object|null} The saved record, or null if none exists.
+ * @returns {object|null} The saved record, or null if none exists (or
+ *   it exists but is unreadable - see modules/atomicWrite.js).
  */
 export function loadCharacterState(name, dir = DEFAULT_CHARACTERS_DIR) {
-    try {
-        const raw = fs.readFileSync(filePathFor(name, dir), "utf8");
-        return JSON.parse(raw);
-    } catch {
-        return null;
-    }
+    return readJsonFile(filePathFor(name, dir));
 }
 
 /**
- * Save a character's state, overwriting any previous save.
+ * Save a character's state, atomically replacing any previous save
+ * (see modules/atomicWrite.js).
  * @param {string} name
  * @param {object} state - Plain, serializable data (password hash plus
  *   whatever game state the caller wants persisted).
  * @param {string} [dir]
  */
 export function saveCharacterState(name, state, dir = DEFAULT_CHARACTERS_DIR) {
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(filePathFor(name, dir), JSON.stringify(state, null, 2));
+    writeJsonAtomic(filePathFor(name, dir), state);
 }

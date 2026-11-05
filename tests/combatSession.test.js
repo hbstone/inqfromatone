@@ -137,4 +137,13 @@ registerAttackProducer(() => ({ statKey: 'strength', context: {}, damage: 1 }));
     mock.timers.reset();
 }
 
+// A sessionId with no live session behind it (e.g. restored from a save
+// made mid-fight) resolves to no session and gets cleared
+{
+    const a = makeCombatant('A');
+    a.components.combat = { sessionId: 'from-before-a-restart' };
+    assert.equal(getSession(a), undefined);
+    assert.equal(a.components.combat, undefined, 'the stale combat component should be cleared');
+}
+
 console.log('All tests passed');

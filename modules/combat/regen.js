@@ -6,6 +6,7 @@
 // simplest thing that gives regen a floor to iterate on later.
 import { getStatKeyForRole, getStatDefinition } from "../content/loadStatDefinitions.js";
 import { getStatValue, adjustBaseStat } from "../stats.js";
+import { guardedInterval } from "../guard.js";
 
 const REGEN_INTERVAL_MS = 30 * 1000;
 const REGEN_AMOUNT = 1;
@@ -22,7 +23,7 @@ const REGEN_AMOUNT = 1;
  * @returns {NodeJS.Timeout} The interval handle (e.g. for tests to clear).
  */
 export function startRegenTicker(world) {
-    return setInterval(() => regenTick(world), REGEN_INTERVAL_MS);
+    return guardedInterval("regen tick", () => regenTick(world), REGEN_INTERVAL_MS);
 }
 
 function regenTick(world) {

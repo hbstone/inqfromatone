@@ -81,7 +81,16 @@ export function extractLines(buffer, chunk) {
   return { lines: parts.map(line => line.trim()), remainder };
 }
 
+// A socket that's closed or closing (a player who just quit or dropped,
+// mid-broadcast) - writing to it would only raise a write-after-end error.
+function isClosed(socket) {
+  return Boolean(socket.destroyed || socket.writableEnded);
+}
+
 export function writeToSocket(socket, message) {
+  if (isClosed(socket)) {
+    return;
+  }
   // Capitalize before color-rendering, not after: renderColors turns a
   // leading token into raw ANSI escape bytes, which capitalizeFirst can no
   // longer recognize as "skip this, capitalize what's after it".
@@ -116,6 +125,9 @@ export function writeToSocket(socket, message) {
  * @param {net.Socket} socket
  */
 export function writePrompt(socket) {
+  if (isClosed(socket)) {
+    return;
+  }
   const prompt = "> ";
   const colored = isColorEnabled(socket)
     ? renderColors(prompt)
