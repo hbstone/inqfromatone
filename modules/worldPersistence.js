@@ -24,7 +24,8 @@
 // saveWorld too, for the same reason characters do.
 import { loadRoomState, roomStateExists, saveRoomState } from "../worldData.js";
 import { characterExists, loadCharacterState, saveCharacterState } from "../data.js";
-import { guard, guardedInterval } from "./guard.js";
+import { guard } from "./guard.js";
+import { every } from "./scheduler.js";
 
 const WORLD_SAVE_INTERVAL_MS = 60 * 1000;
 
@@ -119,8 +120,8 @@ export function saveWorld(world, { roomsDir, charactersDir } = {}) {
 /**
  * Start the periodic world-save ticker.
  * @param {import("./World.js").World} world
- * @returns {NodeJS.Timeout} The interval handle (e.g. for tests to clear).
+ * @returns {{ cancel: () => void }} The scheduler job.
  */
 export function startWorldSaveTicker(world) {
-    return guardedInterval("periodic world save", () => saveWorld(world), WORLD_SAVE_INTERVAL_MS);
+    return every("periodic world save", WORLD_SAVE_INTERVAL_MS, () => saveWorld(world));
 }

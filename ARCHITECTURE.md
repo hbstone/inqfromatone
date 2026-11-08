@@ -79,10 +79,11 @@ as locked in before it's been used.
 2. **Event bus** (done) — `modules/events.js` (`on`/`emit`), multiple
    listeners per event. Wired so far: `command` (after dispatch, in
    `game.js`) and `enterRoom`/`leaveRoom` (room movement, in
-   `modules/commands/move.js`, shared by the directional commands). `onDamage`
-   and `onTick` stay unwired until combat (Phase 2) and the game clock
-   (Phase 3) exist to emit them — no point guessing at their payload shape
-   before the systems that produce them are real.
+   `modules/commands/move.js`, shared by the directional commands). Combat
+   later added `attack`/`damage`/`defeat`/`combatEnd`, and the game clock
+   added `hourChange`/`phaseChange`. There's no generic per-pulse `tick`
+   event; recurring work registers a scheduler job instead (see "Scheduler
+   and game clock" below).
 3. **Entity component bags** (done) — `Character`/`Item`/`Room` each carry
    `this.components = {}`. Turned out to be more invasive than "add a
    field": none of the three classes were actually instantiated anywhere in
@@ -109,7 +110,8 @@ commands, events, entities, and content are all now pluggable rather than
 hardcoded.
 
 Game clock/scheduler is Phase 3 in the roadmap, not part of this list —
-it's needed for NPC brains, not for the engine/content split itself.
+it's needed for NPC brains, not for the engine/content split itself. (Now
+built: see "Scheduler and game clock".)
 
 ## Phase 2 decisions
 
@@ -545,7 +547,7 @@ name/description/exits, which always come from content.
 A room has no single "session end" moment the way a character does; a
 chest three players filled an hour ago has no session to end. (Characters
 now join rooms in the same checkpoint - see "World checkpoints" below.) `modules/worldPersistence.js`'s `startWorldSaveTicker`
-mirrors `combat/regen.js`'s ticker shape - every 60s, save whatever's
+is a scheduler job, same as `combat/regen.js`'s - every 60s, save whatever's
 dirty. `server.js` also now handles `SIGINT`/`SIGTERM` to save immediately
 on a graceful stop, so a normal dev `Ctrl+C` doesn't lose the last
 interval. A hard crash can still lose up to one interval's changes -
@@ -664,14 +666,66 @@ sessionId that no longer resolves (sessions are in-memory only).
 ## Error isolation
 
 `modules/guard.js` wraps everything the engine runs on a player's behalf:
-command handlers and login (`game.js`, `modules/login.js`), timer ticks (combat auto-attack,
-regen, the world-save ticker), socket handlers, and each per-entity save.
+command handlers and login (`game.js`, `modules/login.js`), scheduler jobs (combat auto-attack,
+regen, the world-save ticker, the game clock), socket handlers, and each per-entity save.
 A throw costs that one action - logged, and the player gets a generic
 error message - instead of crashing the process. Same reasoning
 `events.js` already applied per listener. `uncaughtException`/
 `unhandledRejection` are the last resort: best-effort `saveWorld`, then
 exit(1) for a supervisor to restart, per Node's guidance that the process
 isn't safe to keep running.
+
+## Scheduler and game clock
+
+**One scheduler, no scattered timers.** `modules/scheduler.js` is the
+engine's only source of "later": `every(label, ms, fn)` and
+`after(label, ms, fn)`, each returning a job with `cancel()`. Regen, the
+world-save checkpoint, combat auto-attacks and the session safety timeout
+all moved onto it from their own `setInterval`/`setTimeout` calls, and
+theme packs schedule things the same way. That gives one place that knows
+every recurring thing the game does, one guard per job (a broken
+theme-pack job is logged, not fatal), and a single spot for a later
+pause or debug listing. `guard.js`'s `guardedInterval` is gone as a result.
+
+**Time only moves when `advance(ms)` is called.** `start()` (from
+`game.js`) calls it every 250ms with the real elapsed time. Within one
+`advance`, due jobs run in due-time order (ties: the order they were
+added), so the pulse rate limits lateness but never ordering. Tests call
+`advance` directly instead of mocking Node's timers. A single wake-up
+advances at most 1s, so after a stall (laptop sleep, debugger) jobs pick up
+where they left off instead of firing every missed run in a burst; time
+never moves backwards if the system clock does.
+
+Scheduler time means "how long the engine has been running". It is not
+the in-game time of day.
+
+**The game clock is derived from the wall clock, not counted.**
+`modules/gameClock.js`: game time = (real time since a fixed epoch) ×
+`speed`. So it needs no saving, keeps moving while the server is down,
+and is the same for everyone (players can say "meet at dusk" outside the
+game). Changing `speed` later makes the clock jump to a new time, which is
+accepted: it's a rare content decision, not a runtime event.
+
+**The engine owns the mechanism; content owns the meaning.** Core has a
+24-hour day, a day count from 1, and named phases. `content/time.json`
+holds the theme decisions: `speed` (4 by default, so a game day is six real
+hours), which phases exist, when they start, and an optional `message`
+told to everyone online when one begins. Before the day's first phase
+starts, the last one carries over (night runs past midnight). Calendars
+(months, years, seasons, holidays) are left to themes, built from the day
+number and these events:
+
+- `hourChange` `{ time, world }`: every new game hour.
+- `phaseChange` `{ from, to, time, world }`: when that hour starts a new phase.
+
+`time` is a deliberately plain core command ("It is 19:15 (dusk) on day
+42."). A theme that wants its own phrasing will need to replace it, which
+waits on pack composition in Phase 4, since the registry refuses
+duplicate verbs.
+
+Not built yet: indoor/outdoor rooms. Phase messages currently reach
+everyone online, including people inside. A room flag that filters them is
+the obvious next step once rooms need it.
 
 ## Known gap: no input rate/size limiting
 
