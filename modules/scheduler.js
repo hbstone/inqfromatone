@@ -22,7 +22,9 @@ import { guard } from "./guard.js";
 // How often the real-time driver (start()) wakes up to advance time.
 // Jobs still run in exact due-time order inside each advance, so this only
 // limits how late a job can be (at most one pulse), not their ordering.
-const PULSE_MS = 250;
+// 100ms keeps things like the 0.5s gap between commands (inputQueue.js)
+// close to exact, and costs next to nothing when no job is due.
+const PULSE_MS = 100;
 
 // The most time a single wake-up will advance. If the process stalls (a
 // laptop sleeping, a debugger pause), jobs pause with it instead of firing

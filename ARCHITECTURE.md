@@ -631,8 +631,7 @@ name prompt. A password-only save from before this change resumes at the
 description step instead of logging in a character with no stats.
 
 **Three wrong passwords closes the connection** - a cheap brake on scripted
-guessing, not real rate limiting (see "Known gap: no input rate/size
-limiting" below).
+guessing, alongside the 0.5s command gap (see "Input limits" below).
 
 **Passwords are hidden while typed.** `setInputHidden` (`modules/utils.js`)
 sends Telnet `IAC WILL ECHO` (the client stops echoing) and `IAC WONT ECHO`
@@ -727,27 +726,35 @@ Not built yet: indoor/outdoor rooms. Phase messages currently reach
 everyone online, including people inside. A room flag that filters them is
 the obvious next step once rooms need it.
 
-## Known gap: no input rate/size limiting
+## Input limits: line length cap and command pacing
 
-`server.js`'s per-connection line buffer (`modules/utils.js`'s
-`extractLines`, added to fix real line-splitting bugs against clients like
-Windows' `telnet.exe`) has no cap on either axis:
+`modules/inputQueue.js` sits between the socket and `handleCommand`
+(`server.js` hands it each decoded chunk). It closes the two holes that
+used to be listed here as a known gap: a large paste stalling the server
+for everyone, and a newline-less stream growing the line buffer forever.
 
-- **Command flooding.** A pasted block of many newline-separated commands
-  (e.g. a hundred `north`s) gets fully drained in one synchronous pass of
-  the `"data"` handler's loop — no per-connection rate limit, no cooldown
-  between commands. Functionally identical to sending the same commands
-  one at a time very fast, but without the natural interleaving-with-other-
-  connections that separate packets get from the event loop; a large
-  enough paste can stall the server for everyone during that pass.
-- **Unbounded buffer growth.** Nothing caps how long `socket.lineBuffer`
-  can grow while waiting for a `\n` — a client that sends a large chunk
-  with no newline at all just keeps that string growing.
+- **Lines are capped at 8 KB** (`MAX_LINE_LENGTH`), plenty for a very
+  wordy roleplay pose. An over-long line is ignored with a notice, and the
+  connection stays open. A line still arriving is dropped as soon as the
+  buffer passes the cap, and its tail is skipped when the newline comes, so
+  memory stays bounded however long a client keeps going.
+- **Commands run at least 0.5s apart per connection** (`COMMAND_GAP_MS`).
+  Lines are queued; the first after a pause runs immediately, so normal
+  typing feels instant, and each later one waits out the gap. You can't
+  fire two or three commands at once by pasting. The gap is a scheduler
+  `after` job, so it's exact to within a pulse (the pulse went from 250ms
+  to 100ms for this).
+- **At most 20 commands queued** (`MAX_QUEUED_COMMANDS`, ten seconds of
+  backlog). Beyond that, lines are dropped with one notice per burst.
+- Login input goes through the same queue, which also slows scripted
+  password guessing on top of the three-strikes rule. A bare Enter in-game
+  re-prompts without using a turn.
+- A closed connection's queue and cooldown are cleared (`clearInput`).
 
-Deliberately not fixed yet — real user count is 1-2 people who can just be
-careful about what they paste for now. Needs a real design pass (hard cap
-vs. throttle-and-queue, what a client that trips it sees) before opening
-the server up beyond that, not a reflexive fix bolted on here.
+Still not built, and only needed before opening the server to the public:
+limits on connections per IP, and a timeout for connections that never
+finish logging in. Real network-level DDoS is a hosting/firewall
+concern, not something this process can handle.
 
 ## Currency/economy: deferred to Phase 3, decision notes for later
 

@@ -25,10 +25,11 @@ const SE = 0xf0; // End subnegotiation
  * pattern to strip.
  *
  * Deliberately a strip-and-ignore filter, not a real Telnet implementation
- * - it doesn't negotiate anything back, and (like extractLines historically
- * did for \n) it assumes a negotiation sequence doesn't get split across
- * two "data" chunks. Both are fine for this project's real client mix; see
- * ARCHITECTURE.md's "Known gap" note for the same tradeoff made elsewhere.
+ * - it doesn't answer the client's negotiation (the one thing the server
+ * sends unprompted is setInputHidden's ECHO request), and (like
+ * extractLines historically did for \n) it assumes a negotiation sequence
+ * doesn't get split across two "data" chunks. Both are fine for this
+ * project's real client mix.
  * @param {Buffer} data
  * @returns {Buffer}
  */

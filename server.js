@@ -1,39 +1,34 @@
 import net from "net";
 import { handleCommand, handleDisconnect, saveWorldOnShutdown } from "./game.js";
-import { writeToSocket, writePrompt, extractLines, stripTelnetNegotiation } from "./modules/utils.js";
+import { writeToSocket, writePrompt, stripTelnetNegotiation } from "./modules/utils.js";
+import { receiveInput, clearInput } from "./modules/inputQueue.js";
 import { Character } from "./modules/Character.js";
 import { guard } from "./modules/guard.js";
 
 // Allow PORT to be overridden via environment variable for deployment flexibility
 const PORT = process.env.PORT || 8484;
 
+// Run one line of input and show the result. Called by the input queue,
+// one line at a time.
+function runLine(socket, input) {
+    const response = handleCommand(socket, input);
+    if (response) {
+        writeToSocket(socket, response);
+        writePrompt(socket);
+    }
+    // No response (e.g. `quit`, which closes the socket itself) - no
+    // prompt either, since there's nothing left to prompt for.
+}
+
 const server = net.createServer((socket) => {
     socket.character = new Character(); // Initialize character state
     socket.character.socket = socket;
-    socket.lineBuffer = ""; // Not-yet-complete input, see extractLines
     writeToSocket(socket, "Welcome to the game! Please enter your character's name:");
     writePrompt(socket);
 
+    // Length cap and command pacing live in modules/inputQueue.js.
     socket.on("data", (data) => guard("socket input", () => {
-        const cleaned = stripTelnetNegotiation(data);
-        const { lines, remainder } = extractLines(socket.lineBuffer, cleaned.toString());
-        socket.lineBuffer = remainder;
-
-        for (const input of lines) {
-            // A bare Enter in-game just re-prompts. (During login it still
-            // goes through, so "Name cannot be blank" etc. get said.)
-            if (!input && socket.character.isLoggedIn) {
-                writePrompt(socket);
-                continue;
-            }
-            const response = handleCommand(socket, input);
-            if (response) {
-                writeToSocket(socket, response);
-                writePrompt(socket);
-            }
-            // No response (e.g. `quit`, which closes the socket itself) -
-            // no prompt either, since there's nothing left to prompt for.
-        }
+        receiveInput(socket, stripTelnetNegotiation(data).toString(), runLine);
     }));
 
     // "close", not "end": "end" only fires when the client closes its side
@@ -43,6 +38,7 @@ const server = net.createServer((socket) => {
         if (socket.character.name && !socket.character.stage && socket.character.socket === socket) {
             console.log(`${socket.character.name} has disconnected.`);
         }
+        clearInput(socket);
         handleDisconnect(socket);
     }));
 
