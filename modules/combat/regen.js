@@ -6,7 +6,7 @@
 // simplest thing that gives regen a floor to iterate on later.
 import { getStatKeyForRole, getStatDefinition } from "../content/loadStatDefinitions.js";
 import { getStatValue, adjustBaseStat } from "../stats.js";
-import { guardedInterval } from "../guard.js";
+import { every } from "../scheduler.js";
 
 const REGEN_INTERVAL_MS = 30 * 1000;
 const REGEN_AMOUNT = 1;
@@ -20,10 +20,10 @@ const REGEN_AMOUNT = 1;
  * content-defined starting value is the closest thing to "full health"
  * available to key off.
  * @param {import("../World.js").World} world
- * @returns {NodeJS.Timeout} The interval handle (e.g. for tests to clear).
+ * @returns {{ cancel: () => void }} The scheduler job.
  */
 export function startRegenTicker(world) {
-    return guardedInterval("regen tick", () => regenTick(world), REGEN_INTERVAL_MS);
+    return every("regen tick", REGEN_INTERVAL_MS, () => regenTick(world));
 }
 
 function regenTick(world) {

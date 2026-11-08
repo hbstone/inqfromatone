@@ -19,7 +19,7 @@ import { getStatValue } from "../stats.js";
 import { produceAttack } from "./registry.js";
 import { resolveAttack } from "./resolveAttack.js";
 import { emit } from "../events.js";
-import { guard, guardedInterval } from "../guard.js";
+import { every, after } from "../scheduler.js";
 
 const AUTO_ATTACK_INTERVAL_MS = 2000;
 // A safety net against a stuck session, not a real combat timer - should
@@ -34,10 +34,10 @@ function isAlive(character) {
 
 function createSession() {
     const session = { id: randomUUID(), participants: new Map() };
-    session.safetyTimer = setTimeout(() => guard("combat session safety timeout", () => {
+    session.safetyTimer = after("combat session safety timeout", SESSION_SAFETY_TIMEOUT_MS, () => {
         console.error(`Combat session ${session.id} hit its safety timeout - force-ending.`);
         endSession(session);
-    }), SESSION_SAFETY_TIMEOUT_MS);
+    });
     sessions.set(session.id, session);
     return session;
 }
@@ -66,7 +66,7 @@ function removeParticipant(session, character) {
     if (!entry) {
         return;
     }
-    clearInterval(entry.timer);
+    entry.timer.cancel();
     session.participants.delete(character);
     delete character.components.combat;
 }
@@ -75,10 +75,10 @@ function addParticipant(session, character, target) {
     character.components.combat = { sessionId: session.id };
     const entry = { target, timer: null };
     session.participants.set(character, entry);
-    entry.timer = guardedInterval(
+    entry.timer = every(
         `auto-attack for "${character.name}"`,
-        () => performAutoAttack(session, character),
-        AUTO_ATTACK_INTERVAL_MS
+        AUTO_ATTACK_INTERVAL_MS,
+        () => performAutoAttack(session, character)
     );
 }
 
@@ -115,7 +115,7 @@ function checkForSessionEnd(session) {
 }
 
 function endSession(session) {
-    clearTimeout(session.safetyTimer);
+    session.safetyTimer.cancel();
     const participants = Array.from(session.participants.keys());
     for (const character of participants) {
         removeParticipant(session, character);

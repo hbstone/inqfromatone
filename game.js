@@ -10,6 +10,8 @@ import { loadStatDefinitions } from "./modules/content/loadStatDefinitions.js";
 import { disconnectCharacter } from "./modules/commands/quit.js";
 import { loadRoomStates, saveWorld, startWorldSaveTicker } from "./modules/worldPersistence.js";
 import { guard } from "./modules/guard.js";
+import { start as startScheduler } from "./modules/scheduler.js";
+import { loadTimeSettings, startGameClock } from "./modules/gameClock.js";
 import { writeToSocket } from "./modules/utils.js";
 import { createLoginHandler } from "./modules/login.js";
 
@@ -17,9 +19,12 @@ const world = new World(); // Initialize the world
 const { startingRoomKey } = loadWorldData(world); // Load room/item content data
 loadRoomStates(world); // Overlay any saved room state (dropped/placed items) onto the content defaults
 loadStatDefinitions(); // Load stat definitions (which stats exist, starting values, roles)
+loadTimeSettings(); // Load time-of-day settings (speed, named phases)
 setCombatWorld(world); // let combat messages reach room bystanders, not just the two combatants
 startRegenTicker(world); // passive vitality regen for every online character
 startWorldSaveTicker(world); // periodic checkpoint: dirty rooms + every in-world character (see worldPersistence.js)
+startGameClock(world); // hour/phase-change events and phase messages (see gameClock.js)
+startScheduler(); // drives every job above in real time (see scheduler.js)
 
 const handleLogin = createLoginHandler({ world, startingRoomKey });
 

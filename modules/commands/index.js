@@ -28,6 +28,7 @@ import { say } from "./say.js";
 import { score } from "./score.js";
 import { south } from "./south.js";
 import { tell } from "./tell.js";
+import { time } from "./time.js";
 import { wear, wield } from "./wear.js";
 import { west } from "./west.js";
 import { whisper } from "./whisper.js";
@@ -66,4 +67,5 @@ registerCommand("score", score);
 registerCommand("color", color);
 registerCommand("commands", commands); // after color, so c/co stay color; com is commands
 registerCommand("who", who); // wh stays whisper (registered earlier); who is exact
+registerCommand("time", time); // t stays tell; ti is time
 registerCommand("quit", quit, { abbreviate: false }); // a stray `q` shouldn't log you out

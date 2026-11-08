@@ -147,6 +147,27 @@ try {
         fs.writeFileSync(path.join(charactersDir, 'corrupt.json'), '{"pass');
         const socket = connect();
         assert.match(send(socket, 'Corrupt', 'pw'), /couldn't be loaded/);
+        assert.equal(socket.inputHidden, false, 'echo is back on for the name prompt');
+    }
+
+    // Typed input is hidden only while a password is being asked for
+    {
+        const WILL_ECHO = Buffer.from([0xff, 0xfb, 0x01]);
+        const WONT_ECHO = Buffer.from([0xff, 0xfc, 0x01]);
+        const echoRequests = (socket) => socket.messages.filter(Buffer.isBuffer);
+
+        const socket = connect();
+        send(socket, 'Newbie');
+        assert.deepEqual(echoRequests(socket), [WILL_ECHO], 'hidden for the password prompt');
+        send(socket, 'wrong');
+        assert.deepEqual(echoRequests(socket), [WILL_ECHO], 'still hidden for the retry, not re-sent');
+        send(socket, 'pw');
+        assert.deepEqual(echoRequests(socket), [WILL_ECHO, WONT_ECHO], 'shown again once logged in');
+        leaveWorld(socket.character);
+
+        const fresh = connect();
+        send(fresh, 'Brandnew', 'pw');
+        assert.deepEqual(echoRequests(fresh), [WILL_ECHO, WONT_ECHO], 'shown again for the description step');
     }
 } finally {
     fs.rmSync(charactersDir, { recursive: true, force: true });
