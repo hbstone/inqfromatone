@@ -632,9 +632,14 @@ description step instead of logging in a character with no stats.
 guessing, not real rate limiting (see "Known gap: no input rate/size
 limiting" below).
 
-Not done: passwords still echo on screen as typed. Hiding them needs
-telnet `IAC WILL ECHO` negotiation, which this server doesn't speak yet
-(see `stripTelnetNegotiation` in `modules/utils.js`).
+**Passwords are hidden while typed.** `setInputHidden` (`modules/utils.js`)
+sends Telnet `IAC WILL ECHO` (the client stops echoing) and `IAC WONT ECHO`
+(echo back on). It's the only negotiation the server sends; the client's
+replies are dropped by `stripTelnetNegotiation` like everything else. The
+login handler syncs it after every step (hidden exactly when the stage is
+`password`) rather than toggling at each stage change, so no path can leave
+a player typing blind. Raw non-Telnet connections (e.g. netcat) just see
+a couple of garbage bytes.
 
 ## Connections: logging in twice takes over
 

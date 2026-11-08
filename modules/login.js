@@ -6,7 +6,7 @@ import { stripColors } from "./color.js";
 import { look } from "./commands/look.js";
 import { initializeCharacterStats } from "./content/loadStatDefinitions.js";
 import { findInWorldCharacter, takeOverConnection } from "./connection.js";
-import { writeToSocket } from "./utils.js";
+import { writeToSocket, setInputHidden } from "./utils.js";
 import { hashPassword, verifyPassword } from "./auth.js";
 import { characterExists, loadCharacterState, saveCharacterState } from "../data.js";
 
@@ -25,7 +25,17 @@ const MAX_PASSWORD_ATTEMPTS = 3;
  * @returns {(socket: object, input: string) => (string|undefined)}
  */
 export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
+    // Typed input is hidden exactly while the next thing asked for is a
+    // password. Synced after every step instead of toggled at each place
+    // the stage changes, so no path (wrong password, reconnect, unreadable
+    // save, ...) can leave a player typing blind.
     return function handleLogin(socket, input) {
+        const response = loginStep(socket, input);
+        setInputHidden(socket, socket.character.stage === "password");
+        return response;
+    };
+
+    function loginStep(socket, input) {
         const character = socket.character;
 
         // Handle name input
@@ -170,5 +180,5 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
 
             return `Welcome, ${character.name}! Your description: "${input}"\n\n${look(world, [], character)}`;
         }
-    };
+    }
 }

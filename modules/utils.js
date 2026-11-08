@@ -62,6 +62,33 @@ export function stripTelnetNegotiation(data) {
   return Buffer.from(output);
 }
 
+const WILL = 0xfb;
+const WONT = 0xfc;
+const ECHO = 0x01; // Telnet ECHO option (RFC 857)
+
+/**
+ * Ask the client to stop (or resume) echoing what the player types - used
+ * to hide passwords. This is the one bit of Telnet negotiation the server
+ * does send: "IAC WILL ECHO" claims the echo job for the server (which then
+ * just doesn't echo), so the client stops showing keystrokes; "IAC WONT
+ * ECHO" hands it back. Telnet clients (PuTTY, Windows telnet.exe) and MUD
+ * clients honor this; their DO/DONT replies are dropped by
+ * stripTelnetNegotiation like any other negotiation. A raw (non-Telnet)
+ * connection would just show the bytes as a couple of garbage characters.
+ *
+ * Idempotent: tracked per socket, so callers can call it every step
+ * without sending the same request twice.
+ * @param {net.Socket} socket
+ * @param {boolean} hidden - true to hide typed input, false to show it.
+ */
+export function setInputHidden(socket, hidden) {
+  if (isClosed(socket) || Boolean(socket.inputHidden) === hidden) {
+    return;
+  }
+  socket.inputHidden = hidden;
+  socket.write(Buffer.from([IAC, hidden ? WILL : WONT, ECHO]));
+}
+
 /**
  * Split accumulated socket input into complete lines, keeping back any
  * trailing partial line for the next chunk. Needed because TCP makes no
