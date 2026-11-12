@@ -62,5 +62,6 @@ export const movePlayer = (world, character, room, direction, opposite) => {
 
     emit("enterRoom", { character, room: nextRoom, world });
 
-    return `You move ${direction} to ${nextRoom.coloredName()}.\n${nextRoom.description}\n${nextRoom.describeExits()}`;
+    // Who's here, but not items: those wait for an explicit `look`.
+    return `You move ${direction} to ${nextRoom.coloredName()}.\n${nextRoom.description}\n${nextRoom.describeExits()}\n${nextRoom.describeCharacters(character)}`;
 };

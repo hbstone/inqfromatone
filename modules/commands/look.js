@@ -21,12 +21,9 @@ export const look = (world, args, character) => {
     const room = world.getRoomById(character.roomId);
 
     if (!itemToken) {
-        const occupantNames = room.characters
-            .filter(c => c !== character)
-            .map(c => c.name);
         const items = room.inventory.map(itemDisplayName).join(", ") || "None";
 
-        return `${room.coloredName()}\n${room.description}\n${room.describeExits()}\n{YCharacters here:{x ${occupantNames.join(", ") || "None"}\n{YItems here:{x ${items}`;
+        return `${room.coloredName()}\n${room.description}\n${room.describeExits()}\n${room.describeCharacters(character)}\n{YItems here:{x ${items}`;
     }
 
     // Look for an item, in the player's inventory first, then the room -

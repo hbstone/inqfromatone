@@ -832,7 +832,9 @@ are warned about at load and ignored.
   (`An old groundskeeper hums.`). Only fires when a player is there.
 
 **Display.** `look` lists NPCs by name in "Characters here:", the same as
-players. A planned system will give PCs and NPCs alike a short
+players. Moving into a room shows that line too (via
+`Room.describeCharacters(viewer)`, shared with `look`), but not "Items
+here:", which waits for an explicit `look`. A planned system will give PCs and NPCs alike a short
 description, a long description and a presence line ("A bearded
 gentleman juggles clubs."), with per-viewer recognition. Presence lines
 are deliberately not an NPC-only feature here.

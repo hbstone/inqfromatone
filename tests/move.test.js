@@ -46,6 +46,22 @@ function setup() {
     assert.match(result, /Exits: None/);
 }
 
+// Arriving lists who's there (PCs and NPCs, not yourself), but not items
+{
+    const { world, start, dest, character } = setup();
+    const bob = new Character('Bob');
+    dest.addCharacter(bob);
+    dest.inventory.push({ name: 'a rock' });
+
+    const result = stripColors(movePlayer(world, character, start, 'north', 'south'));
+    assert.match(result, /Characters here: Bob$/);
+    assert.ok(!result.includes('Alice'), 'not yourself');
+    assert.ok(!result.includes('Items here'), 'items wait for look');
+
+    const empty = stripColors(movePlayer(world, bob, dest, 'south', 'north'));
+    assert.match(empty, /Characters here: None$/);
+}
+
 // The destination room's name is colored too
 {
     const { world, start, character } = setup();

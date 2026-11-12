@@ -94,6 +94,19 @@ export class Room {
         return `{YExits:{x ${exits}`;
     }
 
+    /**
+     * The "Characters here: ..." display line - everyone in the room except
+     * the viewer, PCs and NPCs alike - shared by look and movePlayer.
+     * Takes the viewer so per-viewer names (a short description for
+     * someone you don't know yet) can slot in here later.
+     * @param {object} viewer - The character looking, left out of the list.
+     * @returns {string}
+     */
+    describeCharacters(viewer) {
+        const names = this.characters.filter(c => c !== viewer).map(c => c.name);
+        return `{YCharacters here:{x ${names.join(", ") || "None"}`;
+    }
+
     addCharacter(character) {
         this.characters.push(character);
         character.roomId = this.id;
