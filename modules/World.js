@@ -6,6 +6,7 @@ export class World {
     constructor() {
         this.rooms = new Map(); // Store rooms by unique ID
         this.zones = new Map(); // zone key -> { key, name, description, indoors }
+        this.npcs = []; // every NPC in the world, for their behavior pulse (see modules/npcs/behaviors.js)
     }
 
     /**

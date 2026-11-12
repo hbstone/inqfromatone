@@ -8,6 +8,7 @@ export class Character {
         this.inventory = [];
         this.equipment = {}; // slot -> Item, only ever holding equippable items (see modules/equipment.js)
         this.colorEnabled = true; // see modules/commands/color.js and modules/color.js
+        this.isNpc = false; // see modules/Npc.js
 
         // Connection/session state
         this.isLoggedIn = false;

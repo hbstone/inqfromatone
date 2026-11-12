@@ -16,7 +16,8 @@ import { writeToSocket } from "./utils.js";
 export function findInWorldCharacter(world, name) {
     const wanted = name.toLowerCase();
     for (const room of world.getAllRooms()) {
-        const found = room.characters.find(c => c.name?.toLowerCase() === wanted);
+        // NPCs aren't logins: a player named like one mustn't take it over
+        const found = room.characters.find(c => !c.isNpc && c.name?.toLowerCase() === wanted);
         if (found) {
             return found;
         }

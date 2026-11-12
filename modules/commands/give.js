@@ -27,6 +27,12 @@ export const give = (world, args, character) => {
         return "You can't find them.";
     }
 
+    // NPCs aren't saved, so anything handed to one would vanish at the
+    // next restart (see ARCHITECTURE.md's "NPCs")
+    if (recipient.isNpc) {
+        return `${recipient.name} doesn't take it.`;
+    }
+
     const message = formatItemList(matches.map(previewMatch));
     moveMatches(matches, recipient.inventory);
 

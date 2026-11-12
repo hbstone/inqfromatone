@@ -2,6 +2,8 @@ import { World } from "./modules/World.js";
 import { resolveCommand, explainCommand } from "./modules/commands/registry.js";
 import "./modules/commands/index.js"; // registers the built-in verbs, see index.js
 import "./modules/checks/index.js"; // registers the default check resolver, see index.js
+import "./modules/npcs/index.js"; // registers the built-in NPC behaviors (before content loads, so it can check behavior names)
+import { startNpcBehaviors } from "./modules/npcs/behaviors.js";
 import { setWorld as setCombatWorld } from "./modules/combat/index.js"; // registers the unarmed attack producer + combat messages, see index.js
 import { startRegenTicker } from "./modules/combat/regen.js";
 import { emit } from "./modules/events.js";
@@ -24,6 +26,7 @@ setCombatWorld(world); // let combat messages reach room bystanders, not just th
 startRegenTicker(world); // passive vitality regen for every online character
 startWorldSaveTicker(world); // periodic checkpoint: dirty rooms + every in-world character (see worldPersistence.js)
 startGameClock(world); // hour/phase-change events and phase messages (see gameClock.js)
+startNpcBehaviors(world); // NPCs wander and chatter (see modules/npcs/behaviors.js)
 startScheduler(); // drives every job above in real time (see scheduler.js)
 
 const handleLogin = createLoginHandler({ world, startingRoomKey });

@@ -9,17 +9,21 @@
 //   content/items.json                 shared item catalog
 //   content/zones/<zone>/zone.json     { name, description?, indoors? }
 //   content/zones/<zone>/rooms.json    that zone's rooms
+//   content/zones/<zone>/npcs.json     that zone's NPC templates (optional)
 //
-// A room's id in the World is "<zone>/<room key>". Exits and the starting
-// room may use a bare key for a room in the same zone, or a full
-// "<zone>/<key>" id for one in another zone.
+// A room's id in the World is "<zone>/<room key>", and an NPC template's is
+// "<zone>/<npc key>". Exits, and a room's "npcs" list, may use a bare key
+// for something in the same zone, or a full "<zone>/<key>" id for one in
+// another zone.
 //
-// NPC definitions aren't handled here: there's no NPC entity/class in the
-// codebase yet, so there's nothing real to load data into (Phase 3).
+// NPCs are spawned fresh from these templates every boot, one per entry in
+// a room's "npcs" list - they aren't saved (see modules/Npc.js).
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { Item } from "../Item.js";
+import { Npc } from "../Npc.js";
+import { hasBehavior } from "../npcs/behaviors.js";
 import { assertUniqueKeys } from "./assertUniqueKeys.js";
 import { addItem } from "../stacking.js";
 
@@ -45,8 +49,8 @@ function assertValidKey(key, label) {
 }
 
 /**
- * A room's World id from a reference written inside a zone: a bare key
- * means "in this zone", a "zone/key" id is used as-is.
+ * A room's (or NPC template's) World id from a reference written inside a
+ * zone: a bare key means "in this zone", a "zone/key" id is used as-is.
  * @param {string} ref
  * @param {string} zoneKey - The zone the reference was written in.
  * @returns {string}
@@ -76,6 +80,8 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
 
     // [{ zoneKey, rooms }] - rooms as authored, for the second pass.
     const zones = [];
+    // "<zone>/<key>" -> NPC template, from every zone's npcs.json
+    const npcTemplates = new Map();
     const startingRooms = [];
 
     // First pass: create every zone and room, so exit/item references
@@ -86,6 +92,22 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
         const zoneData = readJson(path.join(zoneDir, "zone.json"));
         const rooms = readJson(path.join(zoneDir, "rooms.json"));
         assertUniqueKeys(rooms, `room (zone "${zoneKey}")`);
+        const npcsFile = path.join(zoneDir, "npcs.json");
+        const npcs = fs.existsSync(npcsFile) ? readJson(npcsFile) : [];
+        assertUniqueKeys(npcs, `NPC (zone "${zoneKey}")`);
+        for (const npcData of npcs) {
+            if (!npcData.key || !npcData.name) {
+                console.warn(`Skipping NPC with missing key/name in zone "${zoneKey}":`, npcData);
+                continue;
+            }
+            assertValidKey(npcData.key, "NPC");
+            for (const behavior of Object.keys(npcData.behaviors ?? {})) {
+                if (!hasBehavior(behavior)) {
+                    console.warn(`NPC "${zoneKey}/${npcData.key}" has unknown behavior "${behavior}"; it will be ignored.`);
+                }
+            }
+            npcTemplates.set(`${zoneKey}/${npcData.key}`, { ...npcData, id: `${zoneKey}/${npcData.key}` });
+        }
 
         world.addZone(zoneKey, {
             name: zoneData.name ?? zoneKey,
@@ -155,6 +177,17 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
                     container: itemData.container ?? null,
                     stackable: itemData.stackable ?? false,
                 }));
+            }
+
+            for (const npcRef of roomData.npcs ?? []) {
+                const template = npcTemplates.get(resolveRoomRef(npcRef, zoneKey));
+                if (!template) {
+                    console.warn(`Skipping NPC "${npcRef}" in room "${room.id}": no such NPC defined.`);
+                    continue;
+                }
+                const npc = new Npc(template, room.id);
+                room.addCharacter(npc);
+                world.npcs.push(npc);
             }
         }
     }

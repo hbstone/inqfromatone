@@ -780,6 +780,66 @@ Not built yet: zone-wide messaging (e.g. a theme's weather broadcast) and
 per-zone resets or respawns. Add them when a theme needs one; the zone
 lookup on each room is already there.
 
+## NPCs (Tier 0)
+
+The first rung of the roadmap's NPC brain tiers: non-combat NPCs that
+wander and add ambient flavor, driven by weighted-random behavior tags.
+
+**An NPC is a `Character`** (`modules/Npc.js`, `isNpc: true`) living in
+`room.characters` like anyone else, so `look`, `emote @target`, `whisper`
+and movement messages work on them unchanged, and room broadcasts already
+skip them (no socket). The places that assumed every character is a
+player now check `isNpc`:
+
+- **Saving:** `saveCharacters` skips them.
+- **Login:** `findInWorldCharacter` skips them, so a new player named
+  "Marla" doesn't take over the NPC Marla.
+- **`kill`:** refused ("You can't attack Marla."). Core NPCs are
+  non-combat. A theme that wants hostile NPCs needs a flag for it later.
+- **`give`:** refused ("Marla doesn't take it."), since NPCs aren't saved
+  and the item would vanish at the next restart.
+
+**Content.** Each zone has an optional `npcs.json` of templates (`key`,
+`name`, optional `keywords` and `description`, `behaviors`). A room's
+`"npcs": ["cat", "woods/owl"]` spawns one NPC per entry, with the same
+bare-key-or-`zone/key` rule as exits. `name` is written as it reads
+mid-sentence ("an old groundskeeper"); `writeToSocket` already capitalizes
+the first letter of every line. Keywords default to the name's words
+minus articles.
+
+**Not saved: NPCs respawn in their home rooms every boot.** Saving them
+is the next step once they carry items or state worth keeping, and they
+then belong in `saveWorld` alongside characters (see "World
+checkpoints").
+
+**Behaviors are a registry** (`modules/npcs/behaviors.js`,
+`registerBehavior(name, run)`), like commands. Core registers two
+(`modules/npcs/index.js`); themes add their own without touching core.
+Every 10 seconds each NPC gets a pulse: its behaviors are tried in random
+order, each firing with its `chance`, and the first that actually does
+something ends the pulse. So an NPC does at most one thing per pulse, and
+a chance of 0.1 is about once every 10 pulses. Each pulse is guarded, so a
+broken theme behavior is logged rather than fatal. Unknown behavior names
+are warned about at load and ignored.
+
+- `wander` `{ chance, leaveZone? }`: steps through a random exit, staying
+  in its current zone unless `leaveZone` is true. It reuses the player
+  movement code, so people see it leave and arrive, and the
+  room/zone events fire with the NPC as `character` (listeners can check
+  `isNpc`).
+- `ambient` `{ chance, says?, emotes? }`: one random line to the room,
+  either spoken (`An old groundskeeper says, "..."`) or an emote
+  (`An old groundskeeper hums.`). Only fires when a player is there.
+
+**Display.** `look` lists NPCs by name in "Characters here:", the same as
+players. A planned system will give PCs and NPCs alike a short
+description, a long description and a presence line ("A bearded
+gentleman juggles clubs."), with per-viewer recognition. Presence lines
+are deliberately not an NPC-only feature here.
+
+Not built yet: Tier 1 routines (schedules by time of day), NPCs reacting
+to what players say (Tier 2), and NPCs carrying or exchanging items.
+
 ## Input limits: line length cap and command pacing
 
 `modules/inputQueue.js` sits between the socket and `handleCommand`

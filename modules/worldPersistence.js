@@ -125,7 +125,7 @@ export function saveCharacter(character, dir) {
 }
 
 /**
- * Save every character currently in the world. Not dirty-tracked like
+ * Save every player character currently in the world. Not dirty-tracked like
  * rooms: a character's state changes constantly (regen alone ticks every
  * 30s), and one small file per online player is cheap.
  * @param {import("./World.js").World} world
@@ -134,6 +134,9 @@ export function saveCharacter(character, dir) {
 export function saveCharacters(world, dir) {
     for (const room of world.getAllRooms()) {
         for (const character of room.characters) {
+            if (character.isNpc) {
+                continue; // NPCs respawn from content each boot (see modules/Npc.js)
+            }
             guard(`saving character "${character.name}"`, () => saveCharacter(character, dir));
         }
     }

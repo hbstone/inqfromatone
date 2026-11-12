@@ -1,7 +1,5 @@
 import { getSession, disengageCombat } from "../combat/session.js";
-import { movePlayer } from "./move.js";
-
-const OPPOSITES = { north: "south", south: "north", east: "west", west: "east" };
+import { movePlayer, OPPOSITES } from "./move.js";
 
 // A disengage combined with a move - but only if the move is actually
 // possible. An invalid direction fails outright (no disengage happens)

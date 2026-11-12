@@ -17,7 +17,8 @@
     "exits": {
       "south": "starting-room",
       "west": "storage-room"
-    }
+    },
+    "npcs": ["cat"]
   },
   {
     "key": "storage-room",

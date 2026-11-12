@@ -1,0 +1,22 @@
+[
+  {
+    "key": "groundskeeper",
+    "name": "an old groundskeeper",
+    "keywords": ["old", "groundskeeper", "keeper"],
+    "description": "A stooped, weathered man in a patched coat, never far from his rake. He looks like he's tended these flagstones longer than anyone can remember.",
+    "behaviors": {
+      "ambient": {
+        "chance": 0.15,
+        "says": [
+          "Mind the moss between the stones; it's slick.",
+          "Wind's turning. We'll have weather before long."
+        ],
+        "emotes": [
+          "rakes a few stray leaves into a tidy pile.",
+          "leans on his rake and squints up at the sky.",
+          "hums an old tune, slightly off-key."
+        ]
+      }
+    }
+  }
+]
