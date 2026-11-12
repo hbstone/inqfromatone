@@ -70,6 +70,19 @@ try {
         leaveWorld(socket.character);
     }
 
+    // A save from before zones holds a bare room key; it still finds the
+    // room, now under its zone-qualified id
+    {
+        world.addRoom('Well', 'An old well.', 'yard/well');
+        saveCharacterState('Newbie', { ...loadCharacterState('Newbie', charactersDir), roomId: 'well' }, charactersDir);
+        const socket = connect();
+        assert.match(send(socket, 'Newbie', 'pw'), /Welcome back, Newbie!/);
+        assert.equal(socket.character.roomId, 'yard/well');
+        leaveWorld(socket.character);
+        // later tests expect Newbie back in the starting room
+        saveCharacterState('Newbie', { ...loadCharacterState('Newbie', charactersDir), roomId: 'start' }, charactersDir);
+    }
+
     // Three wrong passwords closes the connection
     {
         const socket = connect();

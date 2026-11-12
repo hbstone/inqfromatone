@@ -144,7 +144,9 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
             character.stage = null;
 
             character.restoreFrom(saved);
-            const room = world.getRoomById(saved.roomId) ?? world.getRoomById(startingRoomKey);
+            // findRoomAllowingLegacyId: saves from before zones hold a bare
+            // room key (see World.js).
+            const room = world.findRoomAllowingLegacyId(saved.roomId) ?? world.getRoomById(startingRoomKey);
             room.addCharacter(character);
 
             return `Welcome back, ${character.name}!\n\n${look(world, [], character)}`;

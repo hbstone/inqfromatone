@@ -22,7 +22,7 @@
 //
 // NPCs, once they exist and can get/drop/craft on their own, belong in
 // saveWorld too, for the same reason characters do.
-import { loadRoomState, roomStateExists, saveRoomState } from "../worldData.js";
+import { deleteRoomState, loadRoomState, roomStateExists, saveRoomState } from "../worldData.js";
 import { characterExists, loadCharacterState, saveCharacterState } from "../data.js";
 import { guard } from "./guard.js";
 import { every } from "./scheduler.js";
@@ -40,6 +40,7 @@ const WORLD_SAVE_INTERVAL_MS = 60 * 1000;
  */
 export function loadRoomStates(world, dir) {
     for (const room of world.getAllRooms()) {
+        migratePreZoneRoomSave(world, room, dir);
         if (!roomStateExists(room.id, dir)) {
             continue;
         }
@@ -50,6 +51,39 @@ export function loadRoomStates(world, dir) {
         }
         room.restoreFrom(saved);
     }
+}
+
+/**
+ * Saves from before zones are keyed by the bare room key
+ * (rooms/narrow-hallway.json); move one to the room's zone-qualified path
+ * (rooms/start/narrow-hallway.json) if that doesn't exist yet. Pre-zone
+ * keys were unique world-wide, so a bare key only migrates when exactly
+ * one room still ends in it. Remove once no pre-zone saves remain (see
+ * ARCHITECTURE.md's "Zones").
+ * @param {import("./World.js").World} world
+ * @param {import("./Room.js").Room} room
+ * @param {string} [dir]
+ */
+function migratePreZoneRoomSave(world, room, dir) {
+    const slash = room.id.indexOf("/");
+    if (slash === -1) {
+        return;
+    }
+    const legacyKey = room.id.slice(slash + 1);
+    if (!roomStateExists(legacyKey, dir) || roomStateExists(room.id, dir)) {
+        return;
+    }
+    if (world.findRoomAllowingLegacyId(legacyKey) !== room) {
+        console.warn(`Not migrating rooms/${legacyKey}.json: more than one zone has a "${legacyKey}" room.`);
+        return;
+    }
+    const saved = loadRoomState(legacyKey, dir);
+    if (!saved) {
+        return; // unreadable; leave it where it is for a human to look at
+    }
+    saveRoomState(room.id, saved, dir);
+    deleteRoomState(legacyKey, dir);
+    console.log(`Moved room save rooms/${legacyKey}.json to rooms/${room.id}.json.`);
 }
 
 /**

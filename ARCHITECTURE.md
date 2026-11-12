@@ -80,8 +80,8 @@ as locked in before it's been used.
    listeners per event. Wired so far: `command` (after dispatch, in
    `game.js`) and `enterRoom`/`leaveRoom` (room movement, in
    `modules/commands/move.js`, shared by the directional commands). Combat
-   later added `attack`/`damage`/`defeat`/`combatEnd`, and the game clock
-   added `hourChange`/`phaseChange`. There's no generic per-pulse `tick`
+   later added `attack`/`damage`/`defeat`/`combatEnd`, the game clock
+   added `hourChange`/`phaseChange`, and zones added `zoneLeave`/`zoneEnter`. There's no generic per-pulse `tick`
    event; recurring work registers a scheduler job instead (see "Scheduler
    and game clock" below).
 3. **Entity component bags** (done) — `Character`/`Item`/`Room` each carry
@@ -96,7 +96,8 @@ as locked in before it's been used.
    `room.characters` didn't). All fixed alongside the bags, since wiring up
    real entities was the actual prerequisite for the bags to mean anything.
 4. **Data-driven definitions** (done) — room/item data moved out of JS into
-   `content/rooms.json`/`content/items.json`, loaded at startup by
+   `content/rooms.json`/`content/items.json` (rooms later split into
+   per-zone files, see "Zones"), loaded at startup by
    `modules/content/loadWorldData.js`. Named `content/`, not `data/` per
    the pack layout above — `data.js` (character persistence) already owns
    that name at the repo root. This is "core's" content for now, the same
@@ -717,14 +718,67 @@ number and these events:
 - `hourChange` `{ time, world }`: every new game hour.
 - `phaseChange` `{ from, to, time, world }`: when that hour starts a new phase.
 
-`time` is a deliberately plain core command ("It is 19:15 (dusk) on day
-42."). A theme that wants its own phrasing will need to replace it, which
+`time` is a deliberately plain core command: a 12-hour clock and the phase
+("It is 7:15pm (dusk)."). It leaves out the day count, which means nothing
+to players without a calendar around it; dates are a theme's to present. A
+theme that wants its own phrasing will need to replace it, which
 waits on pack composition in Phase 4, since the registry refuses
 duplicate verbs.
 
-Not built yet: indoor/outdoor rooms. Phase messages currently reach
-everyone online, including people inside. A room flag that filters them is
-the obvious next step once rooms need it.
+Phase messages skip people in indoor rooms (see "Zones" below).
+
+## Zones
+
+A zone is a named group of rooms, one folder each:
+
+```
+content/zones/<zone>/zone.json    { "name", "description", "indoors" }
+content/zones/<zone>/rooms.json   the zone's rooms, same shape as before
+```
+
+Items stay in the shared `content/items.json` for now; nothing yet needs
+zone-local items.
+
+**Room ids are namespaced: `<zone>/<room key>`** (`start/narrow-hallway`).
+Two zones can both have a `gate`, and Phase 4 packs get a namespace for
+free. In content, an exit to a bare key stays in its own zone and a
+`zone/key` exit crosses over. Zone and room keys are limited to lowercase
+letters, digits, and dashes, since they become save paths:
+`rooms/<zone>/<key>.json`.
+
+**Indoors.** Places are outdoors unless flagged `"indoors": true`, so a
+missing flag and a false one mean the same thing (the usual MUD
+convention of flagging the exceptions). The flag on a zone sets the
+default for its rooms; a room's own flag overrides it either way, e.g.
+`"indoors": false` for a courtyard inside an indoor zone. The only thing
+reading it so far is the game clock: phase messages ("Darkness
+settles...") skip people in indoor rooms. Weather would use it the same way.
+
+**Events only, no output.** Moving into another zone emits `zoneLeave`
+`{ character, zone, to, world }` and `zoneEnter` `{ character, zone, from,
+world }` (zones as `{ key, name, description, indoors }`), nested inside
+the room events: leaveRoom, zoneLeave, the move, zoneEnter, enterRoom.
+Core prints nothing for them. Unlike arriving in a room, crossing into a
+zone has no natural message, and anything shown would be theme content
+(ambient text, music, a regional effect). Like the room events, they fire
+on movement only, not on login or logout.
+
+**No zone name shown to players**, in `look` or anywhere else, and no
+`where` command yet. Players learn where they are in character. A future
+`where` is likely, but opt-in, for people who want to be found.
+
+**Migration from pre-zone saves (temporary).** Saves from before zones
+use bare keys: a character's `roomId: "narrow-hallway"`,
+`rooms/narrow-hallway.json`. Pre-zone keys were unique world-wide, so a
+bare key resolves when exactly one zone has a room with that key:
+`World.findRoomAllowingLegacyId` at login (the character saves with the
+new id at the next checkpoint), and `loadRoomStates` moves an old room
+file to its zone path at startup. Both can be deleted once no pre-zone
+saves remain.
+
+Not built yet: zone-wide messaging (e.g. a theme's weather broadcast) and
+per-zone resets or respawns. Add them when a theme needs one; the zone
+lookup on each room is already there.
 
 ## Input limits: line length cap and command pacing
 

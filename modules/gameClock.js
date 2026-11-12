@@ -92,8 +92,9 @@ export function getGameTime(now = Date.now()) {
 /**
  * Start watching for hour and phase changes. On each new hour, emits
  * "hourChange"; when that hour starts a new phase, also emits
- * "phaseChange" and tells everyone online the phase's message, if it has
- * one. Called once from game.js.
+ * "phaseChange" and tells everyone online and not indoors the phase's
+ * message, if it has one (dawn breaking isn't news in a windowless cellar;
+ * see ARCHITECTURE.md's "Zones"). Called once from game.js.
  * @param {import("./World.js").World} world
  * @param {() => number} [now] - Real-time source. Overridable for tests.
  * @returns {{ cancel: () => void }} The scheduler job.
@@ -118,8 +119,13 @@ export function startGameClock(world, now = Date.now) {
 
         const message = phaseAt(time.hour)?.message;
         if (message) {
-            for (const character of world.getOnlineCharacters()) {
-                writeToSocket(character.socket, message);
+            for (const room of world.getAllRooms()) {
+                if (room.indoors) continue;
+                for (const character of room.characters) {
+                    if (character.socket) {
+                        writeToSocket(character.socket, message);
+                    }
+                }
             }
         }
     });
