@@ -6,7 +6,7 @@ import { World } from '../modules/World.js';
 import { on } from '../modules/events.js';
 import { advance, reset } from '../modules/scheduler.js';
 import { loadTimeSettings, getGameTime, startGameClock } from '../modules/gameClock.js';
-import { time } from '../modules/commands/time.js';
+import { time, formatClock } from '../modules/commands/time.js';
 
 const EPOCH = Date.parse('2026-01-01T00:00:00Z');
 const MINUTE = 60 * 1000;
@@ -84,12 +84,20 @@ try {
         assert.ok(!socket.messages.some(m => m.includes('Night falls.')));
     }
 
-    // `time` reports the clock, with the phase when there is one
+    // 12-hour clock, including the midnight/noon edges
+    assert.equal(formatClock(0, 5), '12:05am');
+    assert.equal(formatClock(5, 26), '5:26am');
+    assert.equal(formatClock(11, 59), '11:59am');
+    assert.equal(formatClock(12, 0), '12:00pm');
+    assert.equal(formatClock(17, 26), '5:26pm');
+    assert.equal(formatClock(23, 9), '11:09pm');
+
+    // `time` reports the clock, with the phase when there is one, and no day
     {
         loadTimeSettings(settings({ speed: 1, phases: [{ name: 'day', startHour: 0 }] }));
-        assert.match(time(), /^It is \d\d:\d\d \(day\) on day \d+\.$/);
+        assert.match(time(), /^It is \d{1,2}:\d\d[ap]m \(day\)\.$/);
         loadTimeSettings(settings({ speed: 1, phases: [] }));
-        assert.match(time(), /^It is \d\d:\d\d on day \d+\.$/);
+        assert.match(time(), /^It is \d{1,2}:\d\d[ap]m\.$/);
     }
 
     // The real content file loads

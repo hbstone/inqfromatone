@@ -717,8 +717,10 @@ number and these events:
 - `hourChange` `{ time, world }`: every new game hour.
 - `phaseChange` `{ from, to, time, world }`: when that hour starts a new phase.
 
-`time` is a deliberately plain core command ("It is 19:15 (dusk) on day
-42."). A theme that wants its own phrasing will need to replace it, which
+`time` is a deliberately plain core command: a 12-hour clock and the phase
+("It is 7:15pm (dusk)."). It leaves out the day count, which means nothing
+to players without a calendar around it; dates are a theme's to present. A
+theme that wants its own phrasing will need to replace it, which
 waits on pack composition in Phase 4, since the registry refuses
 duplicate verbs.
 
