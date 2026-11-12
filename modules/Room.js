@@ -8,6 +8,13 @@ export class Room {
         this.inventory = [];
         this.exits = {};
 
+        // Which zone this room belongs to (a key into World's zones), and
+        // whether it's indoors (sheltered from the sky) - see ARCHITECTURE.md's "Zones".
+        // Both set by the content loader; a room built directly (tests)
+        // has no zone and is outdoors, the content default.
+        this.zone = null;
+        this.indoors = false;
+
         // Theme-owned data (see ARCHITECTURE.md). Core never reads/writes
         // into this for a specific theme's keys.
         this.components = {};

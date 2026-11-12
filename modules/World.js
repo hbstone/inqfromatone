@@ -5,6 +5,45 @@ import { keywordMatches } from "./keywordMatch.js";
 export class World {
     constructor() {
         this.rooms = new Map(); // Store rooms by unique ID
+        this.zones = new Map(); // zone key -> { key, name, description, indoors }
+    }
+
+    /**
+     * Register a zone: a named group of rooms (see ARCHITECTURE.md's
+     * "Zones"). Rooms point at it through room.zone.
+     * @param {string} key
+     * @param {{ name: string, description?: string, indoors?: boolean }} data
+     */
+    addZone(key, { name, description = "", indoors = false }) {
+        this.zones.set(key, { key, name, description, indoors });
+    }
+
+    /**
+     * @param {string} key
+     * @returns {{ key: string, name: string, description: string, indoors: boolean }|null}
+     */
+    getZone(key) {
+        return this.zones.get(key) ?? null;
+    }
+
+    /**
+     * Find a room from an id that may predate zones. Saves written before
+     * zones existed hold a bare room key ("narrow-hallway") where there's
+     * now a zone-qualified id ("start/narrow-hallway"). A bare key resolves
+     * if exactly one zone has a room with that key; anything else is null.
+     * Pre-zone keys were unique world-wide, so a legacy save always
+     * resolves unless the room has since been removed or duplicated.
+     * Remove once no pre-zone saves remain (see ARCHITECTURE.md's "Zones").
+     * @param {string} id
+     * @returns {object|null}
+     */
+    findRoomAllowingLegacyId(id) {
+        const room = this.getRoomById(id);
+        if (room || typeof id !== "string" || id.includes("/")) {
+            return room;
+        }
+        const matches = this.getAllRooms().filter(r => r.id.endsWith(`/${id}`));
+        return matches.length === 1 ? matches[0] : null;
     }
 
     /**

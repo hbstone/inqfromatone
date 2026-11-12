@@ -63,6 +63,10 @@ try {
         const room = world.getRoomById(world.addRoom('Room', 'A room'));
         const socket = { messages: [], write: (m) => socket.messages.push(m) };
         room.addCharacter({ name: 'Watcher', socket, keywords: ['watcher'] });
+        const inside = world.getRoomById(world.addRoom('Cellar', 'A cellar'));
+        inside.indoors = true;
+        const insideSocket = { messages: [], write: (m) => insideSocket.messages.push(m) };
+        inside.addCharacter({ name: 'Lurker', socket: insideSocket, keywords: ['lurker'] });
 
         const hours = [];
         const phaseChanges = [];
@@ -79,6 +83,7 @@ try {
         advance(1000); // same hour, nothing new
 
         assert.deepEqual(hours, [5, 6]);
+        assert.deepEqual(insideSocket.messages, [], 'phase messages skip indoor rooms');
         assert.deepEqual(phaseChanges, ['night->day']);
         assert.equal(socket.messages.filter(m => m.includes('The sun rises.')).length, 1);
         assert.ok(!socket.messages.some(m => m.includes('Night falls.')));

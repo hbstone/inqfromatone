@@ -2,10 +2,11 @@
   {
     "key": "starting-room",
     "name": "Starting Room",
-    "description": "A simple starting room.",
+    "description": "A simple starting room. A door to the south opens onto a courtyard.",
     "isStartingRoom": true,
     "exits": {
-      "north": "narrow-hallway"
+      "north": "narrow-hallway",
+      "south": "grounds/courtyard"
     },
     "items": ["rusty-key"]
   },
