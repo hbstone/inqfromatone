@@ -1,8 +1,10 @@
 import { writeToSocket } from "../utils.js";
 import { emit } from "../events.js";
 
+export const OPPOSITES = { north: "south", south: "north", east: "west", west: "east" };
+
 // Shared room-transition logic used by the directional commands
-// (north/south/east/west). Pulled out so there's one place that emits
+// (north/south/east/west), flee, and wandering NPCs (modules/npcs/index.js). Pulled out so there's one place that emits
 // leaveRoom/enterRoom, instead of four call sites to keep in sync.
 //
 // Crossing into another zone also emits zoneLeave/zoneEnter, nested inside

@@ -17,6 +17,11 @@ export const kill = (world, args, character) => {
         return "You don't see them here.";
     }
 
+    // Core NPCs are non-combat for now (see ARCHITECTURE.md's "NPCs")
+    if (target.isNpc) {
+        return `You can't attack ${target.name}.`;
+    }
+
     if (!engageCombat(character, target)) {
         return `${target.name} is already defeated.`;
     }
