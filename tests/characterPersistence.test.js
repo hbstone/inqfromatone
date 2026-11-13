@@ -32,6 +32,8 @@ import { Item } from '../modules/Item.js';
         }],
         equipment: {},
         colorEnabled: true,
+        shortDesc: null,
+        memories: {},
         components: { caster: { mana: 50 } },
     });
     assert.ok(!('password' in saved), 'toSaveData should never include password');
