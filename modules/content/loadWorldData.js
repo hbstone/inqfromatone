@@ -1,15 +1,14 @@
-// Loads zone/room/item definitions out of JSON data files into a World,
-// instead of them being hardcoded in JS (see ARCHITECTURE.md's Phase 1
-// build order and "Zones"). This is effectively "core's" content for now -
-// the same "core pack" framing already used for modules/commands/index.js -
-// living at the repo's top-level content/ directory rather than nested
-// under a real pack layout, since that's Phase 4 scope.
+// Loads zone/room/item definitions out of JSON data files into a World
+// (see ARCHITECTURE.md's "Zones" and "Packs"). Content comes from each of
+// the game's packs, in order - every pack's content/ directory may hold:
 //
-// Layout:
-//   content/items.json                 shared item catalog
-//   content/zones/<zone>/zone.json     { name, description?, indoors? }
-//   content/zones/<zone>/rooms.json    that zone's rooms
-//   content/zones/<zone>/npcs.json     that zone's NPC templates (optional)
+//   items.json                 items, merged across packs (mergeByKey.js)
+//   zones/<zone>/zone.json     { name, description?, indoors? }
+//   zones/<zone>/rooms.json    that zone's rooms
+//   zones/<zone>/npcs.json     that zone's NPC templates (optional)
+//
+// A zone belongs to exactly one pack; exits and NPC lists can point into
+// any pack's zones.
 //
 // A room's id in the World is "<zone>/<room key>", and an NPC template's is
 // "<zone>/<npc key>". Exits, and a room's "npcs" list, may use a bare key
@@ -20,14 +19,13 @@
 // a room's "npcs" list - they aren't saved (see modules/Npc.js).
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { Item } from '../Item.js';
 import { Npc } from '../Npc.js';
 import { hasBehavior } from '../npcs/behaviors.js';
 import { assertUniqueKeys } from './assertUniqueKeys.js';
+import { mergeByKey, sourceName } from './mergeByKey.js';
+import { defaultContentDirs } from '../packs/game.js';
 import { addItem } from '../stacking.js';
-
-const DEFAULT_CONTENT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'content');
 
 // Zone and room keys end up in save-file paths (rooms/<zone>/<key>.json, see
 // worldData.js), so keep them to a filename-safe shape rather than relying
@@ -59,22 +57,43 @@ export function resolveRoomRef(ref, zoneKey) {
 /**
  * Load zone/room/item content data into a World.
  * @param {import("../World.js").World} world
- * @param {string} [contentDir] - Directory containing items.json and
- *   zones/. Defaults to the repo's top-level content/ directory.
- *   Overridable so tests (or, eventually, other packs) can point at their
- *   own data.
+ * @param {string|string[]} [contentDirs] - Content directories (each may
+ *   hold items.json and zones/), one per pack in game order; a single path
+ *   works too. Defaults to the default game's packs (see
+ *   modules/packs/game.js). Items merge across packs (see mergeByKey.js);
+ *   a zone key may only be used by one pack.
+ * @param {{ startingRoom?: string|null }} [options] - The game config's
+ *   startingRoom, which beats any room's "isStartingRoom".
  * @returns {{ startingRoomKey: string|null }} The starting room's World id.
  */
-export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
-    const items = readJson(path.join(contentDir, 'items.json'));
-    assertUniqueKeys(items, 'item');
+export function loadWorldData(world, contentDirs = defaultContentDirs(), { startingRoom = null } = {}) {
+    const dirs = [contentDirs].flat();
 
-    const zonesDir = path.join(contentDir, 'zones');
-    const zoneKeys = fs
-        .readdirSync(zonesDir, { withFileTypes: true })
-        .filter((entry) => entry.isDirectory())
-        .map((entry) => entry.name)
-        .sort();
+    const items = mergeByKey(
+        dirs
+            .filter((dir) => fs.existsSync(path.join(dir, 'items.json')))
+            .map((dir) => ({ source: sourceName(dir, path), entries: readJson(path.join(dir, 'items.json')) })),
+        'item',
+    );
+
+    // Every pack's zones, by key; a zone belongs to exactly one pack.
+    const zoneDirs = new Map(); // zone key -> { dir, source }
+    for (const dir of dirs) {
+        const zonesDir = path.join(dir, 'zones');
+        if (!fs.existsSync(zonesDir)) continue;
+        for (const entry of fs.readdirSync(zonesDir, { withFileTypes: true })) {
+            if (!entry.isDirectory()) continue;
+            const source = sourceName(dir, path);
+            const existing = zoneDirs.get(entry.name);
+            if (existing) {
+                throw new Error(
+                    `Zone "${entry.name}" is defined by both "${existing.source}" and "${source}"; zone keys must be unique across a game's packs.`,
+                );
+            }
+            zoneDirs.set(entry.name, { dir: path.join(zonesDir, entry.name), source });
+        }
+    }
+    const zoneKeys = Array.from(zoneDirs.keys()).sort();
 
     // [{ zoneKey, rooms }] - rooms as authored, for the second pass.
     const zones = [];
@@ -86,7 +105,7 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
     // below can target any of them regardless of declaration order.
     for (const zoneKey of zoneKeys) {
         assertValidKey(zoneKey, 'zone');
-        const zoneDir = path.join(zonesDir, zoneKey);
+        const zoneDir = zoneDirs.get(zoneKey).dir;
         const zoneData = readJson(path.join(zoneDir, 'zone.json'));
         const rooms = readJson(path.join(zoneDir, 'rooms.json'));
         assertUniqueKeys(rooms, `room (zone "${zoneKey}")`);
@@ -151,8 +170,14 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
         }
     }
 
-    let startingRoomKey = startingRooms[0] ?? null;
-    if (startingRooms.length > 1) {
+    // The game config's choice wins outright; packs' own "isStartingRoom"
+    // flags are the fallback (a pack used on its own, or tests).
+    let startingRoomKey = startingRoom ?? startingRooms[0] ?? null;
+    if (startingRoom) {
+        if (!world.getRoomById(startingRoom)) {
+            throw new Error(`The game's startingRoom "${startingRoom}" isn't a room any of its packs define.`);
+        }
+    } else if (startingRooms.length > 1) {
         console.warn(
             `More than one room marked "isStartingRoom" (${startingRooms.join(', ')}); using ${startingRoomKey}.`,
         );

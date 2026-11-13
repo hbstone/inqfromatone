@@ -4,7 +4,7 @@
 // from then on, along with private notes about them.
 //
 // It's a naming policy (modules/naming.js) plus a few commands, switched on
-// by content/features.json. Without it, everyone sees real names.
+// by a pack's features.json. Without it, everyone sees real names.
 //
 // Memories are keyed by identity (the lowercased real name), not by short
 // description: someone who changes how they look is still recognized. The

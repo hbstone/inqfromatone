@@ -36,10 +36,15 @@ const behaviors = new Map();
  *   world: import("../World.js").World, random: () => number }) => boolean} run -
  *   Does the behavior once; returns whether it did anything (false lets
  *   the NPC's next behavior have a go this pulse).
+ * @param {{ override?: boolean }} [options] - override: true replaces an
+ *   already-registered behavior; without it a name clash is an error.
  */
-export function registerBehavior(name, run) {
-    if (behaviors.has(name)) {
-        throw new Error(`NPC behavior "${name}" is already registered.`);
+export function registerBehavior(name, run, { override = false } = {}) {
+    if (behaviors.has(name) && !override) {
+        throw new Error(`NPC behavior "${name}" is already registered (pass { override: true } to replace it).`);
+    }
+    if (!behaviors.has(name) && override) {
+        throw new Error(`NPC behavior "${name}" can't be overridden: nothing registered it yet.`);
     }
     behaviors.set(name, run);
 }

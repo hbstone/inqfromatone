@@ -10,7 +10,7 @@ import { createLoginHandler } from '../modules/login.js';
 import { loadStatDefinitions } from '../modules/content/loadStatDefinitions.js';
 import { characterExists, loadCharacterState, saveCharacterState } from '../data.js';
 
-loadStatDefinitions(); // real content/stats/attributes.json
+loadStatDefinitions(); // the default game's stats (packs/starter)
 mock.method(console, 'warn', () => {});
 mock.method(console, 'error', () => {});
 

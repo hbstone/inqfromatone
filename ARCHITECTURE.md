@@ -44,18 +44,9 @@ settled:
 
 ## Content pack layout: starting convention
 
-A pack is a folder with:
-
-```
-some-pack/
-  pack.json       # manifest: name, version, whatever metadata turns out to matter
-  data/           # room/item/NPC definitions
-  commands/       # verb handlers the pack registers
-```
-
-This is a starting point, expected to be refined once the first real pack is
-built against it (see Phase 4 in the roadmap) — don't treat the shape above
-as locked in before it's been used.
+Superseded by "Packs" below, which is what was built. (The original
+sketch had `data/` and `commands/` folders; content ended up in `content/`
+and code in a single `index.js` entry point.)
 
 ## Build order (Phase 1)
 
@@ -1008,6 +999,68 @@ Items here: None
   current routine post's `presence` while at that post (the groundskeeper
   "snores softly on a pile of sacks." at night). While walking to a post
   they show plain "is here.", so nobody rakes leaves in the hallway.
+
+## Packs
+
+Phase 4's composition layer (`modules/packs/`). A **game** is an ordered
+list of **packs**; packs add content and code, and later packs build on
+earlier ones.
+
+```
+games/default.json        { "packs": ["starter"], "startingRoom": "start/starting-room" }
+packs/<name>/
+  pack.json               { "name", "version", "description" } - name must match the folder
+  content/                (optional) any of: items.json, zones/, stats/*.json, time.json, features.json
+  index.js                (optional) export default function setup(pack) { ... }
+```
+
+**Which game runs:** `GAME=<name> pnpm start` reads `games/<name>.json`;
+without `GAME` it's `default`. Saves (`characters/`, `rooms/`) are shared, not
+per game, for now.
+
+**The old `content/` folder is now `packs/starter/content/`.** Earlier
+sections of this document that mention `content/...` paths mean that pack.
+Zone keys didn't change, so saves needed no migration.
+
+**Composition rules** (later packs in the list come later):
+
+- **Items and stats** merge by key (`modules/content/mergeByKey.js`). A
+  clash between packs is an error unless the later entry says
+  `"override": true`, which replaces the earlier one everywhere it's used.
+  Overriding something no earlier pack defines is an error (likely a
+  typo). Stats: every `.json` in a pack's `stats/` is read, and a role may
+  still be claimed by only one stat.
+- **Zones** belong to exactly one pack: the same zone key in two packs is
+  an error. Exits, NPC lists and routine posts can point into any pack's
+  zones. (Prefixing zone ids with the pack name was considered and
+  deferred: it would mean a save migration, and a game's author picks its
+  few packs.)
+- **`time.json`**: the last pack that has one wins outright. Phases aren't
+  merged, since a theme's day is one design. No pack with one means real
+  time and no phases.
+- **`features.json`**: merged, later packs winning.
+- **Starting room:** the game's `startingRoom` wins; otherwise a room
+  marked `isStartingRoom`, as before.
+- **Commands and NPC behaviors** (from pack code): a name clash is an
+  error unless registered with `{ override: true }`. An overridden verb
+  keeps the original's place in abbreviation priority (and its `abbreviate`
+  setting unless one is given). Overriding nothing is an error.
+
+**Pack code** runs before content loads, in game order, so content can use
+the behaviors it registers. It receives a context object
+(`modules/packs/context.js`) with `registerCommand`, `registerBehavior`, `on`,
+`every`, `after`, plus `name`, `dir`, `manifest` and `world`. Errors raised
+through it are labeled with the pack's name. It is **not a sandbox**: pack
+code is ordinary Node code and fully trusted. Only data-only packs are
+safe to take from strangers (the roadmap's "semi-trusted content" note).
+
+**Defaults for tools and tests:** every content loader, called without
+arguments, reads the default game's packs (`defaultContentDirs()`); passing
+a single path still works for test fixtures.
+
+Still in core rather than a pack, for later PRs: combat (moving to
+`packs/combat/` next), and the core verbs, NPC behaviors and check resolver,
+which register themselves on import as before.
 
 ## Input limits: line length cap and command pacing
 

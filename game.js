@@ -18,13 +18,20 @@ import { writeToSocket } from './modules/utils.js';
 import { createLoginHandler } from './modules/login.js';
 import { loadFeatures } from './modules/content/loadFeatures.js';
 import { enableRecognition } from './modules/recognition/index.js';
+import { readGame, contentDirsOf, setUpPackCode } from './modules/packs/game.js';
+import path from 'path';
+
+const game = readGame(); // which packs this game is made of: games/$GAME.json, else games/default.json (see modules/packs/game.js)
+console.log(`Starting game "${game.name}" with packs: ${game.packs.map((pack) => pack.name).join(', ')}`);
+const contentDirs = contentDirsOf(game);
 
 const world = new World(); // Initialize the world
-const { startingRoomKey } = loadWorldData(world); // Load room/item content data
+await setUpPackCode(game, world); // each pack's index.js registers its verbs/behaviors/listeners, before content refers to them
+const { startingRoomKey } = loadWorldData(world, contentDirs, { startingRoom: game.startingRoom }); // Load zone/room/item/NPC content
 loadRoomStates(world); // Overlay any saved room state (dropped/placed items) onto the content defaults
-loadStatDefinitions(); // Load stat definitions (which stats exist, starting values, roles)
-loadTimeSettings(); // Load time-of-day settings (speed, named phases)
-const features = loadFeatures(); // optional engine features this game switches on (content/features.json)
+loadStatDefinitions(contentDirs.map((dir) => path.join(dir, 'stats'))); // Load stat definitions (which stats exist, starting values, roles)
+loadTimeSettings(contentDirs); // Load time-of-day settings (speed, named phases)
+const features = loadFeatures(contentDirs); // optional engine features this game switches on (packs' features.json)
 if (features.recognition) {
     enableRecognition(); // strangers by short description; remember/forget/rename/shortdesc (see modules/recognition/)
 }

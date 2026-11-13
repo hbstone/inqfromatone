@@ -1,0 +1,4 @@
+{
+    "packs": ["starter"],
+    "startingRoom": "start/starting-room"
+}

@@ -20,16 +20,26 @@ const commands = new Map(); // lowercase name -> { handler, abbreviate }
  * @param {string} name - The verb a player types to invoke this command
  *   (stored lowercase; lookup is case-insensitive).
  * @param {(world: object, args: string[], character: object, socket: object) => (string|void)} handler
- * @param {{ abbreviate?: boolean }} [options] - abbreviate: false requires
- *   the full name - for verbs too consequential to trigger by a stray
- *   letter, like `quit`.
+ * @param {{ abbreviate?: boolean, override?: boolean }} [options] -
+ *   abbreviate: false requires the full name - for verbs too consequential
+ *   to trigger by a stray letter, like `quit`. override: true replaces an
+ *   already-registered verb (a pack theming `time`, say); it keeps the
+ *   original's place in abbreviation priority, and its abbreviate setting
+ *   unless one is given. Without it, a name clash is an error, so two packs
+ *   can't silently fight over a verb.
  */
-export function registerCommand(name, handler, { abbreviate = true } = {}) {
+export function registerCommand(name, handler, { abbreviate, override = false } = {}) {
     const key = name.toLowerCase();
-    if (commands.has(key)) {
-        throw new Error(`Command "${key}" is already registered.`);
+    const existing = commands.get(key);
+    if (existing && !override) {
+        throw new Error(`Command "${key}" is already registered (pass { override: true } to replace it).`);
     }
-    commands.set(key, { handler, abbreviate });
+    if (!existing && override) {
+        throw new Error(`Command "${key}" can't be overridden: nothing registered it yet.`);
+    }
+    // Map.set on an existing key keeps its insertion position, so an
+    // override keeps the original's abbreviation priority.
+    commands.set(key, { handler, abbreviate: abbreviate ?? existing?.abbreviate ?? true });
 }
 
 /**
