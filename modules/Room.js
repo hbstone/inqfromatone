@@ -1,4 +1,5 @@
 import { Item } from "./Item.js";
+import { nameFor } from "./naming.js";
 
 export class Room {
     constructor(name, description) {
@@ -97,13 +98,12 @@ export class Room {
     /**
      * The "Characters here: ..." display line - everyone in the room except
      * the viewer, PCs and NPCs alike - shared by look and movePlayer.
-     * Takes the viewer so per-viewer names (a short description for
-     * someone you don't know yet) can slot in here later.
+     * Names are as the viewer knows them (see modules/naming.js).
      * @param {object} viewer - The character looking, left out of the list.
      * @returns {string}
      */
     describeCharacters(viewer) {
-        const names = this.characters.filter(c => c !== viewer).map(c => c.name);
+        const names = this.characters.filter(c => c !== viewer).map(c => nameFor(c, viewer));
         return `{YCharacters here:{x ${names.join(", ") || "None"}`;
     }
 

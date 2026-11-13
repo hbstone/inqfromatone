@@ -887,6 +887,38 @@ path" fallback. Fallbacks for missing items or NPCs wait until NPCs can
 use items or interact with each other.
 
 
+## Naming: what each viewer calls someone
+
+Groundwork for recognition (strangers seen by short description, people
+you've met by the name you gave them). The rule lives in one place,
+`modules/naming.js`:
+
+- `nameFor(subject, viewer)`: how `viewer` sees `subject` in any
+  in-character text. You always see your own real name.
+- `findCharacter(viewer, candidates, token)`: what `viewer` means by a
+  keyword, matched against `keywordsFor(subject, viewer)`. Targeting
+  follows what the viewer sees, so a real name you haven't learned
+  wouldn't match once recognition is on.
+- `tellRoom(room, render, exclude)`: the room broadcast. `render(viewer)`
+  builds each person's own copy, since names in it can differ per viewer.
+- `setNamingPolicy({ nameFor, keywordsFor })` replaces the rule; the
+  default is real names. Recognition will be a policy, so a game without
+  it simply doesn't install one.
+
+Every in-character message that names a character to someone else goes
+through these: movement, `say`, `emote` (including `@targets`, rendered per
+viewer), `give`, `whisper`, `look`, `kill`, `drop`, `disengage`, combat
+messages, NPC ambient lines and "Characters here:". Targeting in `look`,
+`give`, `whisper`, `kill` and `emote @` uses `findCharacter`.
+
+**Out of character keeps real names** and doesn't use the seam: `who`,
+`tell`, login, and the "has left the game" / "has disconnected" notices.
+Log messages use real names too.
+
+`tests/naming.test.js` installs a policy where everyone looks different to
+each viewer and checks each of the above, so a new message that bypasses
+the seam has a pattern to follow and test against.
+
 ## Input limits: line length cap and command pacing
 
 `modules/inputQueue.js` sits between the socket and `handleCommand`

@@ -1,7 +1,7 @@
 import { writeToSocket } from "../utils.js";
+import { findCharacter, nameFor } from "../naming.js";
 import { isContainer } from "../containers.js";
 import { resolveItemToken, itemDisplayName, previewMatch } from "../itemSearch.js";
-import { keywordMatches } from "../keywordMatch.js";
 
 // A container's contents only show up when you look at it directly, not
 // in the room/inventory listing above - keeps that listing from turning
@@ -38,16 +38,16 @@ export const look = (world, args, character) => {
     }
 
     // Look for a character in the room
-    const targetCharacter = room.characters.find(char => keywordMatches(char.keywords, itemToken));
+    const targetCharacter = findCharacter(character, room.characters, itemToken);
     if (targetCharacter) {
         // Notify the target character
         if (targetCharacter.socket) {
             writeToSocket(
                 targetCharacter.socket,
-                `${character.name} looks at you.`
+                `${nameFor(character, targetCharacter)} looks at you.`
             );
         }
-        return `You look at ${targetCharacter.name}: ${targetCharacter.description}`;
+        return `You look at ${nameFor(targetCharacter, character)}: ${targetCharacter.description}`;
     }
 
     return "You can't find that here.";

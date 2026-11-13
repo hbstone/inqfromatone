@@ -1,6 +1,5 @@
-import { writeToSocket } from "../utils.js";
 import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
-import { keywordMatches } from "../keywordMatch.js";
+import { findCharacter, nameFor, tellRoom } from "../naming.js";
 
 // `emote <text>` - freeform third-person action text: "Character <text>."
 // to the room, "You <text>." back to the actor. Same trailing-period rule
@@ -43,8 +42,11 @@ import { keywordMatches } from "../keywordMatch.js";
 const TARGET_TOKEN = /^([@#])((?:\d+[.*])?\w+)(.*)$/;
 
 // Resolves one token. Returns { text } on success (including the
-// "someone"/"something" fallback) or { error } when a qualified # asked
-// for more than exists - the caller aborts the whole emote on that.
+// "someone"/"something" fallback), { character, trailing } for an @ that
+// found someone - named per viewer when the emote is sent, since people
+// may know them by different names (see modules/naming.js) - or { error }
+// when a qualified # asked for more than exists - the caller aborts the
+// whole emote on that.
 function resolveToken(token, character, room) {
     const match = token.match(TARGET_TOKEN);
     if (!match) {
@@ -55,8 +57,8 @@ function resolveToken(token, character, room) {
 
     if (sigil === "@") {
         // No ordinal/cardinal for @ yet - plain (fuzzy) keyword only.
-        const target = room.characters.find(c => keywordMatches(c.keywords, keywordToken));
-        return { text: (target ? target.name : "someone") + trailing };
+        const target = findCharacter(character, room.characters, keywordToken);
+        return target ? { character: target, trailing } : { text: "someone" + trailing };
     }
 
     const { matches, error } = resolveItemToken(keywordToken, [character.inventory, room.inventory]);
@@ -85,16 +87,14 @@ export const emote = (world, args, character) => {
         if (resolved.error) {
             return resolved.error;
         }
-        resolvedTokens.push(resolved.text);
+        resolvedTokens.push(resolved);
     }
 
-    const text = addTrailingPeriod(resolvedTokens.join(" "));
+    const textFor = (viewer) => addTrailingPeriod(resolvedTokens
+        .map(t => t.character ? nameFor(t.character, viewer) + t.trailing : t.text)
+        .join(" "));
 
-    room.characters.forEach(char => {
-        if (char !== character && char.socket) {
-            writeToSocket(char.socket, `${character.name} ${text}`);
-        }
-    });
+    tellRoom(room, (viewer) => `${nameFor(character, viewer)} ${textFor(viewer)}`, [character]);
 
-    return `You ${text}`;
+    return `You ${textFor(character)}`;
 };

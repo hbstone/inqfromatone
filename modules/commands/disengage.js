@@ -1,4 +1,5 @@
 import { writeToSocket } from "../utils.js";
+import { nameFor } from "../naming.js";
 import { getSession, disengageCombat } from "../combat/session.js";
 
 export const disengage = (world, args, character) => {
@@ -12,7 +13,7 @@ export const disengage = (world, args, character) => {
 
     others.forEach(other => {
         if (other.socket) {
-            writeToSocket(other.socket, `${character.name} disengages from combat.`);
+            writeToSocket(other.socket, `${nameFor(character, other)} disengages from combat.`);
         }
     });
 

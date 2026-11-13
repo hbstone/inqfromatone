@@ -10,6 +10,7 @@
 // from game.js) to reach room bystanders - the two combatants get their
 // direct messages regardless.
 import { registerAttackProducer } from "./registry.js";
+import { nameFor, tellRoom } from "../naming.js";
 import { getStatKeyForRole } from "../content/loadStatDefinitions.js";
 import { getStatValue } from "../stats.js";
 import { on } from "../events.js";
@@ -52,15 +53,10 @@ export function setWorld(w) {
 // room a combatant is standing in (both combatants already got their own
 // direct message, so they're excluded). Assumes the two combatants share
 // a room, true for every way v1 can start or continue a fight.
-function broadcastToRoom(character, message, exclude) {
+function broadcastToRoom(character, render, exclude) {
     const room = world?.getRoomById(character.roomId);
-    if (!room) {
-        return;
-    }
-    for (const bystander of room.characters) {
-        if (!exclude.includes(bystander) && bystander.socket) {
-            writeToSocket(bystander.socket, message);
-        }
+    if (room) {
+        tellRoom(room, render, exclude);
     }
 }
 
@@ -69,22 +65,22 @@ on("attack", ({ attacker, defender, hit }) => {
         return; // the "damage" listener below covers the hit case
     }
     if (attacker.socket) {
-        writeToSocket(attacker.socket, `You swing at ${defender.name} and miss.`);
+        writeToSocket(attacker.socket, `You swing at ${nameFor(defender, attacker)} and miss.`);
     }
     if (defender.socket) {
-        writeToSocket(defender.socket, `${attacker.name} swings at you and misses.`);
+        writeToSocket(defender.socket, `${nameFor(attacker, defender)} swings at you and misses.`);
     }
-    broadcastToRoom(attacker, `${attacker.name} swings at ${defender.name} and misses.`, [attacker, defender]);
+    broadcastToRoom(attacker, (viewer) => `${nameFor(attacker, viewer)} swings at ${nameFor(defender, viewer)} and misses.`, [attacker, defender]);
 });
 
 on("damage", ({ attacker, defender, amount }) => {
     if (attacker.socket) {
-        writeToSocket(attacker.socket, `You hit ${defender.name} for ${amount} damage!`);
+        writeToSocket(attacker.socket, `You hit ${nameFor(defender, attacker)} for ${amount} damage!`);
     }
     if (defender.socket) {
-        writeToSocket(defender.socket, `${attacker.name} hits you for ${amount} damage!`);
+        writeToSocket(defender.socket, `${nameFor(attacker, defender)} hits you for ${amount} damage!`);
     }
-    broadcastToRoom(attacker, `${attacker.name} hits ${defender.name} for ${amount} damage!`, [attacker, defender]);
+    broadcastToRoom(attacker, (viewer) => `${nameFor(attacker, viewer)} hits ${nameFor(defender, viewer)} for ${amount} damage!`, [attacker, defender]);
 });
 
 on("defeat", ({ character, defeatedBy }) => {
@@ -92,7 +88,7 @@ on("defeat", ({ character, defeatedBy }) => {
         writeToSocket(character.socket, "You have been defeated!");
     }
     if (defeatedBy.socket) {
-        writeToSocket(defeatedBy.socket, `You have defeated ${character.name}!`);
+        writeToSocket(defeatedBy.socket, `You have defeated ${nameFor(character, defeatedBy)}!`);
     }
-    broadcastToRoom(character, `${defeatedBy.name} has defeated ${character.name}!`, [character, defeatedBy]);
+    broadcastToRoom(character, (viewer) => `${nameFor(defeatedBy, viewer)} has defeated ${nameFor(character, viewer)}!`, [character, defeatedBy]);
 });

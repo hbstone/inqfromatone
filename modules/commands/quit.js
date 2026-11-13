@@ -1,4 +1,5 @@
 import { writeToSocket } from "../utils.js";
+import { nameFor } from "../naming.js";
 import { saveWorld } from "../worldPersistence.js";
 import { getSession, disengageCombat } from "../combat/session.js";
 
@@ -32,7 +33,7 @@ export const disconnectCharacter = (world, character, departureMessage, saveDirs
         disengageCombat(character);
         for (const opponent of opponents) {
             if (opponent.socket && !getSession(opponent)) {
-                writeToSocket(opponent.socket, `${character.name} is gone - you are no longer fighting.`);
+                writeToSocket(opponent.socket, `${nameFor(character, opponent)} is gone - you are no longer fighting.`);
             }
         }
     }

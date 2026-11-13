@@ -1,4 +1,4 @@
-import { writeToSocket } from "../utils.js";
+import { nameFor, tellRoom } from "../naming.js";
 
 // `say <message>` - IC, broadcasts to the whole room (unlike `tell`,
 // which is OOC and direct to one recipient, and `whisper`, which is IC
@@ -20,11 +20,7 @@ export const say = (world, args, character) => {
     const message = formatMessage(rawMessage);
     const room = world.getRoomById(character.roomId);
 
-    room.characters.forEach(char => {
-        if (char !== character && char.socket) {
-            writeToSocket(char.socket, `${character.name} says, "${message}"`);
-        }
-    });
+    tellRoom(room, (viewer) => `${nameFor(character, viewer)} says, "${message}"`, [character]);
 
     return `You say, "${message}"`;
 };
