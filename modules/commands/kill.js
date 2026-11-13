@@ -1,6 +1,6 @@
 import { writeToSocket } from "../utils.js";
+import { findCharacter, nameFor } from "../naming.js";
 import { engageCombat } from "../combat/session.js";
-import { keywordMatches } from "../keywordMatch.js";
 
 export const kill = (world, args, character) => {
     const targetName = args.join(" ");
@@ -9,9 +9,7 @@ export const kill = (world, args, character) => {
     }
 
     const room = world.getRoomById(character.roomId);
-    const target = room.characters.find(
-        char => char !== character && keywordMatches(char.keywords, targetName)
-    );
+    const target = findCharacter(character, room.characters.filter(c => c !== character), targetName);
 
     if (!target) {
         return "You don't see them here.";
@@ -19,16 +17,16 @@ export const kill = (world, args, character) => {
 
     // Core NPCs are non-combat for now (see ARCHITECTURE.md's "NPCs")
     if (target.isNpc) {
-        return `You can't attack ${target.name}.`;
+        return `You can't attack ${nameFor(target, character)}.`;
     }
 
     if (!engageCombat(character, target)) {
-        return `${target.name} is already defeated.`;
+        return `${nameFor(target, character)} is already defeated.`;
     }
 
     if (target.socket) {
-        writeToSocket(target.socket, `${character.name} attacks you!`);
+        writeToSocket(target.socket, `${nameFor(character, target)} attacks you!`);
     }
 
-    return `You attack ${target.name}!`;
+    return `You attack ${nameFor(target, character)}!`;
 };

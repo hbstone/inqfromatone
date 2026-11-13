@@ -1,5 +1,5 @@
 import { writeToSocket } from "../utils.js";
-import { keywordMatches } from "../keywordMatch.js";
+import { findCharacter, nameFor } from "../naming.js";
 
 export const whisper = (world, args, character) => {
     const recipientName = args[0];
@@ -10,7 +10,7 @@ export const whisper = (world, args, character) => {
         return "Usage: whisper <character> <message>";
     }
 
-    const recipient = room.characters.find(char => keywordMatches(char.keywords, recipientName));
+    const recipient = findCharacter(character, room.characters, recipientName);
 
     if (!recipient) {
         return `You don't see ${recipientName} here.`;
@@ -20,9 +20,9 @@ export const whisper = (world, args, character) => {
     if (recipient.socket) {
         writeToSocket(
             recipient.socket,
-            `${character.name} whispers to you, "${message}"`
+            `${nameFor(character, recipient)} whispers to you, "${message}"`
         );
     }
 
-    return `You whisper to ${recipient.name}: "${message}"`;
+    return `You whisper to ${nameFor(recipient, character)}: "${message}"`;
 };

@@ -1,4 +1,4 @@
-import { writeToSocket } from "../utils.js";
+import { nameFor, tellRoom } from "../naming.js";
 import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
 import { moveMatches } from "../stacking.js";
 
@@ -23,11 +23,7 @@ export const drop = (world, args, character) => {
     room.markDirty(); // matches.length > 0 is guaranteed above, so this always touches the room
 
     // Broadcast the action to the room
-    room.characters.forEach(char => {
-        if (char !== character && char.socket) {
-            writeToSocket(char.socket, `${character.name} drops ${message}.`);
-        }
-    });
+    tellRoom(room, (viewer) => `${nameFor(character, viewer)} drops ${message}.`, [character]);
 
     return `You drop ${message}.`;
 };

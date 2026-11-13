@@ -4,7 +4,7 @@
 // registerBehavior. See ARCHITECTURE.md's "NPCs".
 import { registerBehavior, pick } from "./behaviors.js";
 import { movePlayer, OPPOSITES } from "../commands/move.js";
-import { writeToSocket } from "../utils.js";
+import { nameFor, tellRoom } from "../naming.js";
 
 // "wander": { "chance", "leaveZone"? } - step through a random exit. Stays
 // inside the NPC's current zone unless leaveZone is true, so a town's
@@ -31,20 +31,17 @@ registerBehavior("wander", ({ npc, settings, world, random }) => {
 // groundskeeper" here: writeToSocket capitalizes every line's first letter.)
 registerBehavior("ambient", ({ npc, settings, world, random }) => {
     const room = world.getRoomById(npc.roomId);
-    const audience = room.characters.filter(c => c.socket);
-    if (audience.length === 0) {
+    if (!room.characters.some(c => c.socket)) {
         return false;
     }
     const lines = [
-        ...(settings.says ?? []).map(text => `${npc.name} says, "${text}"`),
-        ...(settings.emotes ?? []).map(text => `${npc.name} ${text}`),
+        ...(settings.says ?? []).map(text => (viewer) => `${nameFor(npc, viewer)} says, "${text}"`),
+        ...(settings.emotes ?? []).map(text => (viewer) => `${nameFor(npc, viewer)} ${text}`),
     ];
-    const line = pick(lines, random);
-    if (!line) {
+    const render = pick(lines, random);
+    if (!render) {
         return false;
     }
-    for (const character of audience) {
-        writeToSocket(character.socket, line);
-    }
+    tellRoom(room, render);
     return true;
 });

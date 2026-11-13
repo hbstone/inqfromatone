@@ -1,6 +1,6 @@
 import { writeToSocket } from "../utils.js";
+import { findCharacter, nameFor, tellRoom } from "../naming.js";
 import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
-import { keywordMatches } from "../keywordMatch.js";
 import { moveMatches } from "../stacking.js";
 
 export const give = (world, args, character) => {
@@ -21,7 +21,7 @@ export const give = (world, args, character) => {
     }
 
     // Find the recipient in the current room
-    const recipient = room.characters.find(char => keywordMatches(char.keywords, recipientName));
+    const recipient = findCharacter(character, room.characters, recipientName);
 
     if (!recipient) {
         return "You can't find them.";
@@ -30,7 +30,7 @@ export const give = (world, args, character) => {
     // NPCs aren't saved, so anything handed to one would vanish at the
     // next restart (see ARCHITECTURE.md's "NPCs")
     if (recipient.isNpc) {
-        return `${recipient.name} doesn't take it.`;
+        return `${nameFor(recipient, character)} doesn't take it.`;
     }
 
     const message = formatItemList(matches.map(previewMatch));
@@ -40,19 +40,12 @@ export const give = (world, args, character) => {
     if (recipient.socket) {
         writeToSocket(
             recipient.socket,
-            `${character.name} gives you ${message}.`
+            `${nameFor(character, recipient)} gives you ${message}.`
         );
     }
 
     // Broadcast the action to the room
-    room.characters.forEach(char => {
-        if (char !== character && char !== recipient && char.socket) {
-            writeToSocket(
-                char.socket,
-                `${character.name} gives ${message} to ${recipient.name}.`
-            );
-        }
-    });
+    tellRoom(room, (viewer) => `${nameFor(character, viewer)} gives ${message} to ${nameFor(recipient, viewer)}.`, [character, recipient]);
 
-    return `You give ${message} to ${recipient.name}.`;
+    return `You give ${message} to ${nameFor(recipient, character)}.`;
 };

@@ -1,11 +1,12 @@
-import { writeToSocket } from "../utils.js";
+import { nameFor, tellRoom } from "../naming.js";
 import { emit } from "../events.js";
 
 export const OPPOSITES = { north: "south", south: "north", east: "west", west: "east" };
 
 // Shared room-transition logic used by the directional commands
-// (north/south/east/west), flee, and wandering NPCs (modules/npcs/index.js). Pulled out so there's one place that emits
-// leaveRoom/enterRoom, instead of four call sites to keep in sync.
+// (north/south/east/west), flee, and moving NPCs (modules/npcs/). Pulled
+// out so there's one place that emits leaveRoom/enterRoom, instead of
+// several call sites to keep in sync.
 //
 // Crossing into another zone also emits zoneLeave/zoneEnter, nested inside
 // the room events (leaveRoom, zoneLeave, move, zoneEnter, enterRoom). Core
@@ -32,14 +33,7 @@ export const movePlayer = (world, character, room, direction, opposite) => {
     }
 
     // Broadcast the departure
-    room.characters.forEach(char => {
-        if (char !== character && char.socket) {
-            writeToSocket(
-                char.socket,
-                `${character.name} leaves to the ${direction}.`
-            );
-        }
-    });
+    tellRoom(room, (viewer) => `${nameFor(character, viewer)} leaves to the ${direction}.`, [character]);
 
     // Move the character between rooms, keeping room.characters and
     // character.roomId in sync
@@ -47,14 +41,7 @@ export const movePlayer = (world, character, room, direction, opposite) => {
     nextRoom.addCharacter(character);
 
     // Broadcast the arrival
-    nextRoom.characters.forEach(char => {
-        if (char !== character && char.socket) {
-            writeToSocket(
-                char.socket,
-                `${character.name} arrives from the ${opposite}.`
-            );
-        }
-    });
+    tellRoom(nextRoom, (viewer) => `${nameFor(character, viewer)} arrives from the ${opposite}.`, [character]);
 
     if (changingZone) {
         emit("zoneEnter", { character, zone: toZone, from: fromZone, world });
