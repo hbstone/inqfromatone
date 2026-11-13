@@ -12,10 +12,14 @@ on:
     branches:
       - main
 
-# Down scope as necessary via https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token
+# Read-only: nothing here writes to the repo, so a compromised dependency
+# running in CI gets no write access through the token.
 permissions:
-  checks: write
-  contents: write
+  contents: read
+
+# Actions are pinned to a commit SHA (version in the comment), not a tag
+# that could be moved to new code. See ARCHITECTURE.md's "Dependencies".
+# pnpm comes from the version pinned in package.json's packageManager.
 
 jobs:
   run-linters:
@@ -24,21 +28,24 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 20
+          node-version: 24
+
+      - name: Install pnpm
+        run: npm install -g "$(node -p "require('./package.json').packageManager")"
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run ESLint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Run Prettier
-        run: npm run format
+        run: pnpm run format
 
   run-tests:
     name: Run tests
@@ -46,15 +53,18 @@ jobs:
 
     steps:
       - name: Check out Git repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 20
+          node-version: 24
+
+      - name: Install pnpm
+        run: npm install -g "$(node -p "require('./package.json').packageManager")"
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run tests
-        run: npm test
+        run: pnpm test
