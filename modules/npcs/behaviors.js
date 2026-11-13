@@ -15,8 +15,15 @@
 // random order, each firing with its `chance`, and the first one that
 // actually does something ends the pulse. So an NPC does at most one thing
 // per pulse, and a chance of 0.1 means "about once every 10 pulses".
+//
+// An NPC with a routine (Tier 1, see routine.js) walks to its current post
+// first; walking takes the whole pulse. Once there, the post's behaviors
+// replace its usual ones, if the post lists any.
 import { every } from "../scheduler.js";
 import { guard } from "../guard.js";
+import { getGameTime } from "../gameClock.js";
+import { movePlayer, OPPOSITES } from "../commands/move.js";
+import { currentRoutineEntry, firstStepToward, settleAtPosts, warnAboutUnknownPhases } from "./routine.js";
 
 export const NPC_PULSE_MS = 10 * 1000;
 
@@ -57,13 +64,45 @@ export function pick(list, random) {
 }
 
 /**
+ * Routine handling for one pulse (see routine.js).
+ * @returns {{ walked: boolean, behaviors: object }} Whether the NPC spent
+ *   the pulse walking to its post, and else which behaviors to run.
+ */
+function followRoutine(npc, world, hour) {
+    const entry = npc.routine && currentRoutineEntry(npc.routine, hour);
+    if (!entry) {
+        return { walked: false, behaviors: npc.behaviors };
+    }
+    if (npc.roomId === entry.roomId) {
+        npc.unreachablePost = null;
+        return { walked: false, behaviors: entry.behaviors ?? npc.behaviors };
+    }
+    const direction = firstStepToward(world, npc.roomId, entry.roomId);
+    if (direction) {
+        npc.unreachablePost = null;
+        movePlayer(world, npc, world.getRoomById(npc.roomId), direction, OPPOSITES[direction]);
+        return { walked: true };
+    }
+    if (npc.unreachablePost !== entry.roomId) {
+        npc.unreachablePost = entry.roomId; // warn once per post, not every pulse
+        console.warn(`NPC "${npc.templateId}" can't find a way from "${npc.roomId}" to its post "${entry.roomId}"; staying put.`);
+    }
+    return { walked: false, behaviors: npc.behaviors };
+}
+
+/**
  * Give one NPC its pulse.
  * @param {import("../Npc.js").Npc} npc
  * @param {import("../World.js").World} world
  * @param {() => number} [random]
+ * @param {number} [hour] - The game hour; overridable for tests.
  */
-export function pulseNpc(npc, world, random = Math.random) {
-    const entries = Object.entries(npc.behaviors);
+export function pulseNpc(npc, world, random = Math.random, hour = getGameTime().hour) {
+    const { walked, behaviors: active } = followRoutine(npc, world, hour);
+    if (walked) {
+        return;
+    }
+    const entries = Object.entries(active);
     // Fisher-Yates, so no behavior always gets first claim on the pulse
     for (let i = entries.length - 1; i > 0; i--) {
         const j = Math.floor(random() * (i + 1));
@@ -81,13 +120,17 @@ export function pulseNpc(npc, world, random = Math.random) {
 }
 
 /**
- * Start pulsing every NPC in the world. One NPC's broken behavior is
- * logged and skipped, not fatal to the rest (see modules/guard.js).
+ * Start pulsing every NPC in the world, first putting routine NPCs at
+ * their current posts (see routine.js's settleAtPosts). One NPC's broken
+ * behavior is logged and skipped, not fatal to the rest (see
+ * modules/guard.js). Call after the time settings are loaded.
  * @param {import("../World.js").World} world
  * @param {() => number} [random] - Overridable for tests.
  * @returns {{ cancel: () => void }} The scheduler job.
  */
 export function startNpcBehaviors(world, random = Math.random) {
+    warnAboutUnknownPhases(world);
+    settleAtPosts(world, getGameTime().hour);
     return every("npc behaviors", NPC_PULSE_MS, () => {
         for (const npc of world.npcs) {
             guard(`behaviors for NPC "${npc.templateId}"`, () => pulseNpc(npc, world, random));

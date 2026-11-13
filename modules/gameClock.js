@@ -73,6 +73,15 @@ function phaseAt(hour) {
 }
 
 /**
+ * The hour a named phase starts, e.g. for NPC routines keyed to "dusk".
+ * @param {string} name
+ * @returns {number|null} null if there's no such phase.
+ */
+export function getPhaseStartHour(name) {
+    return phases.find(phase => phase.name === name)?.startHour ?? null;
+}
+
+/**
  * The in-game time at a real instant.
  * @param {number} [now] - Real time in ms (Date.now()).
  * @returns {{ day: number, hour: number, minute: number, phase: string|null }}

@@ -16,9 +16,12 @@ export class Npc extends Character {
      *   name, minus articles.
      * @param {string} [template.description] - Shown when looked at.
      * @param {object} [template.behaviors] - behavior name -> its settings.
+     * @param {object[]} [template.routine] - Daily posts (see
+     *   modules/npcs/routine.js), with each `at` already resolved to a
+     *   room id as `roomId` by the loader.
      * @param {string} homeRoomId - Where this NPC spawned.
      */
-    constructor({ id, name, keywords, description = "", behaviors = {} }, homeRoomId) {
+    constructor({ id, name, keywords, description = "", behaviors = {}, routine = null }, homeRoomId) {
         super(name, description);
         if (keywords?.length) {
             this.keywords = keywords.map(k => k.toLowerCase());
@@ -28,6 +31,8 @@ export class Npc extends Character {
         this.isNpc = true;
         this.templateId = id;
         this.behaviors = behaviors;
+        this.routine = routine?.length ? routine : null;
+        this.unreachablePost = null; // see modules/npcs/behaviors.js's followRoutine
         this.homeRoomId = homeRoomId;
     }
 }

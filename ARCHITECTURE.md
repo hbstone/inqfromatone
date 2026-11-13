@@ -839,8 +839,53 @@ description, a long description and a presence line ("A bearded
 gentleman juggles clubs."), with per-viewer recognition. Presence lines
 are deliberately not an NPC-only feature here.
 
-Not built yet: Tier 1 routines (schedules by time of day), NPCs reacting
-to what players say (Tier 2), and NPCs carrying or exchanging items.
+Not built yet: NPCs reacting to what players say (Tier 2), and NPCs
+carrying or exchanging items. Tier 1 routines are below.
+
+## NPC routines (Tier 1)
+
+An NPC template can add a `routine`: daily posts, each starting at a game
+hour or a time-of-day phase, with an optional set of behaviors for while
+it's there.
+
+```json
+"routine": [
+  { "from": "dawn", "at": "courtyard" },
+  { "from": "night", "at": "start/storage-room",
+    "behaviors": { "ambient": { "chance": 0.1, "emotes": ["snores softly."] } } }
+]
+```
+
+- **Which post:** the latest entry started by the current hour. Before
+  the day's first one, the last carries over (the same rule as phases).
+  `from` is a whole hour (0-23) or a phase name from `content/time.json`.
+- **Getting there:** away from its post, the NPC spends each pulse walking
+  one room toward it by the shortest path (breadth-first over exits,
+  `modules/npcs/routine.js`). So people see it leave and arrive like any
+  other move, and the room/zone events fire. Paths can cross zones; the
+  `wander` zone limit doesn't apply to routines.
+- **At the post:** the entry's `behaviors` replace the NPC's usual ones
+  while it's there, or the usual ones run if the entry lists none. A
+  usual `wander` will pull it off its post, and the routine walks it back
+  on a later pulse. Give the post its own behaviors when that isn't
+  wanted.
+- **At startup** routine NPCs are put straight at their current post,
+  silently, so a server that boots at night doesn't have everyone
+  visibly trooping off to bed.
+- **Fallback:** with no way to the post (a missing room, a severed exit,
+  or only non-cardinal exits, which movement doesn't support yet), the
+  NPC stays put and runs its usual behaviors, and a warning is logged
+  once per post.
+- **Validation:** `at` resolves like exits (a bare key means the NPC's own
+  zone). An entry with a missing room or a bad `from` is dropped at load
+  with a warning, and the rest of the routine still runs. Unknown phase
+  names are warned about when NPC behaviors start, since time settings
+  load separately from content.
+
+This covers the roadmap's "authored schedule per job" and the "blocked
+path" fallback. Fallbacks for missing items or NPCs wait until NPCs can
+use items or interact with each other.
+
 
 ## Input limits: line length cap and command pacing
 
