@@ -77,7 +77,9 @@ function setup() {
     world.addZone('town', { name: 'The Town' });
     world.addZone('woods', { name: 'The Woods' });
     const [gate, square, edge] = [
-        ['town/gate', 'town'], ['town/square', 'town'], ['woods/edge', 'woods'],
+        ['town/gate', 'town'],
+        ['town/square', 'town'],
+        ['woods/edge', 'woods'],
     ].map(([id, zone]) => {
         world.addRoom(id, `${id} description`, id);
         const room = world.getRoomById(id);
@@ -94,9 +96,7 @@ function setup() {
     for (const name of ['leaveRoom', 'zoneLeave', 'zoneEnter', 'enterRoom']) {
         on(name, (payload) => {
             if (payload.character !== character) return;
-            const zones = name.startsWith('zone')
-                ? ` ${payload.zone.key} (${(payload.to ?? payload.from).key})`
-                : '';
+            const zones = name.startsWith('zone') ? ` ${payload.zone.key} (${(payload.to ?? payload.from).key})` : '';
             seen.push(name + zones);
         });
     }

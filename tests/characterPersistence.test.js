@@ -17,19 +17,21 @@ import { Item } from '../modules/Item.js';
     assert.deepStrictEqual(saved, {
         description: 'A curious explorer.',
         roomId: 'starting-room',
-        inventory: [{
-            name: 'a rusty key',
-            description: 'An old rusty key.',
-            keywords: ['rusty', 'key'],
-            size: 'small',
-            weight: 1,
-            container: null,
-            equip: null,
-            stackable: false,
-            quantity: 1,
-            inventory: [],
-            components: { lockpick: { uses: 3 } },
-        }],
+        inventory: [
+            {
+                name: 'a rusty key',
+                description: 'An old rusty key.',
+                keywords: ['rusty', 'key'],
+                size: 'small',
+                weight: 1,
+                container: null,
+                equip: null,
+                stackable: false,
+                quantity: 1,
+                inventory: [],
+                components: { lockpick: { uses: 3 } },
+            },
+        ],
         equipment: {},
         colorEnabled: true,
         shortDesc: null,
@@ -92,7 +94,9 @@ import { Item } from '../modules/Item.js';
 {
     const original = new Character('Explorer');
     const sword = new Item('a wooden sword', 'A blunt practice sword.', ['wooden', 'sword'], {
-        size: 'small', weight: 2, equip: { slot: 'weapon' },
+        size: 'small',
+        weight: 2,
+        equip: { slot: 'weapon' },
     });
     sword.components.weapon = { damage: 3 };
     original.equipment.weapon = sword;
@@ -113,7 +117,9 @@ import { Item } from '../modules/Item.js';
 {
     const original = new Character('Explorer');
     const pouch = new Item('a pouch', 'A small pouch.', ['pouch'], {
-        size: 'small', weight: 0.5, container: { maxItemSize: 'small', capacityWeight: 5 },
+        size: 'small',
+        weight: 0.5,
+        container: { maxItemSize: 'small', capacityWeight: 5 },
     });
     const coin = new Item('a coin', 'A tarnished coin.', ['coin'], { size: 'small', weight: 0.1 });
     pouch.inventory.push(coin);

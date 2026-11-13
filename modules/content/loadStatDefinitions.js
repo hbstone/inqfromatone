@@ -13,19 +13,16 @@
 // Like modules/commands/registry.js, definitions live in module-level
 // state once loaded, queried via exported functions, rather than being
 // threaded through every call site that needs them.
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import { assertUniqueKeys } from "./assertUniqueKeys.js";
-import { initStat } from "../stats.js";
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { assertUniqueKeys } from './assertUniqueKeys.js';
+import { initStat } from '../stats.js';
 
-const DEFAULT_CONTENT_DIR = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "..", "..", "content", "stats"
-);
+const DEFAULT_CONTENT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'content', 'stats');
 
 function readJson(filePath) {
-    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
 const definitions = new Map(); // key -> { key, label, startingValue, role? }
@@ -39,8 +36,8 @@ const roleIndex = {}; // role -> key
  *   so tests can point at fixture data.
  */
 export function loadStatDefinitions(contentDir = DEFAULT_CONTENT_DIR) {
-    const attributes = readJson(path.join(contentDir, "attributes.json"));
-    assertUniqueKeys(attributes, "stat");
+    const attributes = readJson(path.join(contentDir, 'attributes.json'));
+    assertUniqueKeys(attributes, 'stat');
 
     definitions.clear();
     for (const key of Object.keys(roleIndex)) {
@@ -57,7 +54,7 @@ export function loadStatDefinitions(contentDir = DEFAULT_CONTENT_DIR) {
             // arbitrarily pick one.
             if (roleIndex[def.role]) {
                 throw new Error(
-                    `Duplicate role "${def.role}" in content data: both "${roleIndex[def.role]}" and "${def.key}" claim it.`
+                    `Duplicate role "${def.role}" in content data: both "${roleIndex[def.role]}" and "${def.key}" claim it.`,
                 );
             }
             roleIndex[def.role] = def.key;

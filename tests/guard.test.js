@@ -7,9 +7,26 @@ mock.method(console, 'error', () => {});
 
 // guard returns fn's result, or the fallback (logged) if it throws
 {
-    assert.equal(guard('ok', () => 42), 42);
-    assert.equal(guard('boom', () => { throw new Error('boom'); }, 'fallback'), 'fallback');
-    assert.equal(guard('boom', () => { throw new Error('boom'); }), undefined);
+    assert.equal(
+        guard('ok', () => 42),
+        42,
+    );
+    assert.equal(
+        guard(
+            'boom',
+            () => {
+                throw new Error('boom');
+            },
+            'fallback',
+        ),
+        'fallback',
+    );
+    assert.equal(
+        guard('boom', () => {
+            throw new Error('boom');
+        }),
+        undefined,
+    );
     assert.equal(console.error.mock.callCount(), 2);
 }
 

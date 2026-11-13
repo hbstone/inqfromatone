@@ -70,17 +70,19 @@ function withFixtureDir(zones, itemsData, fn) {
     try {
         result = withFixtureDir(
             {
-                solo: [{
-                    key: 'only-room',
-                    name: 'Only Room',
-                    description: 'The only room.',
-                    isStartingRoom: true,
-                    exits: { north: 'nowhere' },
-                    items: ['missing-item'],
-                }],
+                solo: [
+                    {
+                        key: 'only-room',
+                        name: 'Only Room',
+                        description: 'The only room.',
+                        isStartingRoom: true,
+                        exits: { north: 'nowhere' },
+                        items: ['missing-item'],
+                    },
+                ],
             },
             [],
-            (fixtureDir) => loadWorldData(world, fixtureDir)
+            (fixtureDir) => loadWorldData(world, fixtureDir),
         );
     } finally {
         console.warn = originalWarn;
@@ -102,24 +104,26 @@ function withFixtureDir(zones, itemsData, fn) {
     const world = new World();
     withFixtureDir(
         {
-            keep: [{
-                key: 'armory',
-                name: 'Armory',
-                description: 'An armory.',
-                isStartingRoom: true,
-                items: ['arrow', 'arrow', 'arrow', 'brick', 'brick'],
-            }],
+            keep: [
+                {
+                    key: 'armory',
+                    name: 'Armory',
+                    description: 'An armory.',
+                    isStartingRoom: true,
+                    items: ['arrow', 'arrow', 'arrow', 'brick', 'brick'],
+                },
+            ],
         },
         [
             { key: 'arrow', name: 'an arrow', description: 'An arrow.', keywords: ['arrow'], stackable: true },
             { key: 'brick', name: 'a brick', description: 'A brick.', keywords: ['brick'] },
         ],
-        (fixtureDir) => loadWorldData(world, fixtureDir)
+        (fixtureDir) => loadWorldData(world, fixtureDir),
     );
 
     const armory = world.getRoomById('keep/armory');
-    const arrows = armory.inventory.filter(item => item.name === 'an arrow');
-    const bricks = armory.inventory.filter(item => item.name === 'a brick');
+    const arrows = armory.inventory.filter((item) => item.name === 'an arrow');
+    const bricks = armory.inventory.filter((item) => item.name === 'a brick');
 
     assert.equal(arrows.length, 1, 'stackable arrows should merge into one object');
     assert.equal(arrows[0].quantity, 3);
@@ -133,18 +137,19 @@ function withFixtureDir(zones, itemsData, fn) {
 {
     const world = new World();
     assert.throws(
-        () => withFixtureDir(
-            {
-                halls: [
-                    { key: 'dup', name: 'A Long Hallway', description: 'One.', isStartingRoom: true },
-                    { key: 'dup', name: 'Also A Long Hallway', description: 'Two.' },
-                ],
-            },
-            [],
-            (fixtureDir) => loadWorldData(world, fixtureDir)
-        ),
+        () =>
+            withFixtureDir(
+                {
+                    halls: [
+                        { key: 'dup', name: 'A Long Hallway', description: 'One.', isStartingRoom: true },
+                        { key: 'dup', name: 'Also A Long Hallway', description: 'Two.' },
+                    ],
+                },
+                [],
+                (fixtureDir) => loadWorldData(world, fixtureDir),
+            ),
         /Duplicate room \(zone "halls"\) key "dup"/,
-        'a duplicate room key should throw rather than silently merge'
+        'a duplicate room key should throw rather than silently merge',
     );
 }
 
@@ -153,16 +158,17 @@ function withFixtureDir(zones, itemsData, fn) {
 {
     const world = new World();
     assert.throws(
-        () => withFixtureDir(
-            { a: [{ key: 'room-a', name: 'Room A', description: 'A room.', isStartingRoom: true }] },
-            [
-                { key: 'dup', name: 'a rusty key', description: 'One.', keywords: ['rusty'] },
-                { key: 'dup', name: 'a shiny key', description: 'Two.', keywords: ['shiny'] },
-            ],
-            (fixtureDir) => loadWorldData(world, fixtureDir)
-        ),
+        () =>
+            withFixtureDir(
+                { a: [{ key: 'room-a', name: 'Room A', description: 'A room.', isStartingRoom: true }] },
+                [
+                    { key: 'dup', name: 'a rusty key', description: 'One.', keywords: ['rusty'] },
+                    { key: 'dup', name: 'a shiny key', description: 'Two.', keywords: ['shiny'] },
+                ],
+                (fixtureDir) => loadWorldData(world, fixtureDir),
+            ),
         /Duplicate item key "dup"/,
-        'a duplicate item key should throw rather than silently shadow'
+        'a duplicate item key should throw rather than silently shadow',
     );
 }
 
@@ -176,7 +182,12 @@ function withFixtureDir(zones, itemsData, fn) {
             town: {
                 zone: { name: 'The Town' },
                 rooms: [
-                    { key: 'gate', name: 'Town Gate', isStartingRoom: true, exits: { north: 'square', east: 'woods/gate' } },
+                    {
+                        key: 'gate',
+                        name: 'Town Gate',
+                        isStartingRoom: true,
+                        exits: { north: 'square', east: 'woods/gate' },
+                    },
                     { key: 'square', name: 'Town Square', exits: { south: 'gate' } },
                     { key: 'inn', name: 'The Inn', indoors: true },
                 ],
@@ -190,7 +201,7 @@ function withFixtureDir(zones, itemsData, fn) {
             },
         },
         [],
-        (fixtureDir) => loadWorldData(world, fixtureDir)
+        (fixtureDir) => loadWorldData(world, fixtureDir),
     );
 
     assert.equal(startingRoomKey, 'town/gate');
@@ -216,12 +227,16 @@ function withFixtureDir(zones, itemsData, fn) {
 // Zone and room keys become save-file paths, so they must be filename-safe
 {
     assert.throws(
-        () => withFixtureDir({ 'Bad Zone': [{ key: 'room', name: 'Room' }] }, [], (dir) => loadWorldData(new World(), dir)),
-        /Invalid zone key "Bad Zone"/
+        () =>
+            withFixtureDir({ 'Bad Zone': [{ key: 'room', name: 'Room' }] }, [], (dir) =>
+                loadWorldData(new World(), dir),
+            ),
+        /Invalid zone key "Bad Zone"/,
     );
     assert.throws(
-        () => withFixtureDir({ ok: [{ key: '../escape', name: 'Room' }] }, [], (dir) => loadWorldData(new World(), dir)),
-        /Invalid room key "\.\.\/escape"/
+        () =>
+            withFixtureDir({ ok: [{ key: '../escape', name: 'Room' }] }, [], (dir) => loadWorldData(new World(), dir)),
+        /Invalid room key "\.\.\/escape"/,
     );
 }
 

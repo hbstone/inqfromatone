@@ -4,7 +4,7 @@
 // called, or how big "small" really is. An item is a container exactly
 // when its `container` field ({ maxItemSize, capacityWeight }) is set;
 // its contents live in the ordinary `inventory` array every Item has.
-const SIZE_ORDER = ["small", "medium", "large"];
+const SIZE_ORDER = ['small', 'medium', 'large'];
 
 function sizeRank(size) {
     const rank = SIZE_ORDER.indexOf(size);
@@ -46,7 +46,7 @@ function alreadyContains(ancestor, item) {
     if (!isContainer(ancestor)) {
         return false;
     }
-    return ancestor.inventory.some(child => child === item || alreadyContains(child, item));
+    return ancestor.inventory.some((child) => child === item || alreadyContains(child, item));
 }
 
 /**

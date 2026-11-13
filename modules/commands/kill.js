@@ -1,15 +1,19 @@
-import { writeToSocket } from "../utils.js";
-import { findCharacter, nameFor } from "../naming.js";
-import { engageCombat } from "../combat/session.js";
+import { writeToSocket } from '../utils.js';
+import { findCharacter, nameFor } from '../naming.js';
+import { engageCombat } from '../combat/session.js';
 
 export const kill = (world, args, character) => {
-    const targetName = args.join(" ");
+    const targetName = args.join(' ');
     if (!targetName) {
-        return "Kill whom?";
+        return 'Kill whom?';
     }
 
     const room = world.getRoomById(character.roomId);
-    const target = findCharacter(character, room.characters.filter(c => c !== character), targetName);
+    const target = findCharacter(
+        character,
+        room.characters.filter((c) => c !== character),
+        targetName,
+    );
 
     if (!target) {
         return "You don't see them here.";

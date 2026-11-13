@@ -1,11 +1,11 @@
-import { writeToSocket } from "../utils.js";
+import { writeToSocket } from '../utils.js';
 
 export const tell = (world, args, character) => {
     const recipientName = args[0];
-    const message = args.slice(1).join(" ");
+    const message = args.slice(1).join(' ');
 
     if (!recipientName || !message) {
-        return "Usage: tell <character> <message>";
+        return 'Usage: tell <character> <message>';
     }
 
     const recipient = world.getOnlineCharacterByName(recipientName);
@@ -16,10 +16,7 @@ export const tell = (world, args, character) => {
 
     // Notify the recipient
     if (recipient.socket) {
-        writeToSocket(
-            recipient.socket,
-            `${character.name} tells you: "${message}"`
-        );
+        writeToSocket(recipient.socket, `${character.name} tells you: "${message}"`);
     }
 
     return `You tell ${recipient.name}: "${message}"`;

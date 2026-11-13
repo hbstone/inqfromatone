@@ -4,13 +4,17 @@ import { isContainer, getEffectiveWeight, canContain, canContainAll } from '../m
 
 function makePouch() {
     return new Item('a pouch', 'A small pouch.', ['pouch'], {
-        size: 'small', weight: 0.5, container: { maxItemSize: 'small', capacityWeight: 5 },
+        size: 'small',
+        weight: 0.5,
+        container: { maxItemSize: 'small', capacityWeight: 5 },
     });
 }
 
 function makeBackpack() {
     return new Item('a backpack', 'A canvas backpack.', ['backpack'], {
-        size: 'medium', weight: 2, container: { maxItemSize: 'medium', capacityWeight: 20 },
+        size: 'medium',
+        weight: 2,
+        container: { maxItemSize: 'medium', capacityWeight: 20 },
     });
 }
 
@@ -41,7 +45,12 @@ function makeItem(size, weight) {
 
 // getEffectiveWeight: a stack's quantity multiplies its per-unit weight
 {
-    const arrow = new Item('an arrow', 'An arrow.', ['arrow'], { size: 'small', weight: 0.05, stackable: true, quantity: 20 });
+    const arrow = new Item('an arrow', 'An arrow.', ['arrow'], {
+        size: 'small',
+        weight: 0.05,
+        stackable: true,
+        quantity: 20,
+    });
     assert.equal(getEffectiveWeight(arrow), 1);
 }
 
@@ -132,7 +141,11 @@ function makeItem(size, weight) {
     const pouch = makePouch(); // capacityWeight 5
     pouch.inventory.push(makeItem('small', 4));
     assert.equal(canContainAll(pouch, [makeItem('small', 1)]).ok, true, 'fills the remaining budget exactly');
-    assert.equal(canContainAll(pouch, [makeItem('small', 0.6), makeItem('small', 0.6)]).ok, false, 'together exceed it');
+    assert.equal(
+        canContainAll(pouch, [makeItem('small', 0.6), makeItem('small', 0.6)]).ok,
+        false,
+        'together exceed it',
+    );
 }
 
 // canContainAll: one bad item (too big) fails the whole batch, even if

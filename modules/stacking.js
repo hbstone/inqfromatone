@@ -5,7 +5,7 @@
 // stackable or how many of one a player happens to be holding.
 //
 // Deliberately no max stack size - see ARCHITECTURE.md.
-import { Item } from "./Item.js";
+import { Item } from './Item.js';
 
 /**
  * Whether `a` and `b` are the same stackable item and could merge into
@@ -33,7 +33,7 @@ function sameStack(a, b) {
  * @param {object} item
  */
 export function addItem(destination, item) {
-    const existing = item.stackable ? destination.find(other => sameStack(other, item)) : null;
+    const existing = item.stackable ? destination.find((other) => sameStack(other, item)) : null;
     if (existing) {
         existing.quantity += item.quantity;
     } else {

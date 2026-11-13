@@ -1,4 +1,4 @@
-import { Item } from "./Item.js";
+import { Item } from './Item.js';
 
 export class Character {
     constructor(name = null, description = null) {
@@ -22,7 +22,7 @@ export class Character {
 
         // Connection/session state
         this.isLoggedIn = false;
-        this.stage = "name";
+        this.stage = 'name';
         this.roomId = null;
         this.socket = null;
 
@@ -42,7 +42,7 @@ export class Character {
      */
     setName(name) {
         this.name = name;
-        this.keywords = name.toLowerCase().split(" ");
+        this.keywords = name.toLowerCase().split(' ');
     }
 
     /**
@@ -55,9 +55,9 @@ export class Character {
         return {
             description: this.description,
             roomId: this.roomId,
-            inventory: this.inventory.map(item => item.toSaveData()),
+            inventory: this.inventory.map((item) => item.toSaveData()),
             equipment: Object.fromEntries(
-                Object.entries(this.equipment).map(([slot, item]) => [slot, item.toSaveData()])
+                Object.entries(this.equipment).map(([slot, item]) => [slot, item.toSaveData()]),
             ),
             colorEnabled: this.colorEnabled,
             shortDesc: this.shortDesc,
@@ -80,7 +80,7 @@ export class Character {
         this.components = saveData.components ?? {};
         this.inventory = (saveData.inventory ?? []).map(Item.fromSaveData);
         this.equipment = Object.fromEntries(
-            Object.entries(saveData.equipment ?? {}).map(([slot, data]) => [slot, Item.fromSaveData(data)])
+            Object.entries(saveData.equipment ?? {}).map(([slot, data]) => [slot, Item.fromSaveData(data)]),
         );
     }
 }

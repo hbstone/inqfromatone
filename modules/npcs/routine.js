@@ -17,8 +17,8 @@
 // lists none). With no way to get there - a missing room, a severed exit -
 // it stays put, falls back to its usual behaviors, and a warning is logged
 // once per post.
-import { getPhaseStartHour } from "../gameClock.js";
-import { OPPOSITES } from "../commands/move.js";
+import { getPhaseStartHour } from '../gameClock.js';
+import { OPPOSITES } from '../commands/move.js';
 
 /**
  * The hour a routine entry starts, or null if it names a phase that
@@ -27,7 +27,7 @@ import { OPPOSITES } from "../commands/move.js";
  * @returns {number|null}
  */
 function startHourOf(entry) {
-    return typeof entry.from === "number" ? entry.from : getPhaseStartHour(entry.from);
+    return typeof entry.from === 'number' ? entry.from : getPhaseStartHour(entry.from);
 }
 
 /**
@@ -38,7 +38,7 @@ function startHourOf(entry) {
  */
 export function currentRoutineEntry(routine, hour) {
     const timed = routine
-        .map(entry => ({ entry, start: startHourOf(entry) }))
+        .map((entry) => ({ entry, start: startHourOf(entry) }))
         .filter(({ start }) => start !== null)
         .sort((a, b) => a.start - b.start);
     if (timed.length === 0) {
@@ -119,9 +119,11 @@ export function warnAboutUnknownPhases(world) {
     for (const npc of world.npcs) {
         for (const entry of npc.routine ?? []) {
             const key = `${npc.templateId}:${entry.from}`;
-            if (typeof entry.from === "string" && getPhaseStartHour(entry.from) === null && !warned.has(key)) {
+            if (typeof entry.from === 'string' && getPhaseStartHour(entry.from) === null && !warned.has(key)) {
                 warned.add(key);
-                console.warn(`NPC "${npc.templateId}" has a routine entry from unknown phase "${entry.from}"; it will be ignored.`);
+                console.warn(
+                    `NPC "${npc.templateId}" has a routine entry from unknown phase "${entry.from}"; it will be ignored.`,
+                );
             }
         }
     }

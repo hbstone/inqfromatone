@@ -3,7 +3,11 @@ import { writeToSocket } from '../modules/utils.js';
 
 function captureWrite() {
     let written = '';
-    const socket = { write: (data) => { written += data; } };
+    const socket = {
+        write: (data) => {
+            written += data;
+        },
+    };
     return { socket, get: () => written };
 }
 

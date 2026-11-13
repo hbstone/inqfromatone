@@ -12,12 +12,16 @@ import '../modules/commands/index.js'; // the real core verbs
     const lines = output.split('\n');
     assert.equal(lines[0], 'Available commands:');
 
-    const listed = lines.slice(1)
-        .filter(line => line.startsWith('  '))
-        .flatMap(line => line.trim().split(/\s+/));
+    const listed = lines
+        .slice(1)
+        .filter((line) => line.startsWith('  '))
+        .flatMap((line) => line.trim().split(/\s+/));
     const expected = listCommands().map(({ name, abbreviate }) => (abbreviate ? name : `${name}*`));
     assert.deepStrictEqual(listed, expected, 'every command, in alphabetical order');
-    assert.deepStrictEqual(expected.map(n => n.replace('*', '')), [...expected.map(n => n.replace('*', ''))].sort());
+    assert.deepStrictEqual(
+        expected.map((n) => n.replace('*', '')),
+        [...expected.map((n) => n.replace('*', ''))].sort(),
+    );
 
     assert.ok(listed.includes('kill*') && listed.includes('quit*'), 'full-word-only commands are starred');
     assert.ok(listed.includes('commands') && listed.includes('who'));
@@ -31,7 +35,11 @@ import '../modules/commands/index.js'; // the real core verbs
     const a = world.getRoomById(world.addRoom('Room A', 'A room.'));
     const b = world.getRoomById(world.addRoom('Room B', 'Another room.'));
 
-    for (const [name, room] of [['Zed', a], ['amy', b], ['Bob', a]]) {
+    for (const [name, room] of [
+        ['Zed', a],
+        ['amy', b],
+        ['Bob', a],
+    ]) {
         const character = new Character(name);
         character.socket = { write() {} };
         room.addCharacter(character);

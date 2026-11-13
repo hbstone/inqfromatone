@@ -24,7 +24,7 @@ export function registerAttackProducer(fn) {
  */
 export function produceAttack(attacker, defender) {
     if (!producer) {
-        throw new Error("No attack producer registered (see registerAttackProducer).");
+        throw new Error('No attack producer registered (see registerAttackProducer).');
     }
     return producer(attacker, defender);
 }

@@ -28,7 +28,10 @@ try {
         saveWorld(world, { charactersDir, roomsDir });
 
         assert.deepStrictEqual(loadRoomState('room', roomsDir).inventory, []);
-        assert.deepStrictEqual(loadCharacterState('Picker', charactersDir).inventory.map(i => i.name), ['a gem']);
+        assert.deepStrictEqual(
+            loadCharacterState('Picker', charactersDir).inventory.map((i) => i.name),
+            ['a gem'],
+        );
         assert.equal(room.dirty, false);
     }
 

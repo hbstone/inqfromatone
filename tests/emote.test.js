@@ -7,7 +7,7 @@ import { emote } from '../modules/commands/emote.js';
 function makeCharacter(name) {
     const character = new Character(name, `${name}, a tester.`);
     character.socket = { written: [] };
-    character.socket.write = msg => character.socket.written.push(msg);
+    character.socket.write = (msg) => character.socket.written.push(msg);
     return character;
 }
 
@@ -88,7 +88,11 @@ function setUpRoom() {
 // A lone "@"/"#" with nothing after isn't treated as a target token
 {
     const { world, alice } = setUpRoom();
-    assert.equal(emote(world, ['mutters', '@', '#'], alice), 'You mutters @ #', 'ends in "#", so no period is added either');
+    assert.equal(
+        emote(world, ['mutters', '@', '#'], alice),
+        'You mutters @ #',
+        'ends in "#", so no period is added either',
+    );
 }
 
 // No args at all is rejected, not sent as an empty emote
@@ -101,11 +105,22 @@ function setUpRoom() {
 {
     const { world, room, alice } = setUpRoom();
     room.inventory.push(
-        new Item('a red pouch', 'A pouch.', ['pouch'], { size: 'small', weight: 0.5, container: { maxItemSize: 'small', capacityWeight: 5 } }),
-        new Item('a blue pouch', 'A pouch.', ['pouch'], { size: 'small', weight: 0.5, container: { maxItemSize: 'small', capacityWeight: 5 } }),
+        new Item('a red pouch', 'A pouch.', ['pouch'], {
+            size: 'small',
+            weight: 0.5,
+            container: { maxItemSize: 'small', capacityWeight: 5 },
+        }),
+        new Item('a blue pouch', 'A pouch.', ['pouch'], {
+            size: 'small',
+            weight: 0.5,
+            container: { maxItemSize: 'small', capacityWeight: 5 },
+        }),
     );
 
-    assert.equal(emote(world, ['tucks', 'a', 'hand', 'into', '#2.pouch'], alice), 'You tucks a hand into a blue pouch.');
+    assert.equal(
+        emote(world, ['tucks', 'a', 'hand', 'into', '#2.pouch'], alice),
+        'You tucks a hand into a blue pouch.',
+    );
 }
 
 // #3*brick resolves the cardinal as a grouped "xN" list, same as get/put
@@ -117,7 +132,11 @@ function setUpRoom() {
         new Item('a 0.5 lb brick', 'A brick.', ['brick'], { size: 'small', weight: 0.5 }),
     );
 
-    assert.equal(emote(world, ['juggles', '#3*brick'], alice), 'You juggles a 0.5 lb brick (x3)', 'ends in ")", so no period is added');
+    assert.equal(
+        emote(world, ['juggles', '#3*brick'], alice),
+        'You juggles a 0.5 lb brick (x3)',
+        'ends in ")", so no period is added',
+    );
 }
 
 // A qualified # asking for more than exists fails the *whole* emote -
@@ -125,7 +144,13 @@ function setUpRoom() {
 // unlike the unqualified soft-fallback case above
 {
     const { world, room, alice, baeron } = setUpRoom();
-    room.inventory.push(new Item('a pouch', 'A pouch.', ['pouch'], { size: 'small', weight: 0.5, container: { maxItemSize: 'small', capacityWeight: 5 } }));
+    room.inventory.push(
+        new Item('a pouch', 'A pouch.', ['pouch'], {
+            size: 'small',
+            weight: 0.5,
+            container: { maxItemSize: 'small', capacityWeight: 5 },
+        }),
+    );
     const before = baeron.socket.written.length;
 
     const result = emote(world, ['tucks', 'a', 'hand', 'into', '#2.pouch'], alice);

@@ -1,7 +1,7 @@
-import { writeToSocket } from "../utils.js";
-import { findCharacter, nameFor } from "../naming.js";
-import { isContainer } from "../containers.js";
-import { resolveItemToken, itemDisplayName, previewMatch } from "../itemSearch.js";
+import { writeToSocket } from '../utils.js';
+import { findCharacter, nameFor } from '../naming.js';
+import { isContainer } from '../containers.js';
+import { resolveItemToken, itemDisplayName, previewMatch } from '../itemSearch.js';
 
 // A container's contents only show up when you look at it directly, not
 // in the room/inventory listing above - keeps that listing from turning
@@ -12,7 +12,7 @@ function describeItem(item) {
     if (!isContainer(item)) {
         return base;
     }
-    const contents = item.inventory.map(itemDisplayName).join(", ") || "nothing";
+    const contents = item.inventory.map(itemDisplayName).join(', ') || 'nothing';
     return `${base}\nIt contains: ${contents}.`;
 }
 
@@ -21,7 +21,7 @@ export const look = (world, args, character) => {
     const room = world.getRoomById(character.roomId);
 
     if (!itemToken) {
-        const items = room.inventory.map(itemDisplayName).join(", ") || "None";
+        const items = room.inventory.map(itemDisplayName).join(', ') || 'None';
 
         return [
             room.coloredName(),
@@ -29,7 +29,7 @@ export const look = (world, args, character) => {
             room.describeExits(),
             ...room.describeCharacters(character),
             `{YItems here:{x ${items}`,
-        ].join("\n");
+        ].join('\n');
     }
 
     // Look for an item, in the player's inventory first, then the room -
@@ -40,7 +40,7 @@ export const look = (world, args, character) => {
         return error;
     }
     if (matches.length > 0) {
-        return matches.map(m => describeItem(previewMatch(m))).join("\n\n");
+        return matches.map((m) => describeItem(previewMatch(m))).join('\n\n');
     }
 
     // Look for a character in the room
@@ -48,10 +48,7 @@ export const look = (world, args, character) => {
     if (targetCharacter) {
         // Notify the target character
         if (targetCharacter.socket) {
-            writeToSocket(
-                targetCharacter.socket,
-                `${nameFor(character, targetCharacter)} looks at you.`
-            );
+            writeToSocket(targetCharacter.socket, `${nameFor(character, targetCharacter)} looks at you.`);
         }
         return `You look at ${nameFor(targetCharacter, character)}: ${targetCharacter.description}`;
     }

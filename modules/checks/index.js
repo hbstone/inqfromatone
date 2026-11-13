@@ -9,7 +9,7 @@
 // to succeed. With equal stats that's a 2/3 chance of success - enough
 // that a fixed matchup doesn't always land or always whiff, without
 // inventing a real dice mechanic nobody's asked for yet.
-import { registerCheckResolver } from "./registry.js";
+import { registerCheckResolver } from './registry.js';
 
 function rollJitter() {
     return Math.floor(Math.random() * 3) - 1; // -1, 0, or +1, uniform

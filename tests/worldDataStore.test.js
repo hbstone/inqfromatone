@@ -14,7 +14,10 @@ try {
     // Save, then round-trip load
     saveRoomState('starting-room', { inventory: [{ name: 'a rusty key' }], components: {} }, dir);
     assert.equal(roomStateExists('starting-room', dir), true);
-    assert.deepStrictEqual(loadRoomState('starting-room', dir), { inventory: [{ name: 'a rusty key' }], components: {} });
+    assert.deepStrictEqual(loadRoomState('starting-room', dir), {
+        inventory: [{ name: 'a rusty key' }],
+        components: {},
+    });
 
     // Overwriting a save replaces the previous content, not merges it
     saveRoomState('starting-room', { inventory: [], components: {} }, dir);

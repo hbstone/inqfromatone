@@ -41,7 +41,12 @@ function setup() {
     const make = (name, alias, room = hall) => {
         const character = new Character(name, `${name}'s long description.`);
         character.alias = alias;
-        character.socket = { messages: [], write(m) { this.messages.push(stripColors(m).trim()); } };
+        character.socket = {
+            messages: [],
+            write(m) {
+                this.messages.push(stripColors(m).trim());
+            },
+        };
         room.addCharacter(character);
         return character;
     };
@@ -81,7 +86,10 @@ try {
         assert.equal(look(world, ['bob'], alice), "You can't find that here.");
         assert.equal(look(world, ['short'], alice), "You look at a short man (to Alice): Bob's long description.");
         assert.equal(last(bob), 'A tall woman (to Bob) looks at you.');
-        assert.match(stripColors(look(world, [], alice)), /\nA short man \(to Alice\) is here\.\nA stout dwarf \(to Alice\) is here\./);
+        assert.match(
+            stripColors(look(world, [], alice)),
+            /\nA short man \(to Alice\) is here\.\nA stout dwarf \(to Alice\) is here\./,
+        );
     }
 
     // emote: the actor and each @target are named per viewer
@@ -133,7 +141,10 @@ try {
     // NPC ambient lines
     {
         const { world, hall, bob } = setup();
-        const keeper = new Npc({ id: 'z/k', name: 'a keeper', behaviors: { ambient: { chance: 1, emotes: ['hums.'] } } }, 'hall');
+        const keeper = new Npc(
+            { id: 'z/k', name: 'a keeper', behaviors: { ambient: { chance: 1, emotes: ['hums.'] } } },
+            'hall',
+        );
         keeper.alias = 'an old keeper';
         hall.addCharacter(keeper);
         pulseNpc(keeper, world, () => 0, 12);
@@ -143,7 +154,7 @@ try {
     // Out of character: tell and who keep real names
     {
         const { world, alice, bob } = setup();
-        world.getOnlineCharacterByName = (name) => [alice, bob].find(c => c.name.toLowerCase() === name);
+        world.getOnlineCharacterByName = (name) => [alice, bob].find((c) => c.name.toLowerCase() === name);
         assert.equal(tell(world, ['bob', 'hi'], alice), 'You tell Bob: "hi"');
         assert.equal(last(bob), 'Alice tells you: "hi"');
         assert.match(who(world), /Alice/);

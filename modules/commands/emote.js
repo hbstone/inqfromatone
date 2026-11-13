@@ -1,5 +1,5 @@
-import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
-import { findCharacter, nameFor, tellRoom } from "../naming.js";
+import { resolveItemToken, formatItemList, previewMatch } from '../itemSearch.js';
+import { findCharacter, nameFor, tellRoom } from '../naming.js';
 
 // `emote <text>` - freeform third-person action text: "Character <text>."
 // to the room, "You <text>." back to the actor. Same trailing-period rule
@@ -55,10 +55,10 @@ function resolveToken(token, character, room) {
 
     const [, sigil, keywordToken, trailing] = match;
 
-    if (sigil === "@") {
+    if (sigil === '@') {
         // No ordinal/cardinal for @ yet - plain (fuzzy) keyword only.
         const target = findCharacter(character, room.characters, keywordToken);
-        return target ? { character: target, trailing } : { text: "someone" + trailing };
+        return target ? { character: target, trailing } : { text: 'someone' + trailing };
     }
 
     const { matches, error } = resolveItemToken(keywordToken, [character.inventory, room.inventory]);
@@ -66,7 +66,7 @@ function resolveToken(token, character, room) {
         return { error };
     }
     if (matches.length === 0) {
-        return { text: "something" + trailing };
+        return { text: 'something' + trailing };
     }
     return { text: formatItemList(matches.map(previewMatch)) + trailing };
 }
@@ -77,7 +77,7 @@ function addTrailingPeriod(text) {
 
 export const emote = (world, args, character) => {
     if (args.length === 0) {
-        return "Emote what?";
+        return 'Emote what?';
     }
 
     const room = world.getRoomById(character.roomId);
@@ -90,9 +90,10 @@ export const emote = (world, args, character) => {
         resolvedTokens.push(resolved);
     }
 
-    const textFor = (viewer) => addTrailingPeriod(resolvedTokens
-        .map(t => t.character ? nameFor(t.character, viewer) + t.trailing : t.text)
-        .join(" "));
+    const textFor = (viewer) =>
+        addTrailingPeriod(
+            resolvedTokens.map((t) => (t.character ? nameFor(t.character, viewer) + t.trailing : t.text)).join(' '),
+        );
 
     tellRoom(room, (viewer) => `${nameFor(character, viewer)} ${textFor(viewer)}`, [character]);
 

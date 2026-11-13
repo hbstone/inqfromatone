@@ -1,6 +1,6 @@
-import { resolveItemToken } from "../itemSearch.js";
-import { canEquip } from "../equipment.js";
-import { setModifier } from "../stats.js";
+import { resolveItemToken } from '../itemSearch.js';
+import { canEquip } from '../equipment.js';
+import { setModifier } from '../stats.js';
 
 // `wear <item>` / `wield <item>` - same generic mechanism underneath (see
 // ARCHITECTURE.md's Equipment section); registered as two verbs purely
@@ -21,7 +21,7 @@ import { setModifier } from "../stats.js";
 // they targeted.
 function makeEquipCommand(verb) {
     return (world, args, character) => {
-        const itemToken = args.join(" ");
+        const itemToken = args.join(' ');
         if (!itemToken) {
             return `What do you want to ${verb}?`;
         }
@@ -54,5 +54,5 @@ function makeEquipCommand(verb) {
     };
 }
 
-export const wear = makeEquipCommand("wear");
-export const wield = makeEquipCommand("wield");
+export const wear = makeEquipCommand('wear');
+export const wield = makeEquipCommand('wield');

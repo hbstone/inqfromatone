@@ -1,21 +1,21 @@
-import { isContainer } from "../containers.js";
-import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
-import { moveMatches } from "../stacking.js";
+import { isContainer } from '../containers.js';
+import { resolveItemToken, formatItemList, previewMatch } from '../itemSearch.js';
+import { moveMatches } from '../stacking.js';
 
 export const get = (world, args, character) => {
     const room = world.getRoomById(character.roomId);
     const itemToken = args[0];
 
     if (!itemToken) {
-        return "What do you want to get?";
+        return 'What do you want to get?';
     }
 
-    const rest = args.slice(1).join(" ");
+    const rest = args.slice(1).join(' ');
     if (!rest) {
         return getFromRoom(room, character, itemToken);
     }
 
-    const containerToken = rest.replace(/^from /i, "");
+    const containerToken = rest.replace(/^from /i, '');
     return getFromContainer(room, character, itemToken, containerToken);
 };
 

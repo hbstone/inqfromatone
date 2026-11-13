@@ -35,8 +35,12 @@ on('damage', (payload) => events.push(['damage', payload]));
     const result = resolveAttack(attacker, defender, attackParams);
 
     assert.deepStrictEqual(result, { hit: true, damage: 3 });
-    assert.equal(getStatValue(defender, 'hp'), 7, 'defender\'s hp should drop by the damage amount');
-    assert.deepStrictEqual(receivedContext, { difficulty: 5 }, 'the context passed in should reach resolveCheck unchanged');
+    assert.equal(getStatValue(defender, 'hp'), 7, "defender's hp should drop by the damage amount");
+    assert.deepStrictEqual(
+        receivedContext,
+        { difficulty: 5 },
+        'the context passed in should reach resolveCheck unchanged',
+    );
     assert.deepStrictEqual(events, [
         ['attack', { attacker, defender, hit: true }],
         ['damage', { attacker, defender, amount: 3 }],
@@ -55,10 +59,8 @@ on('damage', (payload) => events.push(['damage', payload]));
     const result = resolveAttack(attacker, defender, { statKey: 'strength', context: {}, damage: 3 });
 
     assert.deepStrictEqual(result, { hit: false });
-    assert.equal(getStatValue(defender, 'hp'), 10, 'a miss should not change the defender\'s hp');
-    assert.deepStrictEqual(events, [
-        ['attack', { attacker, defender, hit: false }],
-    ]);
+    assert.equal(getStatValue(defender, 'hp'), 10, "a miss should not change the defender's hp");
+    assert.deepStrictEqual(events, [['attack', { attacker, defender, hit: false }]]);
 }
 
 console.log('All tests passed');

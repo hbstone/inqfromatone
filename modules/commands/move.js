@@ -1,7 +1,7 @@
-import { nameFor, tellRoom } from "../naming.js";
-import { emit } from "../events.js";
+import { nameFor, tellRoom } from '../naming.js';
+import { emit } from '../events.js';
 
-export const OPPOSITES = { north: "south", south: "north", east: "west", west: "east" };
+export const OPPOSITES = { north: 'south', south: 'north', east: 'west', west: 'east' };
 
 // Shared room-transition logic used by the directional commands
 // (north/south/east/west), flee, and moving NPCs (modules/npcs/). Pulled
@@ -20,16 +20,16 @@ export const movePlayer = (world, character, room, direction, opposite) => {
 
     const nextRoom = world.getRoomById(room.exits[direction]);
     if (!nextRoom) {
-        return "That path leads nowhere.";
+        return 'That path leads nowhere.';
     }
 
-    emit("leaveRoom", { character, room, world });
+    emit('leaveRoom', { character, room, world });
 
     const changingZone = room.zone !== nextRoom.zone;
     const fromZone = world.getZone(room.zone);
     const toZone = world.getZone(nextRoom.zone);
     if (changingZone) {
-        emit("zoneLeave", { character, zone: fromZone, to: toZone, world });
+        emit('zoneLeave', { character, zone: fromZone, to: toZone, world });
     }
 
     // Broadcast the departure
@@ -48,10 +48,10 @@ export const movePlayer = (world, character, room, direction, opposite) => {
     tellRoom(nextRoom, (viewer) => `${nameFor(character, viewer)} arrives from the ${opposite}.`, [character]);
 
     if (changingZone) {
-        emit("zoneEnter", { character, zone: toZone, from: fromZone, world });
+        emit('zoneEnter', { character, zone: toZone, from: fromZone, world });
     }
 
-    emit("enterRoom", { character, room: nextRoom, world });
+    emit('enterRoom', { character, room: nextRoom, world });
 
     // Who's here, but not items: those wait for an explicit `look`.
     return [
@@ -59,5 +59,5 @@ export const movePlayer = (world, character, room, direction, opposite) => {
         nextRoom.description,
         nextRoom.describeExits(),
         ...nextRoom.describeCharacters(character),
-    ].join("\n");
+    ].join('\n');
 };

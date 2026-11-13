@@ -1,5 +1,5 @@
 {
-  "name": "The Starting Area",
-  "description": "The handful of rooms new characters start in.",
-  "indoors": true
+    "name": "The Starting Area",
+    "description": "The handful of rooms new characters start in.",
+    "indoors": true
 }

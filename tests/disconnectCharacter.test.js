@@ -45,18 +45,21 @@ try {
 
         assert.ok(!room.characters.includes(leaver), 'the leaver should be removed from the room');
         assert.equal(leaver.roomId, null);
-        assert.equal(loadCharacterState('Leaver', saveDirs.charactersDir).roomId, 'room',
-            'the save should reflect where they were, not null');
+        assert.equal(
+            loadCharacterState('Leaver', saveDirs.charactersDir).roomId,
+            'room',
+            'the save should reflect where they were, not null',
+        );
         assert.ok(
-            bystander.socket.messages.some(m => m.includes('Leaver has disconnected.')),
-            'other characters in the room should be notified'
+            bystander.socket.messages.some((m) => m.includes('Leaver has disconnected.')),
+            'other characters in the room should be notified',
         );
 
         // Calling it again (e.g. quit's own socket.end() re-firing the close
         // event) must be a safe no-op, not throw.
         assert.doesNotThrow(
             () => disconnectCharacter(world, leaver, 'Leaver has disconnected.', saveDirs),
-            'disconnecting an already-disconnected character must not throw'
+            'disconnecting an already-disconnected character must not throw',
         );
     }
 
@@ -75,9 +78,15 @@ try {
 
         disconnectCharacter(world, dropper, 'Dropper has left.', saveDirs);
 
-        assert.deepStrictEqual(loadRoomState('room', saveDirs.roomsDir).inventory.map(i => i.name), ['a sword']);
+        assert.deepStrictEqual(
+            loadRoomState('room', saveDirs.roomsDir).inventory.map((i) => i.name),
+            ['a sword'],
+        );
         assert.deepStrictEqual(loadCharacterState('Dropper', saveDirs.charactersDir).inventory, []);
-        assert.ok(loadCharacterState('Other', saveDirs.charactersDir), 'other in-world characters are checkpointed too');
+        assert.ok(
+            loadCharacterState('Other', saveDirs.charactersDir),
+            'other in-world characters are checkpointed too',
+        );
     }
 
     // Disconnecting mid-fight leaves combat, ending it for a lone opponent
@@ -97,10 +106,15 @@ try {
 
         assert.equal(getSession(leaver), undefined, 'the leaver should be out of combat');
         assert.equal(getSession(opponent), undefined, 'a lone remaining opponent should be out of combat too');
-        assert.ok(opponent.socket.messages.some(m => m.includes('no longer fighting')),
-            'the opponent should be told the fight is over');
-        assert.equal(loadCharacterState('Fighter', saveDirs.charactersDir).components.combat, undefined,
-            'combat session state should not be persisted');
+        assert.ok(
+            opponent.socket.messages.some((m) => m.includes('no longer fighting')),
+            'the opponent should be told the fight is over',
+        );
+        assert.equal(
+            loadCharacterState('Fighter', saveDirs.charactersDir).components.combat,
+            undefined,
+            'combat session state should not be persisted',
+        );
     }
 
     // `quit` is refused mid-fight - linkdeath can't be prevented, but a

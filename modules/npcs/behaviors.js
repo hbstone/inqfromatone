@@ -19,11 +19,11 @@
 // An NPC with a routine (Tier 1, see routine.js) walks to its current post
 // first; walking takes the whole pulse. Once there, the post's behaviors
 // replace its usual ones, if the post lists any.
-import { every } from "../scheduler.js";
-import { guard } from "../guard.js";
-import { getGameTime } from "../gameClock.js";
-import { movePlayer, OPPOSITES } from "../commands/move.js";
-import { currentRoutineEntry, firstStepToward, settleAtPosts, warnAboutUnknownPhases } from "./routine.js";
+import { every } from '../scheduler.js';
+import { guard } from '../guard.js';
+import { getGameTime } from '../gameClock.js';
+import { movePlayer, OPPOSITES } from '../commands/move.js';
+import { currentRoutineEntry, firstStepToward, settleAtPosts, warnAboutUnknownPhases } from './routine.js';
 
 export const NPC_PULSE_MS = 10 * 1000;
 
@@ -85,7 +85,9 @@ function followRoutine(npc, world, hour) {
     }
     if (npc.unreachablePost !== entry.roomId) {
         npc.unreachablePost = entry.roomId; // warn once per post, not every pulse
-        console.warn(`NPC "${npc.templateId}" can't find a way from "${npc.roomId}" to its post "${entry.roomId}"; staying put.`);
+        console.warn(
+            `NPC "${npc.templateId}" can't find a way from "${npc.roomId}" to its post "${entry.roomId}"; staying put.`,
+        );
     }
     return { walked: false, behaviors: npc.behaviors };
 }
@@ -131,7 +133,7 @@ export function pulseNpc(npc, world, random = Math.random, hour = getGameTime().
 export function startNpcBehaviors(world, random = Math.random) {
     warnAboutUnknownPhases(world);
     settleAtPosts(world, getGameTime().hour);
-    return every("npc behaviors", NPC_PULSE_MS, () => {
+    return every('npc behaviors', NPC_PULSE_MS, () => {
         for (const npc of world.npcs) {
             guard(`behaviors for NPC "${npc.templateId}"`, () => pulseNpc(npc, world, random));
         }

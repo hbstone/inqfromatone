@@ -5,8 +5,8 @@
 // the real one means a reader only ever sees the old complete file or the
 // new complete file: rename replaces the target in one step on both POSIX
 // and Windows (Node uses MoveFileEx with REPLACE_EXISTING there).
-import fs from "fs";
-import path from "path";
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Serialize `data` as pretty-printed JSON and atomically replace filePath
@@ -33,9 +33,9 @@ export function writeJsonAtomic(filePath, data) {
 export function readJsonFile(filePath) {
     let raw;
     try {
-        raw = fs.readFileSync(filePath, "utf8");
+        raw = fs.readFileSync(filePath, 'utf8');
     } catch (err) {
-        if (err.code === "ENOENT") {
+        if (err.code === 'ENOENT') {
             return null;
         }
         throw err;

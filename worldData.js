@@ -10,15 +10,12 @@
 // filesystem path; the content loader also restricts both parts to
 // lowercase letters, digits, and dashes. The "/" makes each zone a
 // subdirectory: rooms/start/narrow-hallway.json.
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import { readJsonFile, writeJsonAtomic } from "./modules/atomicWrite.js";
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { readJsonFile, writeJsonAtomic } from './modules/atomicWrite.js';
 
-const DEFAULT_ROOMS_DIR = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "rooms"
-);
+const DEFAULT_ROOMS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'rooms');
 
 function filePathFor(key, dir) {
     return path.join(dir, `${key}.json`);

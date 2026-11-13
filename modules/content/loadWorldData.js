@@ -18,19 +18,16 @@
 //
 // NPCs are spawned fresh from these templates every boot, one per entry in
 // a room's "npcs" list - they aren't saved (see modules/Npc.js).
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import { Item } from "../Item.js";
-import { Npc } from "../Npc.js";
-import { hasBehavior } from "../npcs/behaviors.js";
-import { assertUniqueKeys } from "./assertUniqueKeys.js";
-import { addItem } from "../stacking.js";
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { Item } from '../Item.js';
+import { Npc } from '../Npc.js';
+import { hasBehavior } from '../npcs/behaviors.js';
+import { assertUniqueKeys } from './assertUniqueKeys.js';
+import { addItem } from '../stacking.js';
 
-const DEFAULT_CONTENT_DIR = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "..", "..", "content"
-);
+const DEFAULT_CONTENT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'content');
 
 // Zone and room keys end up in save-file paths (rooms/<zone>/<key>.json, see
 // worldData.js), so keep them to a filename-safe shape rather than relying
@@ -39,7 +36,7 @@ const DEFAULT_CONTENT_DIR = path.join(
 const KEY_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 
 function readJson(filePath) {
-    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
 function assertValidKey(key, label) {
@@ -56,7 +53,7 @@ function assertValidKey(key, label) {
  * @returns {string}
  */
 export function resolveRoomRef(ref, zoneKey) {
-    return ref.includes("/") ? ref : `${zoneKey}/${ref}`;
+    return ref.includes('/') ? ref : `${zoneKey}/${ref}`;
 }
 
 /**
@@ -69,13 +66,14 @@ export function resolveRoomRef(ref, zoneKey) {
  * @returns {{ startingRoomKey: string|null }} The starting room's World id.
  */
 export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
-    const items = readJson(path.join(contentDir, "items.json"));
-    assertUniqueKeys(items, "item");
+    const items = readJson(path.join(contentDir, 'items.json'));
+    assertUniqueKeys(items, 'item');
 
-    const zonesDir = path.join(contentDir, "zones");
-    const zoneKeys = fs.readdirSync(zonesDir, { withFileTypes: true })
-        .filter(entry => entry.isDirectory())
-        .map(entry => entry.name)
+    const zonesDir = path.join(contentDir, 'zones');
+    const zoneKeys = fs
+        .readdirSync(zonesDir, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => entry.name)
         .sort();
 
     // [{ zoneKey, rooms }] - rooms as authored, for the second pass.
@@ -87,12 +85,12 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
     // First pass: create every zone and room, so exit/item references
     // below can target any of them regardless of declaration order.
     for (const zoneKey of zoneKeys) {
-        assertValidKey(zoneKey, "zone");
+        assertValidKey(zoneKey, 'zone');
         const zoneDir = path.join(zonesDir, zoneKey);
-        const zoneData = readJson(path.join(zoneDir, "zone.json"));
-        const rooms = readJson(path.join(zoneDir, "rooms.json"));
+        const zoneData = readJson(path.join(zoneDir, 'zone.json'));
+        const rooms = readJson(path.join(zoneDir, 'rooms.json'));
         assertUniqueKeys(rooms, `room (zone "${zoneKey}")`);
-        const npcsFile = path.join(zoneDir, "npcs.json");
+        const npcsFile = path.join(zoneDir, 'npcs.json');
         const npcs = fs.existsSync(npcsFile) ? readJson(npcsFile) : [];
         assertUniqueKeys(npcs, `NPC (zone "${zoneKey}")`);
         for (const npcData of npcs) {
@@ -100,16 +98,20 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
                 console.warn(`Skipping NPC with missing key/name in zone "${zoneKey}":`, npcData);
                 continue;
             }
-            assertValidKey(npcData.key, "NPC");
+            assertValidKey(npcData.key, 'NPC');
             for (const behavior of Object.keys(npcData.behaviors ?? {})) {
                 if (!hasBehavior(behavior)) {
-                    console.warn(`NPC "${zoneKey}/${npcData.key}" has unknown behavior "${behavior}"; it will be ignored.`);
+                    console.warn(
+                        `NPC "${zoneKey}/${npcData.key}" has unknown behavior "${behavior}"; it will be ignored.`,
+                    );
                 }
             }
             for (const entry of npcData.routine ?? []) {
                 for (const behavior of Object.keys(entry.behaviors ?? {})) {
                     if (!hasBehavior(behavior)) {
-                        console.warn(`NPC "${zoneKey}/${npcData.key}" has unknown behavior "${behavior}" in its routine; it will be ignored.`);
+                        console.warn(
+                            `NPC "${zoneKey}/${npcData.key}" has unknown behavior "${behavior}" in its routine; it will be ignored.`,
+                        );
                     }
                 }
             }
@@ -117,13 +119,16 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
                 ...npcData,
                 id: `${zoneKey}/${npcData.key}`,
                 // Posts are written like exits: a bare key is in the NPC's own zone
-                routine: (npcData.routine ?? []).map(entry => ({ ...entry, roomId: resolveRoomRef(entry.at ?? "", zoneKey) })),
+                routine: (npcData.routine ?? []).map((entry) => ({
+                    ...entry,
+                    roomId: resolveRoomRef(entry.at ?? '', zoneKey),
+                })),
             });
         }
 
         world.addZone(zoneKey, {
             name: zoneData.name ?? zoneKey,
-            description: zoneData.description ?? "",
+            description: zoneData.description ?? '',
             indoors: zoneData.indoors === true,
         });
         zones.push({ zoneKey, rooms });
@@ -133,8 +138,8 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
                 console.warn(`Skipping room with missing key/name in zone "${zoneKey}":`, roomData);
                 continue;
             }
-            assertValidKey(roomData.key, "room");
-            const id = world.addRoom(roomData.name, roomData.description ?? "", `${zoneKey}/${roomData.key}`);
+            assertValidKey(roomData.key, 'room');
+            const id = world.addRoom(roomData.name, roomData.description ?? '', `${zoneKey}/${roomData.key}`);
             const room = world.getRoomById(id);
             room.zone = zoneKey;
             // A room inherits its zone's setting unless it says otherwise:
@@ -148,7 +153,9 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
 
     let startingRoomKey = startingRooms[0] ?? null;
     if (startingRooms.length > 1) {
-        console.warn(`More than one room marked "isStartingRoom" (${startingRooms.join(", ")}); using ${startingRoomKey}.`);
+        console.warn(
+            `More than one room marked "isStartingRoom" (${startingRooms.join(', ')}); using ${startingRoomKey}.`,
+        );
     }
     if (!startingRoomKey) {
         startingRoomKey = world.getAllRooms()[0]?.id ?? null;
@@ -160,10 +167,15 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
     // Every room exists now, so routine posts can be checked. A post that
     // names a missing room is dropped; the rest of the routine still runs.
     for (const template of npcTemplates.values()) {
-        template.routine = template.routine.filter(entry => {
-            const valid = typeof entry.from === "number" ? Number.isInteger(entry.from) && entry.from >= 0 && entry.from <= 23 : typeof entry.from === "string";
+        template.routine = template.routine.filter((entry) => {
+            const valid =
+                typeof entry.from === 'number'
+                    ? Number.isInteger(entry.from) && entry.from >= 0 && entry.from <= 23
+                    : typeof entry.from === 'string';
             if (!valid) {
-                console.warn(`Skipping a routine entry for NPC "${template.id}": "from" must be an hour (0-23) or a phase name, got ${JSON.stringify(entry.from)}.`);
+                console.warn(
+                    `Skipping a routine entry for NPC "${template.id}": "from" must be an hour (0-23) or a phase name, got ${JSON.stringify(entry.from)}.`,
+                );
                 return false;
             }
             if (!world.getRoomById(entry.roomId)) {
@@ -191,7 +203,7 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
             }
 
             for (const itemKey of roomData.items ?? []) {
-                const itemData = items.find(item => item.key === itemKey);
+                const itemData = items.find((item) => item.key === itemKey);
                 if (!itemData) {
                     console.warn(`Skipping item "${itemKey}" in room "${room.id}": no such item defined.`);
                     continue;
@@ -200,12 +212,15 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
                 // same "list it N times" convention already used for
                 // non-stackable proof content like the bricks - collapse into
                 // one stack at load time instead of staying N separate objects.
-                addItem(room.inventory, new Item(itemData.name, itemData.description, itemData.keywords ?? [], {
-                    size: itemData.size,
-                    weight: itemData.weight,
-                    container: itemData.container ?? null,
-                    stackable: itemData.stackable ?? false,
-                }));
+                addItem(
+                    room.inventory,
+                    new Item(itemData.name, itemData.description, itemData.keywords ?? [], {
+                        size: itemData.size,
+                        weight: itemData.weight,
+                        container: itemData.container ?? null,
+                        stackable: itemData.stackable ?? false,
+                    }),
+                );
             }
 
             for (const npcRef of roomData.npcs ?? []) {

@@ -29,7 +29,7 @@
 // Search scope is whatever ordered list of inventories the caller passes
 // (e.g. [character.inventory, room.inventory]) - the same "check
 // inventory, then the room" priority every command already used.
-import { keywordMatches } from "./keywordMatch.js";
+import { keywordMatches } from './keywordMatch.js';
 
 const QUALIFIED_TOKEN = /^(?:(\d+)([.*]))?(.+)$/;
 
@@ -47,7 +47,7 @@ function parseItemToken(rawToken) {
     }
 
     const n = Number(numberStr);
-    return qualifier === "."
+    return qualifier === '.'
         ? { keyword: lowerKeyword, ordinal: n, count: null }
         : { keyword: lowerKeyword, ordinal: null, count: n };
 }
@@ -183,10 +183,10 @@ export function formatItemList(items) {
     const parts = Array.from(counts, ([name, count]) => (count > 1 ? `${name} (x${count})` : name));
 
     if (parts.length <= 1) {
-        return parts.join("");
+        return parts.join('');
     }
     if (parts.length === 2) {
         return `${parts[0]} and ${parts[1]}`;
     }
-    return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+    return `${parts.slice(0, -1).join(', ')}, and ${parts[parts.length - 1]}`;
 }

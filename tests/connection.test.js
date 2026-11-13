@@ -7,7 +7,9 @@ import { writeToSocket } from '../modules/utils.js';
 function fakeSocket() {
     const socket = { messages: [], ended: false };
     socket.write = (msg) => socket.messages.push(msg);
-    socket.end = () => { socket.ended = true; };
+    socket.end = () => {
+        socket.ended = true;
+    };
     return socket;
 }
 
@@ -41,7 +43,7 @@ function fakeSocket() {
     assert.notEqual(oldSocket.character, character, 'the old socket no longer drives the character');
     assert.equal(oldSocket.character.isLoggedIn, false);
     assert.equal(oldSocket.character.stage, null, 'further input on the old socket is ignored');
-    assert.ok(oldSocket.messages.some(m => m.includes('another connection')));
+    assert.ok(oldSocket.messages.some((m) => m.includes('another connection')));
     assert.equal(oldSocket.ended, true);
 }
 

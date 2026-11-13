@@ -35,7 +35,12 @@ const quiet = (fn) => {
 
 function player(name, room) {
     const character = new Character(name);
-    character.socket = { messages: [], write(m) { this.messages.push(stripColors(m).trim()); } };
+    character.socket = {
+        messages: [],
+        write(m) {
+            this.messages.push(stripColors(m).trim());
+        },
+    };
     room.addCharacter(character);
     return character;
 }
@@ -68,8 +73,14 @@ try {
     // Keywords default to the name's words minus articles; content can
     // set its own
     {
-        assert.deepEqual(new Npc({ id: 'z/a', name: 'an old groundskeeper' }, 'z/r').keywords, ['old', 'groundskeeper']);
-        assert.deepEqual(new Npc({ id: 'z/a', name: 'Marla', keywords: ['Marla', 'innkeeper'] }, 'z/r').keywords, ['marla', 'innkeeper']);
+        assert.deepEqual(new Npc({ id: 'z/a', name: 'an old groundskeeper' }, 'z/r').keywords, [
+            'old',
+            'groundskeeper',
+        ]);
+        assert.deepEqual(new Npc({ id: 'z/a', name: 'Marla', keywords: ['Marla', 'innkeeper'] }, 'z/r').keywords, [
+            'marla',
+            'innkeeper',
+        ]);
         const npc = new Npc({ id: 'z/a', name: 'a cat' }, 'z/r');
         assert.equal(npc.isNpc, true);
         assert.equal(npc.homeRoomId, 'z/r');
@@ -89,24 +100,27 @@ try {
         };
         fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(path.join(dir, 'items.json'), '[]');
-        zone('town', [
-            { key: 'square', name: 'Square', isStartingRoom: true, npcs: ['cat', 'cat', 'woods/owl', 'ghost'] },
-        ], [
-            { key: 'cat', name: 'a cat', behaviors: { wander: { chance: 0.1 }, juggle: { chance: 1 } } },
-        ]);
+        zone(
+            'town',
+            [{ key: 'square', name: 'Square', isStartingRoom: true, npcs: ['cat', 'cat', 'woods/owl', 'ghost'] }],
+            [{ key: 'cat', name: 'a cat', behaviors: { wander: { chance: 0.1 }, juggle: { chance: 1 } } }],
+        );
         zone('woods', [{ key: 'edge', name: 'Edge' }], [{ key: 'owl', name: 'an owl', description: 'Hoo.' }]);
 
         const world = new World();
         const warnings = quiet(() => loadWorldData(world, dir));
         const square = world.getRoomById('town/square');
 
-        assert.deepEqual(square.characters.map(c => c.name), ['a cat', 'a cat', 'an owl']);
+        assert.deepEqual(
+            square.characters.map((c) => c.name),
+            ['a cat', 'a cat', 'an owl'],
+        );
         assert.equal(world.npcs.length, 3);
         assert.notEqual(world.npcs[0], world.npcs[1], 'each listing spawns its own NPC');
         assert.equal(world.npcs[2].templateId, 'woods/owl');
         assert.equal(world.npcs[2].roomId, 'town/square');
-        assert.ok(warnings.some(w => w.includes('unknown behavior "juggle"')));
-        assert.ok(warnings.some(w => w.includes('NPC "ghost"')));
+        assert.ok(warnings.some((w) => w.includes('unknown behavior "juggle"')));
+        assert.ok(warnings.some((w) => w.includes('NPC "ghost"')));
     }
 
     // wander: moves through an exit within its zone, and other people see it
@@ -119,7 +133,10 @@ try {
         // random() = 0.99 picks the last option; east (the woods) is filtered out
         pulseNpc(cat, world, () => 0.99);
         assert.equal(cat.roomId, 'town/lane', 'stays in town');
-        assert.ok(watcher.socket.messages.includes('A cat leaves to the north.'), 'capitalized at the start of the line');
+        assert.ok(
+            watcher.socket.messages.includes('A cat leaves to the north.'),
+            'capitalized at the start of the line',
+        );
 
         const lurker = player('Lurker', rooms['town/lane']);
         pulseNpc(cat, world, () => 0);
@@ -160,9 +177,18 @@ try {
     {
         const { world, rooms } = townWorld();
         const calls = [];
-        registerBehavior('test-noop', () => { calls.push('noop'); return false; });
-        registerBehavior('test-act', () => { calls.push('act'); return true; });
-        registerBehavior('test-never', () => { calls.push('never'); return true; });
+        registerBehavior('test-noop', () => {
+            calls.push('noop');
+            return false;
+        });
+        registerBehavior('test-act', () => {
+            calls.push('act');
+            return true;
+        });
+        registerBehavior('test-never', () => {
+            calls.push('never');
+            return true;
+        });
         assert.throws(() => registerBehavior('test-act', () => true), /already registered/);
 
         const npc = spawn(world, rooms['town/square'], {
@@ -177,9 +203,9 @@ try {
         for (let i = 0; i < 20; i++) {
             pulseNpc(npc, world);
         }
-        assert.equal(calls.filter(c => c === 'act').length, 20, 'acts every pulse');
+        assert.equal(calls.filter((c) => c === 'act').length, 20, 'acts every pulse');
         assert.ok(!calls.includes('never'), 'chance 0 never fires');
-        assert.ok(calls.filter(c => c === 'noop').length < 20, 'sometimes act goes first and ends the pulse');
+        assert.ok(calls.filter((c) => c === 'noop').length < 20, 'sometimes act goes first and ends the pulse');
     }
 
     // The scheduler pulses every NPC; one broken behavior doesn't stop the rest
@@ -187,8 +213,13 @@ try {
         reset();
         const { world, rooms } = townWorld();
         const pulsed = [];
-        registerBehavior('test-broken', () => { throw new Error('boom'); });
-        registerBehavior('test-count', ({ npc }) => { pulsed.push(npc.name); return true; });
+        registerBehavior('test-broken', () => {
+            throw new Error('boom');
+        });
+        registerBehavior('test-count', ({ npc }) => {
+            pulsed.push(npc.name);
+            return true;
+        });
         spawn(world, rooms['town/square'], { name: 'broken', behaviors: { 'test-broken': { chance: 1 } } });
         spawn(world, rooms['town/square'], { name: 'fine', behaviors: { 'test-count': { chance: 1 } } });
 
@@ -212,7 +243,11 @@ try {
         assert.equal(characterExists('Bob', charactersDir), true);
         assert.equal(characterExists('Marla', charactersDir), false, 'NPCs are not saved');
 
-        assert.equal(findInWorldCharacter(world, 'marla'), null, 'logging in as "Marla" makes a player, not a takeover');
+        assert.equal(
+            findInWorldCharacter(world, 'marla'),
+            null,
+            'logging in as "Marla" makes a player, not a takeover',
+        );
         assert.equal(findInWorldCharacter(world, 'bob'), bob);
 
         assert.equal(kill(world, ['marla'], bob), "You can't attack Marla.");
@@ -229,8 +264,10 @@ try {
     {
         const world = new World();
         loadWorldData(world);
-        assert.ok(world.getRoomById('grounds/courtyard').characters.some(c => c.templateId === 'grounds/groundskeeper'));
-        assert.ok(world.npcs.some(n => n.templateId === 'start/cat'));
+        assert.ok(
+            world.getRoomById('grounds/courtyard').characters.some((c) => c.templateId === 'grounds/groundskeeper'),
+        );
+        assert.ok(world.npcs.some((n) => n.templateId === 'start/cat'));
     }
 } finally {
     reset();

@@ -12,8 +12,8 @@
 // Out-of-character text keeps real names on purpose and doesn't use these:
 // `who`, `tell`, login, and the "has left the game" / "has disconnected"
 // notices.
-import { keywordMatches } from "./keywordMatch.js";
-import { writeToSocket } from "./utils.js";
+import { keywordMatches } from './keywordMatch.js';
+import { writeToSocket } from './utils.js';
 
 const REAL_NAMES = {
     nameFor: (subject) => subject.name,
@@ -67,7 +67,7 @@ export function keywordsFor(subject, viewer) {
  * @returns {object|null}
  */
 export function findCharacter(viewer, candidates, token) {
-    return candidates.find(c => keywordMatches(keywordsFor(c, viewer), token)) ?? null;
+    return candidates.find((c) => keywordMatches(keywordsFor(c, viewer), token)) ?? null;
 }
 
 /**

@@ -1,13 +1,13 @@
-import { writeToSocket } from "../utils.js";
-import { findCharacter, nameFor } from "../naming.js";
+import { writeToSocket } from '../utils.js';
+import { findCharacter, nameFor } from '../naming.js';
 
 export const whisper = (world, args, character) => {
     const recipientName = args[0];
-    const message = args.slice(1).join(" ");
+    const message = args.slice(1).join(' ');
     const room = world.getRoomById(character.roomId);
 
     if (!recipientName || !message) {
-        return "Usage: whisper <character> <message>";
+        return 'Usage: whisper <character> <message>';
     }
 
     const recipient = findCharacter(character, room.characters, recipientName);
@@ -18,10 +18,7 @@ export const whisper = (world, args, character) => {
 
     // Notify the recipient
     if (recipient.socket) {
-        writeToSocket(
-            recipient.socket,
-            `${nameFor(character, recipient)} whispers to you, "${message}"`
-        );
+        writeToSocket(recipient.socket, `${nameFor(character, recipient)} whispers to you, "${message}"`);
     }
 
     return `You whisper to ${nameFor(recipient, character)}: "${message}"`;

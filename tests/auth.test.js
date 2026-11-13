@@ -34,7 +34,15 @@ import { hashPassword, verifyPassword } from '../modules/auth.js';
 
 // Missing or malformed stored values never verify
 {
-    for (const stored of [undefined, null, '', 'plaintext', 'scrypt$16384$8$1$00$', 'scrypt$abc$8$1$00$00', 'bcrypt$1$2$3$4$5']) {
+    for (const stored of [
+        undefined,
+        null,
+        '',
+        'plaintext',
+        'scrypt$16384$8$1$00$',
+        'scrypt$abc$8$1$00$00',
+        'bcrypt$1$2$3$4$5',
+    ]) {
         assert.equal(verifyPassword('anything', stored).ok, false, `should reject ${JSON.stringify(stored)}`);
     }
     // An empty hash field must not "match" an empty candidate

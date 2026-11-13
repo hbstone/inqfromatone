@@ -1,13 +1,13 @@
-import { nameFor, tellRoom } from "../naming.js";
-import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
-import { moveMatches } from "../stacking.js";
+import { nameFor, tellRoom } from '../naming.js';
+import { resolveItemToken, formatItemList, previewMatch } from '../itemSearch.js';
+import { moveMatches } from '../stacking.js';
 
 export const drop = (world, args, character) => {
     const itemToken = args[0];
     const room = world.getRoomById(character.roomId);
 
     if (!itemToken) {
-        return "What do you want to drop?";
+        return 'What do you want to drop?';
     }
 
     const { matches, error } = resolveItemToken(itemToken, [character.inventory]);

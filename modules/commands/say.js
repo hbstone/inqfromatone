@@ -1,4 +1,4 @@
-import { nameFor, tellRoom } from "../naming.js";
+import { nameFor, tellRoom } from '../naming.js';
 
 // `say <message>` - IC, broadcasts to the whole room (unlike `tell`,
 // which is OOC and direct to one recipient, and `whisper`, which is IC
@@ -12,9 +12,9 @@ function formatMessage(rawMessage) {
 }
 
 export const say = (world, args, character) => {
-    const rawMessage = args.join(" ");
+    const rawMessage = args.join(' ');
     if (!rawMessage) {
-        return "Say what?";
+        return 'Say what?';
     }
 
     const message = formatMessage(rawMessage);

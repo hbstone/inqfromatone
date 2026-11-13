@@ -20,4 +20,3 @@ export function guard(label, fn, fallback = undefined) {
         return fallback;
     }
 }
-

@@ -1,7 +1,7 @@
 # Architecture decisions
 
 Companion to [`ROADMAP.md`](./ROADMAP.md). Where the roadmap describes the
-long-term direction, this captures the concrete decisions made about *how*
+long-term direction, this captures the concrete decisions made about _how_
 Phase 1 (engine hardening) is actually built, so implementation has something
 to match instead of re-deriving the shape each time.
 
@@ -142,7 +142,7 @@ in the same `saveWorld` pass as rooms - see "World checkpoints" below.
 **Stats: mechanism is core, identity is theme.** The D&D sextet isn't any
 more "core" than a from-scratch attribute system — both are theme-specific
 identity choices on top of the same generic need (a character has named,
-numeric, modifiable stats). `modules/stats.js` only knows the *shape* of a
+numeric, modifiable stats). `modules/stats.js` only knows the _shape_ of a
 stat (`{ base, modifiers: [{ tag, operation, amount }] }`) and how to fold
 it into an effective value; it never knows what any stat is called.
 `content/stats/attributes.json` (loaded by
@@ -202,7 +202,7 @@ applies damage to the defender's `vitality`-role stat, emits `attack` (with
 `hit: boolean`) and, on a hit, `damage`. It takes a fully-formed
 `{ statKey, context, damage }` and never asks where that came from — the
 same function will underlie both v1's auto-attack and the planned `cemote`
-parser. *Which* stat keys mean "attacker's roll" and "defender's threshold"
+parser. _Which_ stat keys mean "attacker's roll" and "defender's threshold"
 are core-recognized **roles**, not hardcoded names — `getStatKeyForRole()`
 (already generic, unchanged) is doing the same job it does for `vitality`,
 just for two new role strings (`content/stats/attributes.json` tags
@@ -246,7 +246,7 @@ succeed (`modules/checks/index.js`) — with equal stats that's a 2/3 hit
 chance, chosen over a coin-flip because a two-outcome jitter can only ever
 land at 50/50, never the intentionally-uneven split.
 
-*Full design (planned, not built):* `cemote <target> <freeform text>`
+_Full design (planned, not built):_ `cemote <target> <freeform text>`
 replaces the auto-attack producer for a theme that wants it, submitting into
 the batched round engine described above instead of firing on an
 independent timer. Target is always a structured argument — resolved by
@@ -269,7 +269,7 @@ target — no new engine concept, just more content.
 character's `vitality`-role stat by a flat 1 every 30 seconds, capped at
 that stat's content-defined `startingValue` — the closest thing to a "max
 hp" that exists, since the stats system has no separate current/max split
-(base *is* current). Deliberately unconditional: same rate whether a
+(base _is_ current). Deliberately unconditional: same rate whether a
 character is mid-fight, defeated, or just standing around, no "resting
 heals faster" concept yet. This is what keeps a defeated character (`hp`
 at 0) from staying there forever.
@@ -296,15 +296,15 @@ Items can now hold other items - a pouch, a backpack, a chest, all just
 regular `content/items.json` entries, no special-cased item types. Two
 axes, both needed:
 
-- **`size`** (`"small"`/`"medium"`/`"large"`, ordered) gates *what* fits -
+- **`size`** (`"small"`/`"medium"`/`"large"`, ordered) gates _what_ fits -
   a container declares the largest item size it accepts.
-- **`weight`** (a plain number) gates *how much* fits in aggregate - a
+- **`weight`** (a plain number) gates _how much_ fits in aggregate - a
   container declares a total weight budget its contents can't exceed.
 
 Every `Item` carries `size`/`weight` (defaulting to `"small"`/`1` if
 content omits them, so existing entries like `rusty-key` didn't need
 edits) and an optional `container: { maxItemSize, capacityWeight }` -
-its *presence* marks the item as a container, the same way
+its _presence_ marks the item as a container, the same way
 `character.components.combat`'s presence marks "currently fighting."
 `modules/containers.js` is the generic mechanism (`isContainer`,
 `canContain`, `getEffectiveWeight`) - it knows the shape, never which
@@ -376,7 +376,7 @@ every command in the codebase already uses for its own actor-facing
 line. Wants its own pass across all of them once it's worth doing, not a
 one-off fix here.
 
-## Item qualifiers: ordinal (2.x) and cardinal (N*x) keyword matching
+## Item qualifiers: ordinal (2.x) and cardinal (N\*x) keyword matching
 
 `modules/itemSearch.js`'s `resolveItemToken` replaces the ad-hoc
 `items.find(i => i.keywords.includes(keyword))` that `get`/`put`/`drop`/
@@ -393,7 +393,7 @@ Plain, unqualified keywords are unchanged: first match, same as before.
 exists - `2.pouch` with only one around, `3*brick` with only two -
 rejects the entire command with `There aren't N things matching "x"
 here.`, nothing moved. `put` extends this to a batch capacity check:
-`canContainAll` (`modules/containers.js`) weighs the *whole* batch
+`canContainAll` (`modules/containers.js`) weighs the _whole_ batch
 cumulatively against a container's budget before moving anything, not
 each item against the container's still-empty current state one at a
 time - three items that individually fit a container can still
@@ -404,7 +404,7 @@ single item, so single-item and batch puts share one code path.
 `You pick up a 0.5 lb brick (x3).` Item names already carry their own
 article (`a 0.5 lb brick`), which naive pluralization can't handle in
 general (irregular nouns) without content opting in per item, and a
-cardinal match isn't even guaranteed to be N of the *same* item -
+cardinal match isn't even guaranteed to be N of the _same_ item -
 `3*brick` can pull a mix of different brick weights, all matching
 `"brick"`. `formatItemList` groups by name (`a 0.5 lb brick (x2), a 1 lb
 brick, and a pouch`) instead, which stays correct either way.
@@ -414,10 +414,10 @@ recipient, `whisper`) has no ordinal/cardinal support yet - a separate
 decision if it turns out useful, not assumed here.
 
 **One extra wrinkle for `emote`, spelled out because the two look
-similar:** an *unqualified* `#`/`@` that finds nothing still falls back
+similar:** an _unqualified_ `#`/`@` that finds nothing still falls back
 to `"something"`/`"someone"` and the emote proceeds - a typo in
 otherwise-fine freeform text shouldn't nuke the whole thing (existing
-behavior, unchanged). A *qualified* `#` that can't be satisfied aborts
+behavior, unchanged). A _qualified_ `#` that can't be satisfied aborts
 the entire emote instead - nothing broadcasts, same atomic-failure rule
 as everywhere else - because that's a specific, deliberate request that
 plainly can't be met, not a vague reference worth papering over.
@@ -425,7 +425,7 @@ plainly can't be met, not a vague reference worth papering over.
 ## Fuzzy (substring) keyword matching
 
 `modules/keywordMatch.js`'s `keywordMatches(keywords, token)` is the one
-place every item- *and* character-targeting command now checks whether
+place every item- _and_ character-targeting command now checks whether
 what someone typed refers to something: a token matches if it's a
 substring of any one of the entity's keywords, not just an exact match -
 `get bri pou` finds "a brick" in "a pouch" the same way `get brick pouch`
@@ -569,7 +569,7 @@ room.
 
 This is deliberately structured as a stepping stone toward save-on-
 mutation, not a dead end: `markDirty()` is already the exact call site a
-future switch would reuse - only what happens *after* `markDirty()` (an
+future switch would reuse - only what happens _after_ `markDirty()` (an
 immediate/debounced save vs. a ticker polling the flag) would change, not
 the command handlers that call it. Chosen over building save-on-mutation
 now because a ticker needed no per-command save-call plumbing beyond the
@@ -586,7 +586,7 @@ already uses.
 
 ## World checkpoints: rooms and characters save together
 
-`saveWorld` (`modules/worldPersistence.js`) saves every dirty room *and*
+`saveWorld` (`modules/worldPersistence.js`) saves every dirty room _and_
 every in-world character in one synchronous pass. Saving them on separate
 schedules is how state diverged: a player drops a sword, the room saves
 with it, the server restarts before the player's next save, and the sword
@@ -881,7 +881,6 @@ This covers the roadmap's "authored schedule per job" and the "blocked
 path" fallback. Fallbacks for missing items or NPCs wait until NPCs can
 use items or interact with each other.
 
-
 ## Naming: what each viewer calls someone
 
 Groundwork for recognition (strangers seen by short description, people
@@ -929,6 +928,7 @@ specific to recognition sits behind the policy and its commands, so moving
 it into a pack in Phase 4 stays cheap.
 
 **What each viewer sees and can type:**
+
 - Someone you've remembered: your name for them; keywords are its words
   plus their short description's.
 - A stranger: their short description; keywords are its words minus
@@ -1121,13 +1121,13 @@ to build ahead of an actual need.
 matching objects" — meaningless once `addItem` merges same-named
 stackables down to one object, since `5*arrow` against a single 20-arrow
 stack found only one object and failed with "there aren't 5 things
-matching arrow." It now means N *units*: `resolveItemToken`'s cardinal
+matching arrow." It now means N _units_: `resolveItemToken`'s cardinal
 path sums each match's `quantity` (1 for anything non-stackable, so
 existing content's behavior is unchanged — object-counting and
 unit-counting coincide when every object holds exactly 1) and walks
 matches in order, taking a whole object while there's enough count left
 and, for whichever object would otherwise overshoot, recording a
-*partial* claim (a `quantity` less than that object's own) instead.
+_partial_ claim (a `quantity` less than that object's own) instead.
 
 **The split itself is deferred to the moment a command commits.**
 `resolveItemToken` stays read-only — a partial claim is just a number
@@ -1158,7 +1158,7 @@ stack, not one unit.** The intuitive-looking equivalence "`get arrow`
 matching keeps meaning "the whole matched object," same as it always
 has for any item, stacked or not. `1*arrow` does now peel off exactly
 one unit (cardinal's unit-counting applies at N=1 same as any other N),
-so the two forms are deliberately *not* the same command right now; revisit
+so the two forms are deliberately _not_ the same command right now; revisit
 once it's clear from play which default actually feels right.
 
 ## Dependencies: pnpm with supply-chain guards

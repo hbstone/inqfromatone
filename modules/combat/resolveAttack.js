@@ -4,10 +4,10 @@
 // where any of that came from (an auto-attack producer today, parsed
 // cemote text later). The one thing it's allowed to know, same as the
 // rest of core, is that "vitality" is the role damage comes off of.
-import { resolveCheck } from "../checks/registry.js";
-import { getStatKeyForRole } from "../content/loadStatDefinitions.js";
-import { adjustBaseStat } from "../stats.js";
-import { emit } from "../events.js";
+import { resolveCheck } from '../checks/registry.js';
+import { getStatKeyForRole } from '../content/loadStatDefinitions.js';
+import { adjustBaseStat } from '../stats.js';
+import { emit } from '../events.js';
 
 /**
  * Resolve a single attack: attacker vs. defender.
@@ -19,14 +19,14 @@ import { emit } from "../events.js";
 export function resolveAttack(attacker, defender, attackParams) {
     const { statKey, context, damage } = attackParams;
     const hit = resolveCheck(attacker, statKey, context);
-    emit("attack", { attacker, defender, hit });
+    emit('attack', { attacker, defender, hit });
 
     if (!hit) {
         return { hit: false };
     }
 
-    adjustBaseStat(defender, getStatKeyForRole("vitality"), -damage);
-    emit("damage", { attacker, defender, amount: damage });
+    adjustBaseStat(defender, getStatKeyForRole('vitality'), -damage);
+    emit('damage', { attacker, defender, amount: damage });
 
     return { hit: true, damage };
 }

@@ -23,8 +23,16 @@ initStat(character, 'strength', 10);
 // The resolver nudges the attacker's value by -1/0/+1 before comparing
 // (see checks/index.js) - difficulties far enough from the base value are
 // deterministic regardless of which nudge lands.
-assert.equal(resolveCheck(character, 'strength', { difficulty: 8 }), true, 'value comfortably above difficulty should always succeed');
-assert.equal(resolveCheck(character, 'strength', { difficulty: 12 }), false, 'value comfortably below difficulty should always fail');
+assert.equal(
+    resolveCheck(character, 'strength', { difficulty: 8 }),
+    true,
+    'value comfortably above difficulty should always succeed',
+);
+assert.equal(
+    resolveCheck(character, 'strength', { difficulty: 12 }),
+    false,
+    'value comfortably below difficulty should always fail',
+);
 assert.equal(resolveCheck(character, 'strength'), true, 'a missing difficulty defaults to 0, always succeeds');
 
 // At the boundary (difficulty === value), the three possible nudges are
@@ -33,17 +41,17 @@ assert.equal(resolveCheck(character, 'strength'), true, 'a missing difficulty de
 assert.equal(
     withMockedRandom(0, () => resolveCheck(character, 'strength', { difficulty: 10 })),
     false,
-    'a -1 nudge (Math.random() near 0) takes the value below difficulty - miss'
+    'a -1 nudge (Math.random() near 0) takes the value below difficulty - miss',
 );
 assert.equal(
     withMockedRandom(0.5, () => resolveCheck(character, 'strength', { difficulty: 10 })),
     true,
-    'a 0 nudge (Math.random() near the middle) meets difficulty exactly - hit'
+    'a 0 nudge (Math.random() near the middle) meets difficulty exactly - hit',
 );
 assert.equal(
     withMockedRandom(0.99, () => resolveCheck(character, 'strength', { difficulty: 10 })),
     true,
-    'a +1 nudge (Math.random() near 1) beats difficulty - hit'
+    'a +1 nudge (Math.random() near 1) beats difficulty - hit',
 );
 
 console.log('All tests passed');

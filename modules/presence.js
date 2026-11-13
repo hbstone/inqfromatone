@@ -8,13 +8,13 @@
 // set or clear it themselves (say, a forge loop showing "is working at the
 // forge."). NPCs get theirs from content: a template's `presence`, or the
 // current routine post's while they're at it.
-import { nameFor } from "./naming.js";
-import { capitalizeFirst } from "./color.js";
-import { getGameTime } from "./gameClock.js";
-import { currentRoutineEntry } from "./npcs/routine.js";
+import { nameFor } from './naming.js';
+import { capitalizeFirst } from './color.js';
+import { getGameTime } from './gameClock.js';
+import { currentRoutineEntry } from './npcs/routine.js';
 
 export const PRESENCE_MAX = 120;
-const DEFAULT_PRESENCE = "is here.";
+const DEFAULT_PRESENCE = 'is here.';
 
 /**
  * What a character is currently doing, or null for nothing in particular.
@@ -56,7 +56,7 @@ export function presenceLine(subject, viewer, hour) {
  * @returns {{ value: string }|{ error: string }}
  */
 export function normalizePresence(input) {
-    let text = (input ?? "").trim().replace(/\s+/g, " ");
+    let text = (input ?? '').trim().replace(/\s+/g, ' ');
     if (!text) {
         return { error: "Usage: presence <what you're doing>, e.g. presence sweeps the floor" };
     }
@@ -67,22 +67,22 @@ export function normalizePresence(input) {
         text = text.charAt(0).toLowerCase() + text.slice(1);
     }
     if (/[a-z0-9]$/i.test(text)) {
-        text += ".";
+        text += '.';
     }
     return { value: text };
 }
 
 // `presence` - show yours; `presence <text>` - set it; `presence clear`.
 export const presence = (world, args, character) => {
-    const text = args.join(" ");
+    const text = args.join(' ');
     if (!text) {
         return character.presence
             ? `Your presence: "${character.presence}" It clears when you leave or quit, or with: presence clear`
             : "You have no presence set, so others see that you're here. Set one with: presence <what you're doing>";
     }
-    if (text.toLowerCase() === "clear") {
+    if (text.toLowerCase() === 'clear') {
         character.presence = null;
-        return "You clear your presence.";
+        return 'You clear your presence.';
     }
     const result = normalizePresence(text);
     if (result.error) {

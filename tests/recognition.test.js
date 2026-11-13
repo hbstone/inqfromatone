@@ -28,7 +28,12 @@ function setup() {
     const make = (name, shortDesc) => {
         const character = new Character(name, `${name}'s long description.`);
         character.shortDesc = shortDesc;
-        character.socket = { messages: [], write(m) { this.messages.push(stripColors(m).trim()); } };
+        character.socket = {
+            messages: [],
+            write(m) {
+                this.messages.push(stripColors(m).trim());
+            },
+        };
         room.addCharacter(character);
         return character;
     };
@@ -43,7 +48,9 @@ try {
     {
         assert.deepEqual(validateShortDesc('  A   bearded man ', 'Rhaehan'), { value: 'a bearded man' });
         assert.deepEqual(validateShortDesc('The {Rred{x cloak', 'Bob'), { value: 'the red cloak' });
-        assert.deepEqual(validateShortDesc('tall, dark-haired stranger', 'Bob'), { value: "tall, dark-haired stranger" });
+        assert.deepEqual(validateShortDesc('tall, dark-haired stranger', 'Bob'), {
+            value: 'tall, dark-haired stranger',
+        });
         assert.match(validateShortDesc('ab', 'Bob').error, /3-50 characters/);
         assert.match(validateShortDesc('a man with 3 eyes', 'Bob').error, /only use letters/);
         assert.match(validateShortDesc('Rhaehan the bearded', 'Rhaehan').error, /can't include your name/);
@@ -72,7 +79,10 @@ try {
     {
         const { world, room, alice, rhaehan, make } = setup();
         const carol = make('Carol', 'a stout dwarf');
-        assert.equal(remember(world, ['bearded', 'Insolent', 'Jerk'], alice), "You'll remember a bearded man as Insolent Jerk.");
+        assert.equal(
+            remember(world, ['bearded', 'Insolent', 'Jerk'], alice),
+            "You'll remember a bearded man as Insolent Jerk.",
+        );
         assert.equal(nameFor(rhaehan, alice), 'Insolent Jerk');
         assert.equal(nameFor(rhaehan, carol), 'a bearded man', "Carol hasn't met him");
         assert.equal(findCharacter(alice, room.characters, 'insolent'), rhaehan);
@@ -89,10 +99,19 @@ try {
     {
         const { world, alice } = setup();
         remember(world, ['bearded', 'Insolent', 'Jerk'], alice);
-        assert.equal(remember(world, ['jerk', 'did', 'some', 'kinda', 'thing'], alice), 'You add a note about Insolent Jerk.');
-        assert.equal(remember(world, ['bearded', 'apologized,', 'sort', 'of'], alice), 'You add a note about Insolent Jerk.');
+        assert.equal(
+            remember(world, ['jerk', 'did', 'some', 'kinda', 'thing'], alice),
+            'You add a note about Insolent Jerk.',
+        );
+        assert.equal(
+            remember(world, ['bearded', 'apologized,', 'sort', 'of'], alice),
+            'You add a note about Insolent Jerk.',
+        );
         const detail = remember(world, ['insolent'], alice);
-        assert.match(detail, /^Insolent Jerk\n {2}Looks like: a bearded man\n {2}Notes:\n {4}1\. \[\d{4}-\d\d-\d\d\] did some kinda thing\n {4}2\. \[\d{4}-\d\d-\d\d\] apologized, sort of$/);
+        assert.match(
+            detail,
+            /^Insolent Jerk\n {2}Looks like: a bearded man\n {2}Notes:\n {4}1\. \[\d{4}-\d\d-\d\d\] did some kinda thing\n {4}2\. \[\d{4}-\d\d-\d\d\] apologized, sort of$/,
+        );
         assert.equal(alice.memories.rhaehan.notes.length, 2);
     }
 
@@ -102,12 +121,21 @@ try {
         const { world, alice, make } = setup();
         remember(world, ['bearded', 'Insolent', 'Jerk'], alice);
         const stranger = make('Mallory', 'a jerky-looking man');
-        assert.equal(remember(world, ['jerk', 'was', 'rude', 'again', 'today', 'and', 'I', 'did', 'not', 'like', 'it'], alice),
-            'You add a note about Insolent Jerk.');
+        assert.equal(
+            remember(world, ['jerk', 'was', 'rude', 'again', 'today', 'and', 'I', 'did', 'not', 'like', 'it'], alice),
+            'You add a note about Insolent Jerk.',
+        );
         assert.equal(nameFor(stranger, alice), 'a jerky-looking man');
 
         // ...and a stranger can't be given a sentence for a name
-        const reply = remember(world, ['wiry', 'thinks', 'he', 'owns', 'the', 'place', 'honestly'], (() => { make('Dan', 'a wiry lad'); return alice; })());
+        const reply = remember(
+            world,
+            ['wiry', 'thinks', 'he', 'owns', 'the', 'place', 'honestly'],
+            (() => {
+                make('Dan', 'a wiry lad');
+                return alice;
+            })(),
+        );
         assert.match(reply, /too long for a name.*don't remember anyone matching "wiry" yet/);
     }
 
@@ -151,9 +179,15 @@ try {
         const { world, alice, rhaehan } = setup();
         rhaehan.shortDesc = 'a wiry lad';
         remember(world, ['wiry', 'Rhaehan'], alice);
-        assert.equal(shortdesc(world, ['a', 'stout', 'bearded', 'man'], rhaehan), 'Strangers now see you as "a stout bearded man".');
+        assert.equal(
+            shortdesc(world, ['a', 'stout', 'bearded', 'man'], rhaehan),
+            'Strangers now see you as "a stout bearded man".',
+        );
         assert.equal(nameFor(rhaehan, alice), 'Rhaehan', 'still recognized');
-        assert.match(remember(world, ['rhaehan'], alice), /Looks like: a stout bearded man\n {2}When you named them: a wiry lad/);
+        assert.match(
+            remember(world, ['rhaehan'], alice),
+            /Looks like: a stout bearded man\n {2}When you named them: a wiry lad/,
+        );
 
         assert.equal(rename(world, ['rhaehan', 'Old', 'Friend'], alice), "You'll now think of Rhaehan as Old Friend.");
         assert.equal(nameFor(rhaehan, alice), 'Old Friend');
@@ -166,7 +200,10 @@ try {
         remember(world, ['bearded', 'Jerk'], alice);
         room.removeCharacter(rhaehan);
         saveCharacterState('Rhaehan', { shortDesc: 'a sunburnt man' }, charactersDir);
-        assert.match(remember(world, ['jerk'], alice), /Looks like: a sunburnt man\n {2}When you named them: a bearded man/);
+        assert.match(
+            remember(world, ['jerk'], alice),
+            /Looks like: a sunburnt man\n {2}When you named them: a bearded man/,
+        );
         assert.match(remember(world, [], alice), /You remember:\n {2}Jerk \(a bearded man\) - 0 notes/);
     }
 
@@ -198,7 +235,15 @@ try {
         const startingRoomKey = world.addRoom('Start', 'The start.', 'start');
         const handleLogin = createLoginHandler({ world, startingRoomKey, charactersDir });
         const connect = () => {
-            const socket = { messages: [], write(m) { this.messages.push(m); }, end() { this.ended = true; } };
+            const socket = {
+                messages: [],
+                write(m) {
+                    this.messages.push(m);
+                },
+                end() {
+                    this.ended = true;
+                },
+            };
             socket.character = new Character();
             socket.character.socket = socket;
             return socket;
@@ -217,7 +262,10 @@ try {
         const saved = loadCharacterState('Newcomer', charactersDir);
         saveCharacterState('Oldtimer', { ...saved, shortDesc: undefined, description: 'An old hand.' }, charactersDir);
         const old = connect();
-        assert.match(send(old, 'Oldtimer', 'pw'), /Welcome back, Oldtimer! Before you go on: Enter a short description/);
+        assert.match(
+            send(old, 'Oldtimer', 'pw'),
+            /Welcome back, Oldtimer! Before you go on: Enter a short description/,
+        );
         assert.equal(old.character.isLoggedIn, false, 'not in the world yet');
         assert.equal(world.getRoomById('start').characters.length, 0);
         assert.match(send(old, 'a weathered sailor'), /Strangers will see you as "a weathered sailor"/);

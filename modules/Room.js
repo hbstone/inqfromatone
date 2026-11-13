@@ -1,5 +1,5 @@
-import { Item } from "./Item.js";
-import { presenceLine } from "./presence.js";
+import { Item } from './Item.js';
+import { presenceLine } from './presence.js';
 
 export class Room {
     constructor(name, description) {
@@ -47,7 +47,7 @@ export class Room {
      */
     toSaveData() {
         return {
-            inventory: this.inventory.map(item => item.toSaveData()),
+            inventory: this.inventory.map((item) => item.toSaveData()),
             components: this.components,
         };
     }
@@ -91,7 +91,7 @@ export class Room {
      * @returns {string}
      */
     describeExits() {
-        const exits = this.exitNames().join(", ") || "None";
+        const exits = this.exitNames().join(', ') || 'None';
         return `{YExits:{x ${exits}`;
     }
 
@@ -104,7 +104,7 @@ export class Room {
      * @returns {string[]} Empty when nobody else is here.
      */
     describeCharacters(viewer) {
-        return this.characters.filter(c => c !== viewer).map(c => presenceLine(c, viewer));
+        return this.characters.filter((c) => c !== viewer).map((c) => presenceLine(c, viewer));
     }
 
     addCharacter(character) {
@@ -113,7 +113,7 @@ export class Room {
     }
 
     removeCharacter(character) {
-        this.characters = this.characters.filter(c => c !== character);
+        this.characters = this.characters.filter((c) => c !== character);
         if (character.roomId === this.id) {
             character.roomId = null;
         }

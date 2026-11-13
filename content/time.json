@@ -1,9 +1,9 @@
 {
-  "speed": 4,
-  "phases": [
-    { "name": "dawn", "startHour": 5, "message": "The sky begins to lighten in the east." },
-    { "name": "day", "startHour": 7, "message": "The sun climbs above the horizon." },
-    { "name": "dusk", "startHour": 18, "message": "The sun sinks low, and shadows stretch long." },
-    { "name": "night", "startHour": 20, "message": "Darkness settles over the land." }
-  ]
+    "speed": 4,
+    "phases": [
+        { "name": "dawn", "startHour": 5, "message": "The sky begins to lighten in the east." },
+        { "name": "day", "startHour": 7, "message": "The sun climbs above the horizon." },
+        { "name": "dusk", "startHour": 18, "message": "The sun sinks low, and shadows stretch long." },
+        { "name": "night", "startHour": 20, "message": "Darkness settles over the land." }
+    ]
 }

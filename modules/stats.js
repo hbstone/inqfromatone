@@ -50,9 +50,9 @@ export function getStatValue(character, key) {
 
     return stat.modifiers.reduce((value, modifier) => {
         switch (modifier.operation) {
-            case "add":
+            case 'add':
                 return value + modifier.amount;
-            case "multiply":
+            case 'multiply':
                 return value * modifier.amount;
             default:
                 throw new Error(`Unknown stat modifier operation "${modifier.operation}".`);
@@ -84,7 +84,7 @@ export function adjustBaseStat(character, key, delta) {
  */
 export function setModifier(character, key, tag, operation, amount) {
     const stat = requireStat(character, key);
-    const existing = stat.modifiers.find(modifier => modifier.tag === tag);
+    const existing = stat.modifiers.find((modifier) => modifier.tag === tag);
     if (existing) {
         existing.operation = operation;
         existing.amount = amount;
@@ -105,5 +105,5 @@ export function removeModifier(character, key, tag) {
     if (!stat) {
         return;
     }
-    stat.modifiers = stat.modifiers.filter(modifier => modifier.tag !== tag);
+    stat.modifiers = stat.modifiers.filter((modifier) => modifier.tag !== tag);
 }

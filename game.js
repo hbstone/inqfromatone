@@ -1,23 +1,23 @@
-import { World } from "./modules/World.js";
-import { resolveCommand, explainCommand } from "./modules/commands/registry.js";
-import "./modules/commands/index.js"; // registers the built-in verbs, see index.js
-import "./modules/checks/index.js"; // registers the default check resolver, see index.js
-import "./modules/npcs/index.js"; // registers the built-in NPC behaviors (before content loads, so it can check behavior names)
-import { startNpcBehaviors } from "./modules/npcs/behaviors.js";
-import { setWorld as setCombatWorld } from "./modules/combat/index.js"; // registers the unarmed attack producer + combat messages, see index.js
-import { startRegenTicker } from "./modules/combat/regen.js";
-import { emit } from "./modules/events.js";
-import { loadWorldData } from "./modules/content/loadWorldData.js";
-import { loadStatDefinitions } from "./modules/content/loadStatDefinitions.js";
-import { disconnectCharacter } from "./modules/commands/quit.js";
-import { loadRoomStates, saveWorld, startWorldSaveTicker } from "./modules/worldPersistence.js";
-import { guard } from "./modules/guard.js";
-import { start as startScheduler } from "./modules/scheduler.js";
-import { loadTimeSettings, startGameClock } from "./modules/gameClock.js";
-import { writeToSocket } from "./modules/utils.js";
-import { createLoginHandler } from "./modules/login.js";
-import { loadFeatures } from "./modules/content/loadFeatures.js";
-import { enableRecognition } from "./modules/recognition/index.js";
+import { World } from './modules/World.js';
+import { resolveCommand, explainCommand } from './modules/commands/registry.js';
+import './modules/commands/index.js'; // registers the built-in verbs, see index.js
+import './modules/checks/index.js'; // registers the default check resolver, see index.js
+import './modules/npcs/index.js'; // registers the built-in NPC behaviors (before content loads, so it can check behavior names)
+import { startNpcBehaviors } from './modules/npcs/behaviors.js';
+import { setWorld as setCombatWorld } from './modules/combat/index.js'; // registers the unarmed attack producer + combat messages, see index.js
+import { startRegenTicker } from './modules/combat/regen.js';
+import { emit } from './modules/events.js';
+import { loadWorldData } from './modules/content/loadWorldData.js';
+import { loadStatDefinitions } from './modules/content/loadStatDefinitions.js';
+import { disconnectCharacter } from './modules/commands/quit.js';
+import { loadRoomStates, saveWorld, startWorldSaveTicker } from './modules/worldPersistence.js';
+import { guard } from './modules/guard.js';
+import { start as startScheduler } from './modules/scheduler.js';
+import { loadTimeSettings, startGameClock } from './modules/gameClock.js';
+import { writeToSocket } from './modules/utils.js';
+import { createLoginHandler } from './modules/login.js';
+import { loadFeatures } from './modules/content/loadFeatures.js';
+import { enableRecognition } from './modules/recognition/index.js';
 
 const world = new World(); // Initialize the world
 const { startingRoomKey } = loadWorldData(world); // Load room/item content data
@@ -45,7 +45,7 @@ const handleLogin = createLoginHandler({ world, startingRoomKey });
  */
 export const saveWorldOnShutdown = (message) => {
     for (const character of world.getOnlineCharacters()) {
-        guard("shutdown notice", () => writeToSocket(character.socket, message));
+        guard('shutdown notice', () => writeToSocket(character.socket, message));
     }
     saveWorld(world);
 };
@@ -56,7 +56,11 @@ export const handleCommand = (socket, input) => {
     const character = socket.character;
 
     if (!character.isLoggedIn) {
-        return guard(`login for socket ${socket.remoteAddress ?? "?"}`, () => handleLogin(socket, input), COMMAND_ERROR);
+        return guard(
+            `login for socket ${socket.remoteAddress ?? '?'}`,
+            () => handleLogin(socket, input),
+            COMMAND_ERROR,
+        );
     }
 
     const [typed, ...args] = input.trim().split(/\s+/);
@@ -64,7 +68,7 @@ export const handleCommand = (socket, input) => {
     // `n?` (or `n?anything`, `n? more words`): say what the first word
     // would run, without running it - see explainCommand. Only a `?` in
     // the first word counts, so `say really?` is still just a say.
-    const questionMark = typed.indexOf("?");
+    const questionMark = typed.indexOf('?');
     if (questionMark !== -1) {
         return explainCommand(typed.slice(0, questionMark));
     }
@@ -75,8 +79,12 @@ export const handleCommand = (socket, input) => {
         const { name: command, handler } = resolved;
         // A bug in one command costs that one command, not the server -
         // see modules/guard.js.
-        const result = guard(`command "${input}" from ${character.name}`, () => handler(world, args, character, socket), COMMAND_ERROR);
-        emit("command", { character, command, args, result, world });
+        const result = guard(
+            `command "${input}" from ${character.name}`,
+            () => handler(world, args, character, socket),
+            COMMAND_ERROR,
+        );
+        emit('command', { character, command, args, result, world });
         return result;
     }
 

@@ -7,10 +7,7 @@ import { initStat } from '../modules/stats.js';
 {
     const character = { components: {} };
     initStat(character, 'strength', 10);
-    assert.throws(
-        () => resolveCheck(character, 'strength', { difficulty: 5 }),
-        /No check resolver registered/
-    );
+    assert.throws(() => resolveCheck(character, 'strength', { difficulty: 5 }), /No check resolver registered/);
 }
 
 // A registered resolver receives the character, statKey, the *effective*
