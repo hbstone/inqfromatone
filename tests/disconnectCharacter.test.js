@@ -12,7 +12,7 @@ import { initStat } from '../modules/stats.js';
 import { loadCharacterState } from '../data.js';
 import { loadRoomState } from '../worldData.js';
 
-loadStatDefinitions(); // real content/stats/attributes.json - gives "vitality" -> "hp"
+loadStatDefinitions(); // the default game's stats (packs/starter) - gives "vitality" -> "hp"
 
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'disconnect-'));
 const saveDirs = {

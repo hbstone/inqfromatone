@@ -9,18 +9,16 @@
 //
 // The engine owns only the mechanism: a 24-hour day, a day count, and
 // named phases with an optional broadcast message. Everything themed lives
-// in content/time.json: how fast time runs, what the phases are called,
+// in a pack's time.json: how fast time runs, what the phases are called,
 // when they start, and what players see when one begins. Calendars (month
 // and year names, seasons, holidays) are theme territory; they can be built
 // from the day number and the "hourChange"/"phaseChange" events below.
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { emit } from './events.js';
 import { every } from './scheduler.js';
 import { writeToSocket } from './utils.js';
-
-const DEFAULT_TIME_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'content', 'time.json');
+import { defaultContentDirs } from './packs/game.js';
 
 // Day 1 begins at midnight game time on this instant. Fixed rather than
 // "when the server first started", so game time never depends on any
@@ -37,13 +35,24 @@ const CHECK_INTERVAL_MS = 1000;
 let speed = 1;
 let phases = []; // sorted by startHour
 
+// When no pack has a time.json: real-time speed, no named phases.
+const NO_TIME_SETTINGS = { speed: 1, phases: [] };
+
 /**
  * Load the time settings, replacing whatever was loaded before.
- * @param {string} [filePath] - Defaults to content/time.json. Overridable
- *   for tests.
+ * @param {string|string[]} [source] - A time.json path (tests), or content
+ *   directories in game order, of which the *last* with a time.json wins
+ *   outright - phases aren't merged across packs, since a theme's day is one
+ *   design. Defaults to the default game's packs.
  */
-export function loadTimeSettings(filePath = DEFAULT_TIME_FILE) {
-    const settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+export function loadTimeSettings(source = defaultContentDirs()) {
+    const filePath = Array.isArray(source)
+        ? source
+              .map((dir) => path.join(dir, 'time.json'))
+              .filter((file) => fs.existsSync(file))
+              .at(-1)
+        : source;
+    const settings = filePath ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : NO_TIME_SETTINGS;
     if (!(settings.speed > 0)) {
         throw new Error(`Time settings need a positive "speed", got ${settings.speed}.`);
     }

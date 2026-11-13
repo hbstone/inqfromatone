@@ -5,7 +5,7 @@ import { loadStatDefinitions } from '../modules/content/loadStatDefinitions.js';
 import { initStat } from '../modules/stats.js';
 import { Item } from '../modules/Item.js';
 
-loadStatDefinitions(); // real content/stats/attributes.json - gives offense/defense roles
+loadStatDefinitions(); // the default game's stats (packs/starter) - gives offense/defense roles
 
 function makeCombatant() {
     const character = { name: 'Fighter', components: {}, equipment: {} };

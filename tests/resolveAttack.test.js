@@ -5,7 +5,7 @@ import { loadStatDefinitions } from '../modules/content/loadStatDefinitions.js';
 import { initStat, getStatValue } from '../modules/stats.js';
 import { on } from '../modules/events.js';
 
-loadStatDefinitions(); // real content/stats/attributes.json - gives "vitality" -> "hp"
+loadStatDefinitions(); // the default game's stats (packs/starter) - gives "vitality" -> "hp"
 
 function makeCombatant(hp = 10) {
     const character = { name: 'Fighter', components: {} };

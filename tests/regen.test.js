@@ -5,7 +5,7 @@ import { loadStatDefinitions } from '../modules/content/loadStatDefinitions.js';
 import { initStat, getStatValue } from '../modules/stats.js';
 import { startRegenTicker } from '../modules/combat/regen.js';
 
-loadStatDefinitions(); // real content/stats/attributes.json - "vitality" -> "hp", startingValue 10
+loadStatDefinitions(); // the default game's stats (packs/starter) - "vitality" -> "hp", startingValue 10
 
 function makeCharacter(name, hp, online = true) {
     const character = { name, components: {}, socket: online ? {} : null };
