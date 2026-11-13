@@ -17,6 +17,26 @@
           "hums an old tune, slightly off-key."
         ]
       }
-    }
+    },
+    "routine": [
+      {
+        "from": "dawn",
+        "at": "courtyard"
+      },
+      {
+        "from": "night",
+        "at": "start/storage-room",
+        "behaviors": {
+          "ambient": {
+            "chance": 0.1,
+            "emotes": [
+              "snores softly on a pile of sacks.",
+              "mumbles something about moss in his sleep.",
+              "shifts, and the sacks under him rustle."
+            ]
+          }
+        }
+      }
+    ]
   }
 ]

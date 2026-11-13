@@ -106,7 +106,19 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
                     console.warn(`NPC "${zoneKey}/${npcData.key}" has unknown behavior "${behavior}"; it will be ignored.`);
                 }
             }
-            npcTemplates.set(`${zoneKey}/${npcData.key}`, { ...npcData, id: `${zoneKey}/${npcData.key}` });
+            for (const entry of npcData.routine ?? []) {
+                for (const behavior of Object.keys(entry.behaviors ?? {})) {
+                    if (!hasBehavior(behavior)) {
+                        console.warn(`NPC "${zoneKey}/${npcData.key}" has unknown behavior "${behavior}" in its routine; it will be ignored.`);
+                    }
+                }
+            }
+            npcTemplates.set(`${zoneKey}/${npcData.key}`, {
+                ...npcData,
+                id: `${zoneKey}/${npcData.key}`,
+                // Posts are written like exits: a bare key is in the NPC's own zone
+                routine: (npcData.routine ?? []).map(entry => ({ ...entry, roomId: resolveRoomRef(entry.at ?? "", zoneKey) })),
+            });
         }
 
         world.addZone(zoneKey, {
@@ -143,6 +155,23 @@ export function loadWorldData(world, contentDir = DEFAULT_CONTENT_DIR) {
         if (startingRoomKey) {
             console.warn(`No room marked "isStartingRoom"; defaulting to ${startingRoomKey}.`);
         }
+    }
+
+    // Every room exists now, so routine posts can be checked. A post that
+    // names a missing room is dropped; the rest of the routine still runs.
+    for (const template of npcTemplates.values()) {
+        template.routine = template.routine.filter(entry => {
+            const valid = typeof entry.from === "number" ? Number.isInteger(entry.from) && entry.from >= 0 && entry.from <= 23 : typeof entry.from === "string";
+            if (!valid) {
+                console.warn(`Skipping a routine entry for NPC "${template.id}": "from" must be an hour (0-23) or a phase name, got ${JSON.stringify(entry.from)}.`);
+                return false;
+            }
+            if (!world.getRoomById(entry.roomId)) {
+                console.warn(`Skipping a routine entry for NPC "${template.id}": unknown room "${entry.roomId}".`);
+                return false;
+            }
+            return true;
+        });
     }
 
     // Second pass: wire up exits and place items, now that every room id
