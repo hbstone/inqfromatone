@@ -1,11 +1,24 @@
 import { writeToSocket } from '../utils.js';
-import { nameFor } from '../naming.js';
 import { saveWorld } from '../worldPersistence.js';
-import { getSession, disengageCombat } from '../combat/session.js';
+import { emit } from '../events.js';
+
+// Packs can stop a deliberate `quit` (combat refuses it mid-fight) by
+// registering a check that returns a reason, or null to allow it. Only
+// `quit` asks: a dropped connection can't be refused, so packs clean up on
+// the "characterLeaving" event instead (see disconnectCharacter).
+const quitBlockers = [];
+
+/**
+ * @param {(character: object) => (string|null)} check - Returns the
+ *   message to show instead of quitting, or null if quitting is fine.
+ */
+export function registerQuitBlocker(check) {
+    quitBlockers.push(check);
+}
 
 // Shared by the `quit` command and server.js's socket "close" handler
-// (ungraceful disconnect) — both need to leave combat, save, announce the
-// departure, and remove the character from their room; only the
+// (ungraceful disconnect) — both need to let packs clean up, save, announce
+// the departure, and remove the character from their room; only the
 // socket-closing bit at the end of `quit` below is specific to a graceful
 // quit.
 /**
@@ -23,20 +36,10 @@ export const disconnectCharacter = (world, character, departureMessage, saveDirs
         return;
     }
 
-    // Leave combat first: a fight against someone no longer in the world
-    // would otherwise keep running on its timers. If that leaves an
-    // opponent with nobody to fight, the session ends for them too (see
-    // combat/session.js's checkForSessionEnd) - tell them so.
-    const session = getSession(character);
-    if (session) {
-        const opponents = Array.from(session.participants.keys()).filter((c) => c !== character);
-        disengageCombat(character);
-        for (const opponent of opponents) {
-            if (opponent.socket && !getSession(opponent)) {
-                writeToSocket(opponent.socket, `${nameFor(character, opponent)} is gone - you are no longer fighting.`);
-            }
-        }
-    }
+    // Anything a pack keeps running for this character (a fight, a crafting
+    // loop) ends here, before the save, so none of it outlives them or
+    // lands in their save file. Combat uses this to end their fight.
+    emit('characterLeaving', { character, room, world });
 
     // Broadcast to the room about the disconnection
     room.characters.forEach((char) => {
@@ -57,11 +60,11 @@ export const disconnectCharacter = (world, character, departureMessage, saveDirs
 };
 
 export const quit = (world, args, character, socket) => {
-    // Linkdeath can't be prevented (disconnectCharacter auto-disengages
-    // for that), but a deliberate `quit` shouldn't be a free escape from a
-    // fight you're losing.
-    if (getSession(character)) {
-        return "You can't quit in the middle of a fight! Flee or disengage first.";
+    for (const check of quitBlockers) {
+        const reason = check(character);
+        if (reason) {
+            return reason;
+        }
     }
 
     disconnectCharacter(world, character, `${character.name} has left the game.`);

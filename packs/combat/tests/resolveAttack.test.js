@@ -1,9 +1,9 @@
 import assert from 'assert/strict';
-import { resolveAttack } from '../modules/combat/resolveAttack.js';
-import { registerCheckResolver } from '../modules/checks/registry.js';
-import { loadStatDefinitions } from '../modules/content/loadStatDefinitions.js';
-import { initStat, getStatValue } from '../modules/stats.js';
-import { on } from '../modules/events.js';
+import { resolveAttack } from '../lib/resolveAttack.js';
+import { registerCheckResolver } from '../../../modules/checks/registry.js';
+import { loadStatDefinitions } from '../../../modules/content/loadStatDefinitions.js';
+import { initStat, getStatValue } from '../../../modules/stats.js';
+import { on } from '../../../modules/events.js';
 
 loadStatDefinitions(); // the default game's stats (packs/starter) - gives "vitality" -> "hp"
 

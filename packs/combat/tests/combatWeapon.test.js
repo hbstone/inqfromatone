@@ -1,9 +1,9 @@
 import assert from 'assert/strict';
-import { produceAttack } from '../modules/combat/registry.js';
-import '../modules/combat/index.js'; // registers the weapon-aware attack producer
-import { loadStatDefinitions } from '../modules/content/loadStatDefinitions.js';
-import { initStat } from '../modules/stats.js';
-import { Item } from '../modules/Item.js';
+import { produceAttack } from '../lib/registry.js';
+import '../lib/attacks.js'; // registers the weapon-aware attack producer
+import { loadStatDefinitions } from '../../../modules/content/loadStatDefinitions.js';
+import { initStat } from '../../../modules/stats.js';
+import { Item } from '../../../modules/Item.js';
 
 loadStatDefinitions(); // the default game's stats (packs/starter) - gives offense/defense roles
 

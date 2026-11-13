@@ -1,9 +1,9 @@
 import assert from 'assert/strict';
-import { World } from '../modules/World.js';
-import { loadStatDefinitions } from '../modules/content/loadStatDefinitions.js';
-import { initStat } from '../modules/stats.js';
-import { emit } from '../modules/events.js';
-import { setWorld } from '../modules/combat/index.js'; // also registers the attack producer + message listeners
+import { World } from '../../../modules/World.js';
+import { loadStatDefinitions } from '../../../modules/content/loadStatDefinitions.js';
+import { initStat } from '../../../modules/stats.js';
+import { emit } from '../../../modules/events.js';
+import { setWorld } from '../lib/attacks.js'; // also registers the attack producer + message listeners
 
 loadStatDefinitions();
 

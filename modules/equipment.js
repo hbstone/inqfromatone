@@ -7,7 +7,7 @@
 // set; the slot name is an open string, same as a stat's `role` tag in
 // stats.js - core never enumerates them. The one exception, same as
 // vitality/offense/defense there, is combat treating `weapon` as a
-// recognized slot once it needs to look one up (see modules/combat/index.js).
+// recognized slot once it needs to look one up (see packs/combat/lib/attacks.js).
 //
 // This module only validates - same as canContain/canContainAll for
 // containers - the actual inventory/equipment array mutation happens in

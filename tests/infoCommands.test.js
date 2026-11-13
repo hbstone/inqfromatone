@@ -23,7 +23,7 @@ import '../modules/commands/index.js'; // the real core verbs
         [...expected.map((n) => n.replace('*', ''))].sort(),
     );
 
-    assert.ok(listed.includes('kill*') && listed.includes('quit*'), 'full-word-only commands are starred');
+    assert.ok(listed.includes('quit*'), 'full-word-only commands are starred');
     assert.ok(listed.includes('commands') && listed.includes('who'));
     assert.match(output, /\* must be typed in full/);
 }

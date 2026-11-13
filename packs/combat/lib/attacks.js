@@ -10,11 +10,11 @@
 // from game.js) to reach room bystanders - the two combatants get their
 // direct messages regardless.
 import { registerAttackProducer } from './registry.js';
-import { nameFor, tellRoom } from '../naming.js';
-import { getStatKeyForRole } from '../content/loadStatDefinitions.js';
-import { getStatValue } from '../stats.js';
-import { on } from '../events.js';
-import { writeToSocket } from '../utils.js';
+import { nameFor, tellRoom } from '../../../modules/naming.js';
+import { getStatKeyForRole } from '../../../modules/content/loadStatDefinitions.js';
+import { getStatValue } from '../../../modules/stats.js';
+import { on } from '../../../modules/events.js';
+import { writeToSocket } from '../../../modules/utils.js';
 
 const UNARMED_DAMAGE = 1;
 

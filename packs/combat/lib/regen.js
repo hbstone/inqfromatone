@@ -4,9 +4,9 @@
 // trickle: same rate for everyone, in or out of combat, no "resting heals
 // faster" or "regen pauses mid-fight" concept yet. Deliberately the
 // simplest thing that gives regen a floor to iterate on later.
-import { getStatKeyForRole, getStatDefinition } from '../content/loadStatDefinitions.js';
-import { getStatValue, adjustBaseStat } from '../stats.js';
-import { every } from '../scheduler.js';
+import { getStatKeyForRole, getStatDefinition } from '../../../modules/content/loadStatDefinitions.js';
+import { getStatValue, adjustBaseStat } from '../../../modules/stats.js';
+import { every } from '../../../modules/scheduler.js';
 
 const REGEN_INTERVAL_MS = 30 * 1000;
 const REGEN_AMOUNT = 1;

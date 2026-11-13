@@ -1,6 +1,6 @@
-import { writeToSocket } from '../utils.js';
-import { findCharacter, nameFor } from '../naming.js';
-import { engageCombat } from '../combat/session.js';
+import { writeToSocket } from '../../../modules/utils.js';
+import { findCharacter, nameFor } from '../../../modules/naming.js';
+import { engageCombat } from './session.js';
 
 export const kill = (world, args, character) => {
     const targetName = args.join(' ');

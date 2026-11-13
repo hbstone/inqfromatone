@@ -12,7 +12,6 @@ import { loadWorldData } from '../modules/content/loadWorldData.js';
 import { saveCharacters } from '../modules/worldPersistence.js';
 import { findInWorldCharacter } from '../modules/connection.js';
 import { characterExists } from '../data.js';
-import { kill } from '../modules/commands/kill.js';
 import { give } from '../modules/commands/give.js';
 import { look } from '../modules/commands/look.js';
 import { advance, reset } from '../modules/scheduler.js';
@@ -249,8 +248,6 @@ try {
             'logging in as "Marla" makes a player, not a takeover',
         );
         assert.equal(findInWorldCharacter(world, 'bob'), bob);
-
-        assert.equal(kill(world, ['marla'], bob), "You can't attack Marla.");
 
         bob.inventory.push(new Item('a pouch', 'A pouch.', ['pouch']));
         assert.equal(give(world, ['pouch', 'marla'], bob), "Marla doesn't take it.");

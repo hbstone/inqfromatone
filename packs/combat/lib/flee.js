@@ -1,5 +1,5 @@
-import { getSession, disengageCombat } from '../combat/session.js';
-import { movePlayer, OPPOSITES } from './move.js';
+import { getSession, disengageCombat } from './session.js';
+import { movePlayer, OPPOSITES } from '../../../modules/commands/move.js';
 
 // A disengage combined with a move - but only if the move is actually
 // possible. An invalid direction fails outright (no disengage happens)

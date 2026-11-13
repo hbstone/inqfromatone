@@ -10,15 +10,12 @@
 import { registerCommand } from './registry.js';
 import { color } from './color.js';
 import { commands } from './commands.js';
-import { disengage } from './disengage.js';
 import { drop } from './drop.js';
 import { east } from './east.js';
 import { emote } from './emote.js';
-import { flee } from './flee.js';
 import { get } from './get.js';
 import { give } from './give.js';
 import { items } from './items.js';
-import { kill } from './kill.js';
 import { look } from './look.js';
 import { north } from './north.js';
 import { put } from './put.js';
@@ -59,10 +56,7 @@ registerCommand('whisper', whisper);
 registerCommand('emote', emote);
 registerCommand('presence', presence); // p/pu stay put; pr is presence
 
-// Combat
-registerCommand('kill', kill, { abbreviate: false }); // be sure
-registerCommand('flee', flee);
-registerCommand('disengage', disengage);
+// Combat verbs (kill, flee, disengage) live in packs/combat/.
 
 // Character and settings
 registerCommand('score', score);

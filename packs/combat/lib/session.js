@@ -2,7 +2,7 @@
 // Tracks who's fighting whom and drives each participant's auto-attack
 // timer. Has no opinion about what an attack looks like (that's
 // registry.js's job) or what a defeat/hit/miss should say to a player
-// (that's modules/combat/index.js, listening for the events emitted
+// (that's lib/attacks.js, listening for the events emitted
 // below) - this file only knows the mechanics: sessions, participants,
 // timers, and the one role (vitality) it needs to know someone's still
 // standing.
@@ -14,12 +14,12 @@
 // batched round. The full round engine is still the plan once cemote
 // needs multiple sides to submit before anything resolves.
 import { randomUUID } from 'crypto';
-import { getStatKeyForRole } from '../content/loadStatDefinitions.js';
-import { getStatValue } from '../stats.js';
+import { getStatKeyForRole } from '../../../modules/content/loadStatDefinitions.js';
+import { getStatValue } from '../../../modules/stats.js';
 import { produceAttack } from './registry.js';
 import { resolveAttack } from './resolveAttack.js';
-import { emit } from '../events.js';
-import { every, after } from '../scheduler.js';
+import { emit } from '../../../modules/events.js';
+import { every, after } from '../../../modules/scheduler.js';
 
 const AUTO_ATTACK_INTERVAL_MS = 2000;
 // A safety net against a stuck session, not a real combat timer - should

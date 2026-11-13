@@ -1,9 +1,9 @@
 import assert from 'assert/strict';
-import { advance, reset } from '../modules/scheduler.js';
-import { World } from '../modules/World.js';
-import { loadStatDefinitions } from '../modules/content/loadStatDefinitions.js';
-import { initStat, getStatValue } from '../modules/stats.js';
-import { startRegenTicker } from '../modules/combat/regen.js';
+import { advance, reset } from '../../../modules/scheduler.js';
+import { World } from '../../../modules/World.js';
+import { loadStatDefinitions } from '../../../modules/content/loadStatDefinitions.js';
+import { initStat, getStatValue } from '../../../modules/stats.js';
+import { startRegenTicker } from '../lib/regen.js';
 
 loadStatDefinitions(); // the default game's stats (packs/starter) - "vitality" -> "hp", startingValue 10
 

@@ -4,8 +4,6 @@ import './modules/commands/index.js'; // registers the built-in verbs, see index
 import './modules/checks/index.js'; // registers the default check resolver, see index.js
 import './modules/npcs/index.js'; // registers the built-in NPC behaviors (before content loads, so it can check behavior names)
 import { startNpcBehaviors } from './modules/npcs/behaviors.js';
-import { setWorld as setCombatWorld } from './modules/combat/index.js'; // registers the unarmed attack producer + combat messages, see index.js
-import { startRegenTicker } from './modules/combat/regen.js';
 import { emit } from './modules/events.js';
 import { loadWorldData } from './modules/content/loadWorldData.js';
 import { loadStatDefinitions } from './modules/content/loadStatDefinitions.js';
@@ -35,8 +33,6 @@ const features = loadFeatures(contentDirs); // optional engine features this gam
 if (features.recognition) {
     enableRecognition(); // strangers by short description; remember/forget/rename/shortdesc (see modules/recognition/)
 }
-setCombatWorld(world); // let combat messages reach room bystanders, not just the two combatants
-startRegenTicker(world); // passive vitality regen for every online character
 startWorldSaveTicker(world); // periodic checkpoint: dirty rooms + every in-world character (see worldPersistence.js)
 startGameClock(world); // hour/phase-change events and phase messages (see gameClock.js)
 startNpcBehaviors(world); // NPCs wander and chatter (see modules/npcs/behaviors.js)

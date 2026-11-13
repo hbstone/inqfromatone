@@ -4,10 +4,10 @@
 // where any of that came from (an auto-attack producer today, parsed
 // cemote text later). The one thing it's allowed to know, same as the
 // rest of core, is that "vitality" is the role damage comes off of.
-import { resolveCheck } from '../checks/registry.js';
-import { getStatKeyForRole } from '../content/loadStatDefinitions.js';
-import { adjustBaseStat } from '../stats.js';
-import { emit } from '../events.js';
+import { resolveCheck } from '../../../modules/checks/registry.js';
+import { getStatKeyForRole } from '../../../modules/content/loadStatDefinitions.js';
+import { adjustBaseStat } from '../../../modules/stats.js';
+import { emit } from '../../../modules/events.js';
 
 /**
  * Resolve a single attack: attacker vs. defender.

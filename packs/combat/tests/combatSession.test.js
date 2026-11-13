@@ -1,10 +1,10 @@
 import assert from 'assert/strict';
-import { advance, reset } from '../modules/scheduler.js';
-import { engageCombat, disengageCombat, getSession } from '../modules/combat/session.js';
-import { registerAttackProducer } from '../modules/combat/registry.js';
-import { registerCheckResolver } from '../modules/checks/registry.js';
-import { loadStatDefinitions } from '../modules/content/loadStatDefinitions.js';
-import { initStat, getStatValue } from '../modules/stats.js';
+import { advance, reset } from '../../../modules/scheduler.js';
+import { engageCombat, disengageCombat, getSession } from '../lib/session.js';
+import { registerAttackProducer } from '../lib/registry.js';
+import { registerCheckResolver } from '../../../modules/checks/registry.js';
+import { loadStatDefinitions } from '../../../modules/content/loadStatDefinitions.js';
+import { initStat, getStatValue } from '../../../modules/stats.js';
 
 loadStatDefinitions(); // the default game's stats (packs/starter) - gives "vitality" -> "hp"
 

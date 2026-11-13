@@ -5,14 +5,13 @@ import path from 'path';
 import { World } from '../modules/World.js';
 import { Character } from '../modules/Character.js';
 import { Item } from '../modules/Item.js';
-import { disconnectCharacter, quit } from '../modules/commands/quit.js';
-import { engageCombat, getSession } from '../modules/combat/session.js';
+import { disconnectCharacter, quit, registerQuitBlocker } from '../modules/commands/quit.js';
+import { on } from '../modules/events.js';
 import { loadStatDefinitions } from '../modules/content/loadStatDefinitions.js';
-import { initStat } from '../modules/stats.js';
 import { loadCharacterState } from '../data.js';
 import { loadRoomState } from '../worldData.js';
 
-loadStatDefinitions(); // the default game's stats (packs/starter) - gives "vitality" -> "hp"
+loadStatDefinitions(); // the default game's stats
 
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'disconnect-'));
 const saveDirs = {
@@ -89,52 +88,36 @@ try {
         );
     }
 
-    // Disconnecting mid-fight leaves combat, ending it for a lone opponent
-    // (who's told), and no combat state lands in the save
+    // Packs hear about anyone leaving the world before the save (combat ends
+    // their fight there), and can refuse a deliberate quit with a reason
+    // (combat does mid-fight); see packs/combat/tests/pack.test.js for combat
     {
         const { world, room } = makeWorld();
-        const leaver = new Character('Fighter', 'Fighting.');
-        initStat(leaver, 'hp', 10);
+        const leaver = new Character('Leaver', 'Leaving.');
         room.addCharacter(leaver);
-        const opponent = new Character('Opponent');
-        initStat(opponent, 'hp', 10);
-        opponent.socket = fakeSocket();
-        room.addCharacter(opponent);
-
-        engageCombat(leaver, opponent);
-        disconnectCharacter(world, leaver, 'Fighter has disconnected.', saveDirs);
-
-        assert.equal(getSession(leaver), undefined, 'the leaver should be out of combat');
-        assert.equal(getSession(opponent), undefined, 'a lone remaining opponent should be out of combat too');
-        assert.ok(
-            opponent.socket.messages.some((m) => m.includes('no longer fighting')),
-            'the opponent should be told the fight is over',
-        );
+        const heard = [];
+        on('characterLeaving', ({ character, room: from }) => {
+            heard.push(`${character.name} from ${from.id} (still there: ${from.characters.includes(character)})`);
+            character.components.busy = undefined; // a pack tidying its state before the save
+        });
+        leaver.components.busy = true;
+        disconnectCharacter(world, leaver, 'Leaver has disconnected.', saveDirs);
+        assert.deepEqual(heard, [`Leaver from ${room.id} (still there: true)`]);
         assert.equal(
-            loadCharacterState('Fighter', saveDirs.charactersDir).components.combat,
+            loadCharacterState('Leaver', saveDirs.charactersDir).components.busy,
             undefined,
-            'combat session state should not be persisted',
+            'cleaned up before saving',
         );
-    }
 
-    // `quit` is refused mid-fight - linkdeath can't be prevented, but a
-    // deliberate quit isn't a free escape
-    {
-        const { world, room } = makeWorld();
-        const a = new Character('Quitter');
-        initStat(a, 'hp', 10);
-        room.addCharacter(a);
-        const b = new Character('Foe');
-        initStat(b, 'hp', 10);
-        room.addCharacter(b);
-
-        engageCombat(a, b);
-        const socket = fakeSocket();
-        const result = quit(world, [], a, socket);
-
-        assert.match(result, /can't quit/);
-        assert.ok(room.characters.includes(a), 'a refused quit leaves them in the world');
-        disconnectCharacter(world, a, 'cleanup', saveDirs); // ends the session's timers
+        let busy = true;
+        registerQuitBlocker((character) => (busy && character.name === 'Stayer' ? "You're busy!" : null));
+        const stayer = new Character('Stayer');
+        room.addCharacter(stayer);
+        assert.equal(quit(world, [], stayer, fakeSocket()), "You're busy!");
+        assert.ok(room.characters.includes(stayer), 'a refused quit leaves them in the world');
+        busy = false;
+        quit(world, [], stayer, { ...fakeSocket(), end() {} });
+        assert.ok(!room.characters.includes(stayer), 'allowed once nothing blocks it');
     }
 } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });

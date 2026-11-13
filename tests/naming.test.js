@@ -8,8 +8,6 @@ import { Character } from '../modules/Character.js';
 import { Npc } from '../modules/Npc.js';
 import { Item } from '../modules/Item.js';
 import { setNamingPolicy, resetNamingPolicy, nameFor, findCharacter } from '../modules/naming.js';
-import { emit } from '../modules/events.js';
-import { setWorld as setCombatWorld } from '../modules/combat/index.js';
 import '../modules/npcs/index.js';
 import { pulseNpc } from '../modules/npcs/behaviors.js';
 import { say } from '../modules/commands/say.js';
@@ -18,7 +16,6 @@ import { look } from '../modules/commands/look.js';
 import { give } from '../modules/commands/give.js';
 import { drop } from '../modules/commands/drop.js';
 import { whisper } from '../modules/commands/whisper.js';
-import { kill } from '../modules/commands/kill.js';
 import { tell } from '../modules/commands/tell.js';
 import { who } from '../modules/commands/who.js';
 import { movePlayer } from '../modules/commands/move.js';
@@ -53,7 +50,6 @@ function setup() {
     const alice = make('Alice', 'a tall woman');
     const bob = make('Bob', 'a short man');
     const carol = make('Carol', 'a stout dwarf');
-    setCombatWorld(world);
     return { world, hall, yard, alice, bob, carol, make };
 }
 const last = (character) => character.socket.messages.at(-1);
@@ -102,7 +98,7 @@ try {
         assert.equal(last(carol), 'A tall woman (to Carol) waves at someone.', 'real names do not resolve');
     }
 
-    // give, whisper, kill
+    // give, whisper (kill and combat messages: packs/combat/tests/pack.test.js)
     {
         const { world, alice, bob, carol } = setup();
         alice.inventory.push(new Item('a coin', 'A coin.', ['coin']));
@@ -112,12 +108,6 @@ try {
 
         assert.equal(whisper(world, ['short', 'psst'], alice), 'You whisper to a short man (to Alice): "psst"');
         assert.equal(last(bob), 'A tall woman (to Bob) whispers to you, "psst"');
-
-        const npc = new Npc({ id: 'z/cat', name: 'a cat' }, 'hall');
-        npc.alias = 'a scruffy cat';
-        world.getRoomById('hall').addCharacter(npc);
-        assert.equal(kill(world, ['scruffy'], alice), "You can't attack a scruffy cat (to Alice).");
-        assert.equal(kill(world, ['bob'], alice), "You don't see them here.");
     }
 
     // Movement: leave and arrive messages
@@ -127,15 +117,6 @@ try {
         movePlayer(world, alice, hall, 'north', 'south');
         assert.equal(last(bob), 'A tall woman (to Bob) leaves to the north.');
         assert.equal(last(dave), 'A tall woman (to Dave) arrives from the south.');
-    }
-
-    // Combat messages: combatants and bystanders
-    {
-        const { alice, bob, carol } = setup();
-        emit('attack', { attacker: alice, defender: bob, hit: false });
-        assert.equal(last(alice), 'You swing at a short man (to Alice) and miss.');
-        assert.equal(last(bob), 'A tall woman (to Bob) swings at you and misses.');
-        assert.equal(last(carol), 'A tall woman (to Carol) swings at a short man (to Carol) and misses.');
     }
 
     // NPC ambient lines
