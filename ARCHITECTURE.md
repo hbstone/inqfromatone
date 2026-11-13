@@ -170,6 +170,9 @@ resolver is a deterministic stat-vs-threshold comparison, proving
 dice mechanic nobody's asked for); and migration of characters saved
 before `components.stats` existed.
 
+(Combat has since moved into its own pack, `packs/combat/`; see "Packs".
+Paths below are from before that move.)
+
 **Combat: sessions now, round engine and `cemote` parsing planned.** Combat
 is modeled as a session, not a per-character target — target-switching
 mid-fight and multiple simultaneous combatants (one character fighting
@@ -1058,9 +1061,33 @@ safe to take from strangers (the roadmap's "semi-trusted content" note).
 arguments, reads the default game's packs (`defaultContentDirs()`); passing
 a single path still works for test fixtures.
 
-Still in core rather than a pack, for later PRs: combat (moving to
-`packs/combat/` next), and the core verbs, NPC behaviors and check resolver,
-which register themselves on import as before.
+**Combat is a pack** (`packs/combat/`), included in the default game.
+Leaving it out of a game's list removes `kill`/`flee`/`disengage`, `hp` and
+regen entirely. Earlier sections' `modules/combat/*` and
+`modules/commands/{kill,flee,disengage}.js` paths now live in
+`packs/combat/lib/` (`modules/combat/index.js` became `lib/attacks.js`).
+Its `content/stats/combat.json` adds `hp` (vitality) and gives strength and
+dexterity their offense/defense roles by overriding the starter pack's
+role-less versions, so a pack defining those must come before it.
+
+Core no longer knows about combat. Two generic hooks replaced its direct
+calls in `quit.js`:
+
+- **`characterLeaving`** `{ character, room, world }`: emitted when anyone
+  leaves the world (quit or dropped connection), before the save, so packs
+  can end whatever they keep running for that character. Combat ends the
+  fight and tells a lone opponent.
+- **Quit blockers** (`pack.registerQuitBlocker(check)`): `check(character)`
+  returns a reason to refuse a deliberate `quit`, or null. Combat refuses
+  mid-fight. A dropped connection can't be refused, so cleanup belongs on
+  `characterLeaving`.
+
+Pack code may import engine modules for helpers (naming, stats, events,
+utils); registration goes through the context so it's attributed. Pack
+tests live in `packs/<name>/tests/` and `node --test` finds them.
+
+Still in core and registered on import: the core verbs, the core NPC
+behaviors (`wander`, `ambient`) and the default check resolver.
 
 ## Input limits: line length cap and command pacing
 

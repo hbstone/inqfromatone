@@ -14,6 +14,7 @@
 import { registerCommand } from '../commands/registry.js';
 import { registerBehavior } from '../npcs/behaviors.js';
 import { on } from '../events.js';
+import { registerQuitBlocker } from '../commands/quit.js';
 import { every, after } from '../scheduler.js';
 
 /**
@@ -43,6 +44,8 @@ export function createPackContext(pack, world) {
         registerBehavior: attributed(registerBehavior),
         /** Listen for an engine event (see modules/events.js). */
         on: attributed(on),
+        /** Refuse a deliberate `quit` while something's going on (see modules/commands/quit.js). */
+        registerQuitBlocker: attributed(registerQuitBlocker),
         /** Recurring job on the engine scheduler; the label is prefixed with the pack name. */
         every: attributed((label, intervalMs, fn) => every(`${pack.name}: ${label}`, intervalMs, fn)),
         /** One-off job on the engine scheduler; the label is prefixed with the pack name. */

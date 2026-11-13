@@ -1,0 +1,5 @@
+{
+    "name": "combat",
+    "version": "1.0.0",
+    "description": "Fights between characters: kill, flee and disengage, auto-attacks on a timer, hit points and regen. Gives strength and dexterity their combat roles, so it expects a pack defining those to come before it."
+}

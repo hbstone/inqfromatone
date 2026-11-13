@@ -1,0 +1,5 @@
+[
+    { "key": "strength", "label": "Strength", "startingValue": 10, "role": "offense", "override": true },
+    { "key": "dexterity", "label": "Dexterity", "startingValue": 10, "role": "defense", "override": true },
+    { "key": "hp", "label": "Hit Points", "startingValue": 10, "role": "vitality" }
+]

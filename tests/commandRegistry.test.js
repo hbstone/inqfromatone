@@ -33,8 +33,6 @@ const resolve = (typed) => resolveCommand(typed)?.name;
         sc: 'score',
         t: 'tell',
         em: 'emote',
-        f: 'flee',
-        di: 'disengage',
         c: 'color',
         co: 'color',
         com: 'commands',
@@ -47,11 +45,8 @@ const resolve = (typed) => resolveCommand(typed)?.name;
     }
 }
 
-// quit and kill require the full word
+// quit requires the full word (kill too: see packs/combat/tests/pack.test.js)
 {
-    assert.equal(resolve('k'), undefined);
-    assert.equal(resolve('kil'), undefined);
-    assert.equal(resolve('kill'), 'kill');
     assert.equal(resolve('q'), undefined);
     assert.equal(resolve('qui'), undefined);
     assert.equal(resolve('quit'), 'quit');
@@ -80,10 +75,11 @@ const resolve = (typed) => resolveCommand(typed)?.name;
     assert.equal(resolve('lo'), 'lo', 'an exact match beats look, registered earlier');
     assert.equal(resolve('l'), 'look', 'look keeps the shorter prefix');
 
-    // A full-word-only core verb doesn't block a pack verb's prefix
-    registerCommand('kick', noop);
-    assert.equal(resolve('k'), 'kick', 'kill needs its full name, so k falls through to kick');
-    assert.equal(resolve('kill'), 'kill');
+    // A full-word-only verb doesn't block a later verb's prefix
+    registerCommand('zap', noop, { abbreviate: false });
+    registerCommand('zip', noop);
+    assert.equal(resolve('z'), 'zip', 'zap needs its full name, so z falls through to zip');
+    assert.equal(resolve('zap'), 'zap');
 }
 
 // explainCommand: what a typed verb would run, echoing what was typed
@@ -93,7 +89,8 @@ const resolve = (typed) => resolveCommand(typed)?.name;
     assert.equal(explainCommand('look'), '"look" is look.');
     assert.equal(explainCommand('xyzzy'), `"xyzzy" doesn't match any command.`);
     assert.equal(explainCommand('q'), `"q" doesn't match any command. (quit must be typed in full.)`);
-    assert.equal(explainCommand('kil'), `"kil" doesn't match any command. (kill must be typed in full.)`);
+    assert.equal(explainCommand('za'), `"za" doesn't match any command. (zap must be typed in full.)`);
+    assert.equal(explainCommand('qui'), `"qui" doesn't match any command. (quit must be typed in full.)`);
     assert.match(explainCommand(''), /followed by \? to see/);
 }
 

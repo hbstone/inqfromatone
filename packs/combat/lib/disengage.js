@@ -1,6 +1,6 @@
-import { writeToSocket } from '../utils.js';
-import { nameFor } from '../naming.js';
-import { getSession, disengageCombat } from '../combat/session.js';
+import { writeToSocket } from '../../../modules/utils.js';
+import { nameFor } from '../../../modules/naming.js';
+import { getSession, disengageCombat } from './session.js';
 
 export const disengage = (world, args, character) => {
     const session = getSession(character);
