@@ -35,6 +35,10 @@ export const movePlayer = (world, character, room, direction, opposite) => {
     // Broadcast the departure
     tellRoom(room, (viewer) => `${nameFor(character, viewer)} leaves to the ${direction}.`, [character]);
 
+    // Whatever they were doing here doesn't come with them (see
+    // modules/presence.js). NPC presences come from content, not this.
+    character.presence = null;
+
     // Move the character between rooms, keeping room.characters and
     // character.roomId in sync
     room.removeCharacter(character);
@@ -50,5 +54,10 @@ export const movePlayer = (world, character, room, direction, opposite) => {
     emit("enterRoom", { character, room: nextRoom, world });
 
     // Who's here, but not items: those wait for an explicit `look`.
-    return `You move ${direction} to ${nextRoom.coloredName()}.\n${nextRoom.description}\n${nextRoom.describeExits()}\n${nextRoom.describeCharacters(character)}`;
+    return [
+        `You move ${direction} to ${nextRoom.coloredName()}.`,
+        nextRoom.description,
+        nextRoom.describeExits(),
+        ...nextRoom.describeCharacters(character),
+    ].join("\n");
 };

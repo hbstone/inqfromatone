@@ -3,6 +3,7 @@
     "key": "cat",
     "name": "a scruffy grey cat",
     "keywords": ["scruffy", "grey", "gray", "cat"],
+    "presence": "watches the room with half-closed eyes.",
     "description": "A lean grey cat with a torn ear and an air of owning the place.",
     "behaviors": {
       "wander": { "chance": 0.1 },

@@ -1,5 +1,5 @@
 import { Item } from "./Item.js";
-import { nameFor } from "./naming.js";
+import { presenceLine } from "./presence.js";
 
 export class Room {
     constructor(name, description) {
@@ -87,7 +87,7 @@ export class Room {
 
     /**
      * The "Exits: ..." display line, colored the same way as look's other
-     * field labels (Characters here:/Items here:) - see modules/color.js.
+     * field labels (Items here:) - see modules/color.js.
      * @returns {string}
      */
     describeExits() {
@@ -96,15 +96,15 @@ export class Room {
     }
 
     /**
-     * The "Characters here: ..." display line - everyone in the room except
-     * the viewer, PCs and NPCs alike - shared by look and movePlayer.
-     * Names are as the viewer knows them (see modules/naming.js).
-     * @param {object} viewer - The character looking, left out of the list.
-     * @returns {string}
+     * Who's here, one line each - PCs and NPCs alike, everyone but the
+     * viewer - shared by look and movePlayer: "A bearded man sweeps the
+     * floor." or "Insolent Jerk is here." Names are as the viewer knows
+     * them (see modules/naming.js), presences from modules/presence.js.
+     * @param {object} viewer - The character looking, left out.
+     * @returns {string[]} Empty when nobody else is here.
      */
     describeCharacters(viewer) {
-        const names = this.characters.filter(c => c !== viewer).map(c => nameFor(c, viewer));
-        return `{YCharacters here:{x ${names.join(", ") || "None"}`;
+        return this.characters.filter(c => c !== viewer).map(c => presenceLine(c, viewer));
     }
 
     addCharacter(character) {
