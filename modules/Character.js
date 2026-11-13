@@ -10,6 +10,12 @@ export class Character {
         this.colorEnabled = true; // see modules/commands/color.js and modules/color.js
         this.isNpc = false; // see modules/Npc.js
 
+        // Recognition (see modules/recognition/): how strangers see this
+        // character, and what this character remembers about others,
+        // keyed by their lowercased real name.
+        this.shortDesc = null;
+        this.memories = {};
+
         // Connection/session state
         this.isLoggedIn = false;
         this.stage = "name";
@@ -50,6 +56,8 @@ export class Character {
                 Object.entries(this.equipment).map(([slot, item]) => [slot, item.toSaveData()])
             ),
             colorEnabled: this.colorEnabled,
+            shortDesc: this.shortDesc,
+            memories: this.memories,
             components: this.components,
         };
     }
@@ -63,6 +71,8 @@ export class Character {
     restoreFrom(saveData) {
         this.description = saveData.description ?? null;
         this.colorEnabled = saveData.colorEnabled ?? true;
+        this.shortDesc = saveData.shortDesc ?? null;
+        this.memories = saveData.memories ?? {};
         this.components = saveData.components ?? {};
         this.inventory = (saveData.inventory ?? []).map(Item.fromSaveData);
         this.equipment = Object.fromEntries(

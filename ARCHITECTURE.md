@@ -919,6 +919,71 @@ Log messages use real names too.
 each viewer and checks each of the above, so a new message that bypasses
 the seam has a pattern to follow and test against.
 
+## Recognition
+
+Strangers see each other by **short description** ("a bearded man").
+`remember` gives someone a name of your own choosing, which you then see
+and can target them by, plus private notes. Built as a naming policy (see
+"Naming" above) and four commands in `modules/recognition/`.
+
+**Switched on by content.** `content/features.json` has
+`{ "recognition": true }` (`modules/content/loadFeatures.js`; a missing file
+or key means off). It's core rather than a theme pack because the seam is
+core anyway and presence lines will be useful without it. Everything
+specific to recognition sits behind the policy and its commands, so moving
+it into a pack in Phase 4 stays cheap.
+
+**What each viewer sees and can type:**
+- Someone you've remembered: your name for them; keywords are its words
+  plus their short description's.
+- A stranger: their short description; keywords are its words minus
+  articles. A real name you haven't learned never matches.
+- Yourself: your real name.
+- NPCs: unchanged (their content `name` already reads like a short
+  description). Remembering NPCs needs its own design and isn't
+  supported yet.
+- Out of character keeps real names, as in "Naming" above.
+
+**Short descriptions** are 3-50 characters of letters, spaces and `, ' -`,
+must not contain the character's own name, and get a leading article
+lowercased since they're used mid-sentence. Login asks for one after the
+long description for new characters, and before entering the world for
+existing characters that don't have one. `shortdesc` shows or changes it.
+
+**Memories** live on the viewer (`character.memories`, saved with them),
+keyed by the subject's lowercased real name, so identity, not looks:
+
+```json
+"rhaehan": { "name": "Insolent Jerk", "knewAs": "a bearded man",
+             "notes": [{ "text": "did some kinda thing...", "at": "2026-11-12T..." }] }
+```
+
+- `remember` lists everyone you remember. `remember <kw>` shows one: their
+  current short description (if online, or from their save), the one you
+  knew them by if it's changed, and numbered, dated notes.
+- `remember <kw> <text>`: **your memories are checked first**, by the name
+  you gave (an exact word beats a partial match, ties are reported rather
+  than guessed), then anyone in the room you've already remembered. If one
+  matches, the text is a note. Only if none does is it a stranger in the
+  room being given a name. Names are capped at 30 characters / 4 words, so
+  a note can't silently become someone's name: the refusal says nobody
+  matched. This is the guard against a stranger whose look matches one of
+  your names.
+- `rename <kw> <name>`: changes the name and updates `knewAs` to their
+  current look.
+- `forget <kw>` deletes a memory only when it has no notes; otherwise it
+  explains and points to `forget <kw> memories`, which clears the notes.
+  Two steps, so a long history can't vanish in one typo. `forget` must be
+  typed in full.
+- Limits: notes are 400 characters each, 50 per person. A note editor
+  (reword or delete one) is a likely follow-up.
+
+**Changing your look** doesn't break recognition: memories are keyed by
+identity. `remember <kw>` shows "When you named them: a wiry lad" under
+their current look, which is the RP hook. If a character truly wouldn't
+recognize someone, `forget` is the player's call. A disguise system could
+later break recognition on purpose.
+
 ## Input limits: line length cap and command pacing
 
 `modules/inputQueue.js` sits between the socket and `handleCommand`

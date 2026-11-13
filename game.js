@@ -16,12 +16,18 @@ import { start as startScheduler } from "./modules/scheduler.js";
 import { loadTimeSettings, startGameClock } from "./modules/gameClock.js";
 import { writeToSocket } from "./modules/utils.js";
 import { createLoginHandler } from "./modules/login.js";
+import { loadFeatures } from "./modules/content/loadFeatures.js";
+import { enableRecognition } from "./modules/recognition/index.js";
 
 const world = new World(); // Initialize the world
 const { startingRoomKey } = loadWorldData(world); // Load room/item content data
 loadRoomStates(world); // Overlay any saved room state (dropped/placed items) onto the content defaults
 loadStatDefinitions(); // Load stat definitions (which stats exist, starting values, roles)
 loadTimeSettings(); // Load time-of-day settings (speed, named phases)
+const features = loadFeatures(); // optional engine features this game switches on (content/features.json)
+if (features.recognition) {
+    enableRecognition(); // strangers by short description; remember/forget/rename/shortdesc (see modules/recognition/)
+}
 setCombatWorld(world); // let combat messages reach room bystanders, not just the two combatants
 startRegenTicker(world); // passive vitality regen for every online character
 startWorldSaveTicker(world); // periodic checkpoint: dirty rooms + every in-world character (see worldPersistence.js)
