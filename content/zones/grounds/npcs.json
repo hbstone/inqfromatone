@@ -3,6 +3,7 @@
     "key": "groundskeeper",
     "name": "an old groundskeeper",
     "keywords": ["old", "groundskeeper", "keeper"],
+    "presence": "rakes leaves into tidy piles.",
     "description": "A stooped, weathered man in a patched coat, never far from his rake. He looks like he's tended these flagstones longer than anyone can remember.",
     "behaviors": {
       "ambient": {
@@ -26,6 +27,7 @@
       {
         "from": "night",
         "at": "start/storage-room",
+        "presence": "snores softly on a pile of sacks.",
         "behaviors": {
           "ambient": {
             "chance": 0.1,

@@ -22,6 +22,7 @@ import { kill } from "./kill.js";
 import { look } from "./look.js";
 import { north } from "./north.js";
 import { put } from "./put.js";
+import { presence } from "../presence.js";
 import { quit } from "./quit.js";
 import { remove } from "./remove.js";
 import { say } from "./say.js";
@@ -56,6 +57,7 @@ registerCommand("say", say);
 registerCommand("tell", tell);
 registerCommand("whisper", whisper);
 registerCommand("emote", emote);
+registerCommand("presence", presence); // p/pu stay put; pr is presence
 
 // Combat
 registerCommand("kill", kill, { abbreviate: false }); // be sure

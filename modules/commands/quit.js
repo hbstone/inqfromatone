@@ -53,6 +53,7 @@ export const disconnectCharacter = (world, character, departureMessage, saveDirs
     saveWorld(world, saveDirs);
 
     room.removeCharacter(character);
+    character.presence = null; // not saved anyway; cleared for a takeover-free reconnect too (see modules/presence.js)
 };
 
 export const quit = (world, args, character, socket) => {

@@ -81,7 +81,7 @@ try {
         assert.equal(look(world, ['bob'], alice), "You can't find that here.");
         assert.equal(look(world, ['short'], alice), "You look at a short man (to Alice): Bob's long description.");
         assert.equal(last(bob), 'A tall woman (to Bob) looks at you.');
-        assert.match(stripColors(look(world, [], alice)), /Characters here: a short man \(to Alice\), a stout dwarf \(to Alice\)/);
+        assert.match(stripColors(look(world, [], alice)), /\nA short man \(to Alice\) is here\.\nA stout dwarf \(to Alice\) is here\./);
     }
 
     // emote: the actor and each @target are named per viewer

@@ -16,6 +16,10 @@ export class Character {
         this.shortDesc = null;
         this.memories = {};
 
+        // What they're doing right now, shown in place of "is here." (see
+        // modules/presence.js). Not saved: it clears on leaving or quitting.
+        this.presence = null;
+
         // Connection/session state
         this.isLoggedIn = false;
         this.stage = "name";

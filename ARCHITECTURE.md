@@ -831,13 +831,8 @@ are warned about at load and ignored.
   either spoken (`An old groundskeeper says, "..."`) or an emote
   (`An old groundskeeper hums.`). Only fires when a player is there.
 
-**Display.** `look` lists NPCs by name in "Characters here:", the same as
-players. Moving into a room shows that line too (via
-`Room.describeCharacters(viewer)`, shared with `look`), but not "Items
-here:", which waits for an explicit `look`. A planned system will give PCs and NPCs alike a short
-description, a long description and a presence line ("A bearded
-gentleman juggles clubs."), with per-viewer recognition. Presence lines
-are deliberately not an NPC-only feature here.
+**Display.** NPCs show in `look` and on entering a room the same way
+players do: a line each, with their presence (see "Presence" below).
 
 Not built yet: NPCs reacting to what players say (Tier 2), and NPCs
 carrying or exchanging items. Tier 1 routines are below.
@@ -908,7 +903,7 @@ you've met by the name you gave them). The rule lives in one place,
 Every in-character message that names a character to someone else goes
 through these: movement, `say`, `emote` (including `@targets`, rendered per
 viewer), `give`, `whisper`, `look`, `kill`, `drop`, `disengage`, combat
-messages, NPC ambient lines and "Characters here:". Targeting in `look`,
+messages, NPC ambient lines and presence lines. Targeting in `look`,
 `give`, `whisper`, `kill` and `emote @` uses `findCharacter`.
 
 **Out of character keeps real names** and doesn't use the seam: `who`,
@@ -983,6 +978,36 @@ identity. `remember <kw>` shows "When you named them: a wiry lad" under
 their current look, which is the RP hook. If a character truly wouldn't
 recognize someone, `forget` is the player's call. A disguise system could
 later break recognition on purpose.
+
+## Presence
+
+What someone is doing, shown as their own line when others `look` or walk
+in (`modules/presence.js`). It replaced the old "Characters here:" list:
+
+```
+Courtyard
+A small, open courtyard under the sky...
+Exits: north
+Insolent Jerk sweeps the cobblestone with a worn broom.
+An old groundskeeper rakes leaves into tidy piles.
+Items here: None
+```
+
+- **One line per character** (PCs and NPCs, not yourself), named as the
+  viewer knows them (see "Naming"). With no presence set it reads
+  "<name> is here.". Entering a room shows the same lines; "Items here:"
+  still waits for `look`.
+- **`presence <text>`** sets yours, `presence` shows it and `presence clear`
+  clears it. The text is third person without the name, like `emote`: the
+  first letter is lowercased and a period is added after a letter or
+  digit. Capped at 120 characters.
+- **It clears when you leave the room or quit**, and is never saved, since
+  what you were doing doesn't follow you. Later, commands can set or clear
+  it themselves (a forge loop showing "is working at the forge.").
+- **NPCs** get theirs from content: the template's `presence`, or the
+  current routine post's `presence` while at that post (the groundskeeper
+  "snores softly on a pile of sacks." at night). While walking to a post
+  they show plain "is here.", so nobody rakes leaves in the hallway.
 
 ## Input limits: line length cap and command pacing
 

@@ -35,7 +35,7 @@ function setup() {
     assert.match(result, /Exits: None/);
 }
 
-// The room name and field labels (Exits:/Characters here:/Items here:)
+// The room name and field labels (Exits:/Items here:)
 // carry color tokens - the one thing this QoL pass explicitly wanted
 // visually differentiated
 {
@@ -44,7 +44,6 @@ function setup() {
     const result = look(world, [], character);
     assert.match(result, /^\{CTown Square\{x/, 'room name is colored');
     assert.match(result, /\{YExits:\{x/, '"Exits:" label is colored');
-    assert.match(result, /\{YCharacters here:\{x/, '"Characters here:" label is colored');
     assert.match(result, /\{YItems here:\{x/, '"Items here:" label is colored');
 }
 

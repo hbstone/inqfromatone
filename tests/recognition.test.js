@@ -61,7 +61,7 @@ try {
         const cat = new Npc({ id: 'z/cat', name: 'a grey cat' }, 'hall');
         room.addCharacter(cat);
         assert.equal(nameFor(cat, alice), 'a grey cat');
-        assert.match(stripColors(look(world, [], alice)), /Characters here: a bearded man, a grey cat/);
+        assert.match(stripColors(look(world, [], alice)), /\nA bearded man is here\.\nA grey cat is here\./);
 
         say(world, ['hi'], alice);
         assert.equal(last(rhaehan), 'A tall woman says, "Hi."');

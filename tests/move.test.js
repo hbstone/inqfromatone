@@ -54,12 +54,12 @@ function setup() {
     dest.inventory.push({ name: 'a rock' });
 
     const result = stripColors(movePlayer(world, character, start, 'north', 'south'));
-    assert.match(result, /Characters here: Bob$/);
+    assert.match(result, /\nBob is here\.$/);
     assert.ok(!result.includes('Alice'), 'not yourself');
     assert.ok(!result.includes('Items here'), 'items wait for look');
 
     const empty = stripColors(movePlayer(world, bob, dest, 'south', 'north'));
-    assert.match(empty, /Characters here: None$/);
+    assert.match(empty, /Exits: north$/, 'nobody else here: no character lines');
 }
 
 // The destination room's name is colored too

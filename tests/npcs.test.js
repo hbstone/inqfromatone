@@ -221,7 +221,7 @@ try {
         assert.equal(give(world, ['pouch', 'marla'], bob), "Marla doesn't take it.");
         assert.equal(bob.inventory.length, 1, 'still has it');
 
-        assert.match(stripColors(look(world, [], bob)), /Characters here: Marla/);
+        assert.match(stripColors(look(world, [], bob)), /\nMarla is here\./);
         assert.equal(look(world, ['marla'], bob), 'You look at Marla: A cheerful innkeeper.');
     }
 
