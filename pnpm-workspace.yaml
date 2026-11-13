@@ -1,0 +1,16 @@
+# pnpm settings for this project (see ARCHITECTURE.md's "Dependencies").
+# Supply-chain guards for installing on a personal machine:
+
+# Refuse any package version published less than 7 days ago. Hijacked
+# releases are usually caught and pulled within hours to days. Setting this
+# explicitly also makes it strict: a too-new version fails the install
+# rather than being quietly exempted.
+minimumReleaseAge: 10080 # minutes
+
+# Refuse a version published with weaker provenance than earlier versions of
+# the same package - a common sign of a compromised account.
+trustPolicy: no-downgrade
+
+# Dependencies' install/build scripts never run unless listed here. Nothing
+# in this project needs one (eslint, prettier, globals are plain JS).
+allowBuilds: {}

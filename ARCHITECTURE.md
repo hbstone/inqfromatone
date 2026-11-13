@@ -1160,3 +1160,29 @@ has for any item, stacked or not. `1*arrow` does now peel off exactly
 one unit (cardinal's unit-counting applies at N=1 same as any other N),
 so the two forms are deliberately *not* the same command right now; revisit
 once it's clear from play which default actually feels right.
+
+## Dependencies: pnpm with supply-chain guards
+
+The game itself has no npm dependencies; only dev tooling does (eslint,
+@eslint/js, globals, prettier). Even so, installing runs third-party code on
+a personal machine, so the project uses **pnpm** (pinned via
+`packageManager` in `package.json`) with guards in `pnpm-workspace.yaml`:
+
+- **`allowBuilds: {}`**: dependencies' install/build scripts never run
+  unless listed. This is pnpm's default too; the empty list makes it
+  explicit. Install scripts are the usual way a compromised package runs
+  code during install.
+- **`minimumReleaseAge: 10080`** (7 days): a range resolves to the newest
+  version at least a week old, and a lockfile entry younger than that
+  fails. Hijacked releases are usually caught within hours to days. Setting
+  it explicitly makes it strict (pnpm's built-in one-day default only
+  warns). Checked when it was set up: `typescript@next` resolved to the
+  nightly from 7 days earlier, not that day's.
+- **`trustPolicy: no-downgrade`**: refuses a version published with weaker
+  provenance than earlier versions of the same package, a common sign of
+  a compromised account.
+
+Use `pnpm install` (or `pnpm install --frozen-lockfile` to match the
+lockfile exactly), `pnpm test`, `pnpm lint`. Running the tools still
+executes their code on your machine; a dev container is the next layer if
+that's ever wanted.
