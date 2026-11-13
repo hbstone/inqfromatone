@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node server.js",
     "lint": "eslint . --fix",
+    "lint:check": "eslint .",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "node --test"
   },
   "author": "",
