@@ -5,7 +5,7 @@
 // bell past noon" or a calendar will need to replace this; the registry
 // doesn't allow overriding a core verb yet (that's pack-composition work,
 // Phase 4).
-import { getGameTime } from "../gameClock.js";
+import { getGameTime } from '../gameClock.js';
 
 /**
  * A 24-hour time as a 12-hour clock, e.g. 0:05 -> "12:05am", 17:26 -> "5:26pm".
@@ -13,9 +13,9 @@ import { getGameTime } from "../gameClock.js";
  * @param {number} minute - 0 to 59.
  */
 export function formatClock(hour, minute) {
-    const suffix = hour < 12 ? "am" : "pm";
+    const suffix = hour < 12 ? 'am' : 'pm';
     const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-    return `${hour12}:${String(minute).padStart(2, "0")}${suffix}`;
+    return `${hour12}:${String(minute).padStart(2, '0')}${suffix}`;
 }
 
 export const time = () => {

@@ -32,13 +32,15 @@ try {
 
     // Phases: latest one started; before the first, the last carries over
     // from the previous day. Listed out of order on purpose - they're sorted.
-    loadTimeSettings(settings({
-        speed: 1,
-        phases: [
-            { name: 'night', startHour: 20, message: 'Night falls.' },
-            { name: 'day', startHour: 6, message: 'The sun rises.' },
-        ],
-    }));
+    loadTimeSettings(
+        settings({
+            speed: 1,
+            phases: [
+                { name: 'night', startHour: 20, message: 'Night falls.' },
+                { name: 'day', startHour: 6, message: 'The sun rises.' },
+            ],
+        }),
+    );
     assert.equal(getGameTime(EPOCH + 3 * HOUR).phase, 'night', 'early morning is still night');
     assert.equal(getGameTime(EPOCH + 6 * HOUR).phase, 'day');
     assert.equal(getGameTime(EPOCH + 21 * HOUR).phase, 'night');
@@ -50,13 +52,15 @@ try {
     // The clock emits hourChange every hour, phaseChange (plus the phase's
     // message to everyone online) only when the phase actually changes
     {
-        loadTimeSettings(settings({
-            speed: 1,
-            phases: [
-                { name: 'night', startHour: 20, message: 'Night falls.' },
-                { name: 'day', startHour: 6, message: 'The sun rises.' },
-            ],
-        }));
+        loadTimeSettings(
+            settings({
+                speed: 1,
+                phases: [
+                    { name: 'night', startHour: 20, message: 'Night falls.' },
+                    { name: 'day', startHour: 6, message: 'The sun rises.' },
+                ],
+            }),
+        );
         reset();
 
         const world = new World();
@@ -85,8 +89,8 @@ try {
         assert.deepEqual(hours, [5, 6]);
         assert.deepEqual(insideSocket.messages, [], 'phase messages skip indoor rooms');
         assert.deepEqual(phaseChanges, ['night->day']);
-        assert.equal(socket.messages.filter(m => m.includes('The sun rises.')).length, 1);
-        assert.ok(!socket.messages.some(m => m.includes('Night falls.')));
+        assert.equal(socket.messages.filter((m) => m.includes('The sun rises.')).length, 1);
+        assert.ok(!socket.messages.some((m) => m.includes('Night falls.')));
     }
 
     // 12-hour clock, including the midnight/noon edges

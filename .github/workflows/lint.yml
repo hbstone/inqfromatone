@@ -41,11 +41,13 @@ jobs:
       - name: Install Node.js dependencies
         run: pnpm install --frozen-lockfile
 
+      # Check-only: fail on problems instead of fixing a throwaway copy.
+      # Fix locally with `pnpm lint` / `pnpm format`.
       - name: Run ESLint
-        run: pnpm run lint
+        run: pnpm run lint:check
 
-      - name: Run Prettier
-        run: pnpm run format
+      - name: Check formatting (Prettier)
+        run: pnpm run format:check
 
   run-tests:
     name: Run tests

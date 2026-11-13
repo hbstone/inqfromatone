@@ -23,7 +23,9 @@ const handleLogin = createLoginHandler({ world, startingRoomKey, charactersDir }
 function connect() {
     const socket = { messages: [], ended: false };
     socket.write = (msg) => socket.messages.push(msg);
-    socket.end = () => { socket.ended = true; };
+    socket.end = () => {
+        socket.ended = true;
+    };
     socket.character = new Character();
     socket.character.socket = socket;
     return socket;
@@ -80,7 +82,11 @@ try {
         assert.equal(socket.character.roomId, 'yard/well');
         leaveWorld(socket.character);
         // later tests expect Newbie back in the starting room
-        saveCharacterState('Newbie', { ...loadCharacterState('Newbie', charactersDir), roomId: 'start' }, charactersDir);
+        saveCharacterState(
+            'Newbie',
+            { ...loadCharacterState('Newbie', charactersDir), roomId: 'start' },
+            charactersDir,
+        );
     }
 
     // Three wrong passwords closes the connection
@@ -91,7 +97,7 @@ try {
         assert.match(send(socket, 'nope'), /Incorrect password/);
         assert.equal(send(socket, 'nope'), undefined);
         assert.equal(socket.ended, true);
-        assert.ok(socket.messages.some(m => m.includes('Too many incorrect passwords')));
+        assert.ok(socket.messages.some((m) => m.includes('Too many incorrect passwords')));
         assert.equal(send(socket, 'pw'), undefined, 'input after the lockout is ignored');
         assert.equal(socket.character.isLoggedIn, false);
     }
@@ -106,14 +112,21 @@ try {
         assert.equal(second.character, live, 'the live character moves over, not a fresh copy from disk');
         assert.equal(live.socket, second);
         assert.equal(first.ended, true);
-        assert.equal(world.getRoomById('start').characters.filter(c => c.name === 'Newbie').length, 1,
-            'still only one Newbie in the world');
+        assert.equal(
+            world.getRoomById('start').characters.filter((c) => c.name === 'Newbie').length,
+            1,
+            'still only one Newbie in the world',
+        );
         leaveWorld(second.character);
     }
 
     // A legacy SHA-256 password works once, and is upgraded on disk
     {
-        saveCharacterState('Oldtimer', { password: sha256('old'), description: 'From before.', components: {} }, charactersDir);
+        saveCharacterState(
+            'Oldtimer',
+            { password: sha256('old'), description: 'From before.', components: {} },
+            charactersDir,
+        );
         const socket = connect();
         assert.match(send(socket, 'Oldtimer', 'old'), /Welcome back/);
         assert.match(loadCharacterState('Oldtimer', charactersDir).password, /^scrypt\$/);

@@ -14,8 +14,8 @@
 //
 // The gap is timed with the scheduler, so it's honored to within one
 // scheduler pulse.
-import { extractLines, writeToSocket, writePrompt } from "./utils.js";
-import { after } from "./scheduler.js";
+import { extractLines, writeToSocket, writePrompt } from './utils.js';
+import { after } from './scheduler.js';
 
 // Long enough for a very wordy roleplay pose (~1,300 words).
 export const MAX_LINE_LENGTH = 8 * 1024;
@@ -72,7 +72,7 @@ function drain(socket, runLine) {
 
     runLine(socket, line);
 
-    socket.inputCooldown = after("command gap", COMMAND_GAP_MS, () => {
+    socket.inputCooldown = after('command gap', COMMAND_GAP_MS, () => {
         socket.inputCooldown = null;
         drain(socket, runLine);
     });
@@ -87,7 +87,7 @@ function drain(socket, runLine) {
  * @param {(socket: object, line: string) => void} runLine - Runs one line.
  */
 export function receiveInput(socket, chunk, runLine) {
-    socket.lineBuffer ??= "";
+    socket.lineBuffer ??= '';
     socket.inputQueue ??= [];
 
     const { lines, remainder } = extractLines(socket.lineBuffer, chunk);
@@ -107,7 +107,7 @@ export function receiveInput(socket, chunk, runLine) {
     }
 
     if (socket.lineBuffer.length > MAX_LINE_LENGTH) {
-        socket.lineBuffer = "";
+        socket.lineBuffer = '';
         if (!socket.discardingLine) {
             socket.discardingLine = true;
             notify(socket, tooLongNotice());

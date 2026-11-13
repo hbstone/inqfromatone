@@ -1,6 +1,6 @@
-import { randomUUID } from "crypto"; // For generating unique IDs
-import { Room } from "./Room.js";
-import { keywordMatches } from "./keywordMatch.js";
+import { randomUUID } from 'crypto'; // For generating unique IDs
+import { Room } from './Room.js';
+import { keywordMatches } from './keywordMatch.js';
 
 export class World {
     constructor() {
@@ -15,7 +15,7 @@ export class World {
      * @param {string} key
      * @param {{ name: string, description?: string, indoors?: boolean }} data
      */
-    addZone(key, { name, description = "", indoors = false }) {
+    addZone(key, { name, description = '', indoors = false }) {
         this.zones.set(key, { key, name, description, indoors });
     }
 
@@ -40,10 +40,10 @@ export class World {
      */
     findRoomAllowingLegacyId(id) {
         const room = this.getRoomById(id);
-        if (room || typeof id !== "string" || id.includes("/")) {
+        if (room || typeof id !== 'string' || id.includes('/')) {
             return room;
         }
-        const matches = this.getAllRooms().filter(r => r.id.endsWith(`/${id}`));
+        const matches = this.getAllRooms().filter((r) => r.id.endsWith(`/${id}`));
         return matches.length === 1 ? matches[0] : null;
     }
 
@@ -90,7 +90,7 @@ export class World {
      * @returns {object[]} - An array of matching rooms.
      */
     getRoomsByName(name) {
-        return Array.from(this.rooms.values()).filter(room => room.name === name);
+        return Array.from(this.rooms.values()).filter((room) => room.name === name);
     }
 
     /**
@@ -116,8 +116,6 @@ export class World {
      * @returns {object[]}
      */
     getOnlineCharacters() {
-        return Array.from(this.rooms.values()).flatMap(
-            (room) => room.characters.filter((char) => char.socket)
-        );
+        return Array.from(this.rooms.values()).flatMap((room) => room.characters.filter((char) => char.socket));
     }
 }

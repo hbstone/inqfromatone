@@ -24,34 +24,44 @@
 // alone as literal text, not consumed or eaten - so stray "{" characters
 // in ordinary content never disappear or throw.
 
-const RESET = "\x1b[0m";
+const RESET = '\x1b[0m';
 
 // Letter aliases, each resolving to an [r, g, b] point (0-5 each) in the
 // same cube the {rgb form addresses directly. Tunable in one place
 // without touching the parser below.
 const COLOR_ALIASES = {
-    R: [5, 0, 0], r: [3, 0, 0],
-    G: [0, 5, 0], g: [0, 2, 0],
-    Y: [5, 5, 0], y: [3, 3, 0],
-    B: [0, 0, 5], b: [0, 0, 2],
-    M: [5, 0, 5], m: [3, 0, 3],
-    C: [0, 5, 5], c: [0, 3, 3],
-    K: [2, 2, 2], k: [2, 2, 2], // both "blacK" - a dark grey, not true black
-    W: [5, 5, 5], w: [3, 3, 3],
+    R: [5, 0, 0],
+    r: [3, 0, 0],
+    G: [0, 5, 0],
+    g: [0, 2, 0],
+    Y: [5, 5, 0],
+    y: [3, 3, 0],
+    B: [0, 0, 5],
+    b: [0, 0, 2],
+    M: [5, 0, 5],
+    m: [3, 0, 3],
+    C: [0, 5, 5],
+    c: [0, 3, 3],
+    K: [2, 2, 2],
+    k: [2, 2, 2], // both "blacK" - a dark grey, not true black
+    W: [5, 5, 5],
+    w: [3, 3, 3],
 };
 
 const STYLE_ALIASES = {
-    U: "\x1b[4m", u: "\x1b[4m", // underline
-    X: RESET, x: RESET, // reset
+    U: '\x1b[4m',
+    u: '\x1b[4m', // underline
+    X: RESET,
+    x: RESET, // reset
 };
 
-const LETTER_CLASS = Object.keys({ ...COLOR_ALIASES, ...STYLE_ALIASES }).join("");
+const LETTER_CLASS = Object.keys({ ...COLOR_ALIASES, ...STYLE_ALIASES }).join('');
 
 // A single token, matched anywhere: group 1 an {rgb} cube code, group 2 a
 // single-letter alias. The optional trailing "}" is consumed either way
 // but never required.
 const TOKEN_BODY = `\\{(?:([0-5]{3})|([${LETTER_CLASS}]))\\}?`;
-const TOKEN_RE = new RegExp(TOKEN_BODY, "g");
+const TOKEN_RE = new RegExp(TOKEN_BODY, 'g');
 
 // Zero or more tokens anchored at the start of a string, with no capture
 // groups of their own - just used to measure how much leading "token
@@ -64,7 +74,7 @@ function cubeToAnsi([r, g, b]) {
 
 function tokenToAnsi(cubeDigits, letter) {
     if (cubeDigits) {
-        return cubeToAnsi(cubeDigits.split("").map(Number));
+        return cubeToAnsi(cubeDigits.split('').map(Number));
     }
     if (letter in STYLE_ALIASES) {
         return STYLE_ALIASES[letter];
@@ -98,7 +108,7 @@ export function renderColors(str) {
  * @returns {string}
  */
 export function stripColors(str) {
-    return str.replace(TOKEN_RE, "");
+    return str.replace(TOKEN_RE, '');
 }
 
 /**

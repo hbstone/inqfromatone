@@ -1,5 +1,5 @@
-import { isContainer } from "../containers.js";
-import { resolveItemToken, itemDisplayName } from "../itemSearch.js";
+import { isContainer } from '../containers.js';
+import { resolveItemToken, itemDisplayName } from '../itemSearch.js';
 
 // `items` - testing/debugging aid, not really an in-fiction verb: lists
 // every item's name *and* keywords, room floor first then the
@@ -14,13 +14,11 @@ import { resolveItemToken, itemDisplayName } from "../itemSearch.js";
 // full of nested containers you only ever see one container's worth of
 // contents at a time, never a full-tree dump.
 function describeItem(item) {
-    return `${itemDisplayName(item)} [${item.keywords.join(", ")}]`;
+    return `${itemDisplayName(item)} [${item.keywords.join(', ')}]`;
 }
 
 function formatList(items) {
-    return items.length > 0
-        ? items.map(item => `  ${describeItem(item)}`).join("\n")
-        : "  None";
+    return items.length > 0 ? items.map((item) => `  ${describeItem(item)}`).join('\n') : '  None';
 }
 
 export const items = (world, args, character) => {

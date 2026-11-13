@@ -3,16 +3,19 @@
 // otherwise, so a game with no features.json gets plain core behavior.
 //
 //   { "recognition": true }
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const DEFAULT_FEATURES_FILE = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
-    "..", "..", "content", "features.json"
+    '..',
+    '..',
+    'content',
+    'features.json',
 );
 
-const KNOWN = ["recognition"];
+const KNOWN = ['recognition'];
 
 /**
  * @param {string} [filePath] - Overridable for tests.
@@ -22,7 +25,7 @@ export function loadFeatures(filePath = DEFAULT_FEATURES_FILE) {
     if (!fs.existsSync(filePath)) {
         return { recognition: false };
     }
-    const settings = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    const settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     for (const key of Object.keys(settings)) {
         if (!KNOWN.includes(key)) {
             console.warn(`Unknown feature "${key}" in features.json; ignoring it.`);

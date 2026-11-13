@@ -19,7 +19,12 @@ export class Item {
      * @param {number} [options.quantity] - How many units this object
      *   represents. Only meaningful when `stackable` is set; defaults to 1.
      */
-    constructor(name, description, keywords, { size = "small", weight = 1, container = null, equip = null, stackable = false, quantity = 1 } = {}) {
+    constructor(
+        name,
+        description,
+        keywords,
+        { size = 'small', weight = 1, container = null, equip = null, stackable = false, quantity = 1 } = {},
+    ) {
         this.name = name;
         this.description = description;
         this.keywords = keywords;
@@ -53,7 +58,7 @@ export class Item {
             equip: this.equip,
             stackable: this.stackable,
             quantity: this.quantity,
-            inventory: this.inventory.map(item => item.toSaveData()),
+            inventory: this.inventory.map((item) => item.toSaveData()),
             components: this.components,
         };
     }

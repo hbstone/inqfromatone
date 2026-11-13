@@ -2,8 +2,8 @@
 // fixed for a connection's whole life (server.js gives every new socket a
 // fresh, not-yet-logged-in Character), but logging into a character who's
 // already online moves that character onto the new socket instead.
-import { Character } from "./Character.js";
-import { writeToSocket } from "./utils.js";
+import { Character } from './Character.js';
+import { writeToSocket } from './utils.js';
 
 /**
  * Find the in-world character with exactly this name (case-insensitive),
@@ -17,7 +17,7 @@ export function findInWorldCharacter(world, name) {
     const wanted = name.toLowerCase();
     for (const room of world.getAllRooms()) {
         // NPCs aren't logins: a player named like one mustn't take it over
-        const found = room.characters.find(c => !c.isNpc && c.name?.toLowerCase() === wanted);
+        const found = room.characters.find((c) => !c.isNpc && c.name?.toLowerCase() === wanted);
         if (found) {
             return found;
         }
@@ -46,7 +46,7 @@ export function takeOverConnection(character, newSocket) {
     newSocket.character = character;
 
     if (oldSocket && oldSocket !== newSocket) {
-        writeToSocket(oldSocket, "This character has been logged in from another connection. Goodbye.");
+        writeToSocket(oldSocket, 'This character has been logged in from another connection. Goodbye.');
         const placeholder = new Character();
         placeholder.stage = null;
         placeholder.colorEnabled = character.colorEnabled;

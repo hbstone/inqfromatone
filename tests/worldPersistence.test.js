@@ -30,7 +30,10 @@ try {
         assert.equal(roomStateExists(idB, dir), false, 'the untouched room should not be written at all');
         assert.equal(world.getRoomById(idA).dirty, false, 'saving should clear the dirty flag');
 
-        assert.deepStrictEqual(loadRoomState(idA, dir).inventory.map(i => i.name), ['a pouch']);
+        assert.deepStrictEqual(
+            loadRoomState(idA, dir).inventory.map((i) => i.name),
+            ['a pouch'],
+        );
     }
 
     // loadRoomStates overlays saved state onto the content-seeded defaults,
@@ -45,14 +48,14 @@ try {
         loadRoomStates(world, dir); // room-a has a save from the block above; room-b doesn't
 
         assert.deepStrictEqual(
-            world.getRoomById(idA).inventory.map(i => i.name),
+            world.getRoomById(idA).inventory.map((i) => i.name),
             ['a pouch'],
-            'room-a should be overlaid with its saved state'
+            'room-a should be overlaid with its saved state',
         );
         assert.deepStrictEqual(
-            world.getRoomById(idB).inventory.map(i => i.name),
+            world.getRoomById(idB).inventory.map((i) => i.name),
             ['a torch'],
-            'room-b has no save yet, so its content-seeded default should be untouched'
+            'room-b has no save yet, so its content-seeded default should be untouched',
         );
         assert.equal(world.getRoomById(idA).dirty, false, 'a freshly-loaded room should not be dirty');
     }
@@ -62,7 +65,11 @@ try {
     // One whose key is now in two zones is left alone, since it can't be
     // told which room it belonged to.
     {
-        saveRoomState('cellar', { inventory: [new Item('a barrel', 'A barrel.', ['barrel']).toSaveData()], components: {} }, dir);
+        saveRoomState(
+            'cellar',
+            { inventory: [new Item('a barrel', 'A barrel.', ['barrel']).toSaveData()], components: {} },
+            dir,
+        );
         saveRoomState('gate', { inventory: [], components: {} }, dir);
 
         const world = new World();
@@ -82,7 +89,10 @@ try {
 
         assert.equal(roomStateExists('cellar', dir), false, 'the old file is gone');
         assert.equal(roomStateExists('keep/cellar', dir), true, 'and saved at the new path');
-        assert.deepStrictEqual(world.getRoomById('keep/cellar').inventory.map(i => i.name), ['a barrel']);
+        assert.deepStrictEqual(
+            world.getRoomById('keep/cellar').inventory.map((i) => i.name),
+            ['a barrel'],
+        );
 
         assert.equal(roomStateExists('gate', dir), true, 'ambiguous legacy save is left in place');
         assert.equal(roomStateExists('keep/gate', dir), false);

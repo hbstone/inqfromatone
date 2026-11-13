@@ -101,14 +101,13 @@ registerAttackProducer(() => ({ statKey: 'strength', context: {}, damage: 1 }));
 
 // Auto-attack: each side's timer independently lands a hit every 2s tick
 {
-
     const a = makeCombatant('A');
     const b = makeCombatant('B');
     engageCombat(a, b);
 
     advance(2000);
-    assert.equal(getStatValue(a, 'hp'), 9, 'b\'s tick should have hit a');
-    assert.equal(getStatValue(b, 'hp'), 9, 'a\'s tick should have hit b');
+    assert.equal(getStatValue(a, 'hp'), 9, "b's tick should have hit a");
+    assert.equal(getStatValue(b, 'hp'), 9, "a's tick should have hit b");
 
     advance(2000);
     assert.equal(getStatValue(a, 'hp'), 8);
@@ -121,9 +120,8 @@ registerAttackProducer(() => ({ statKey: 'strength', context: {}, damage: 1 }));
 
 // Combat ends automatically once a combatant's hp reaches 0
 {
-
     const a = makeCombatant('A', 100); // will survive
-    const b = makeCombatant('B', 1);   // one hit from defeat
+    const b = makeCombatant('B', 1); // one hit from defeat
     engageCombat(a, b);
 
     advance(2000);

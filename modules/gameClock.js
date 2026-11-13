@@ -13,22 +13,19 @@
 // when they start, and what players see when one begins. Calendars (month
 // and year names, seasons, holidays) are theme territory; they can be built
 // from the day number and the "hourChange"/"phaseChange" events below.
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import { emit } from "./events.js";
-import { every } from "./scheduler.js";
-import { writeToSocket } from "./utils.js";
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { emit } from './events.js';
+import { every } from './scheduler.js';
+import { writeToSocket } from './utils.js';
 
-const DEFAULT_TIME_FILE = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "..", "content", "time.json"
-);
+const DEFAULT_TIME_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'content', 'time.json');
 
 // Day 1 begins at midnight game time on this instant. Fixed rather than
 // "when the server first started", so game time never depends on any
 // saved state.
-const EPOCH = Date.parse("2026-01-01T00:00:00Z");
+const EPOCH = Date.parse('2026-01-01T00:00:00Z');
 
 const MINUTES_PER_DAY = 24 * 60;
 const MS_PER_MINUTE = 60 * 1000;
@@ -46,7 +43,7 @@ let phases = []; // sorted by startHour
  *   for tests.
  */
 export function loadTimeSettings(filePath = DEFAULT_TIME_FILE) {
-    const settings = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    const settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     if (!(settings.speed > 0)) {
         throw new Error(`Time settings need a positive "speed", got ${settings.speed}.`);
     }
@@ -78,7 +75,7 @@ function phaseAt(hour) {
  * @returns {number|null} null if there's no such phase.
  */
 export function getPhaseStartHour(name) {
-    return phases.find(phase => phase.name === name)?.startHour ?? null;
+    return phases.find((phase) => phase.name === name)?.startHour ?? null;
 }
 
 /**
@@ -111,7 +108,7 @@ export function getGameTime(now = Date.now()) {
 export function startGameClock(world, now = Date.now) {
     let last = getGameTime(now());
 
-    return every("game clock", CHECK_INTERVAL_MS, () => {
+    return every('game clock', CHECK_INTERVAL_MS, () => {
         const time = getGameTime(now());
         if (time.hour === last.hour && time.day === last.day) {
             return;
@@ -119,12 +116,12 @@ export function startGameClock(world, now = Date.now) {
         const previous = last;
         last = time;
 
-        emit("hourChange", { time, world });
+        emit('hourChange', { time, world });
 
         if (time.phase === previous.phase) {
             return;
         }
-        emit("phaseChange", { from: previous.phase, to: time.phase, time, world });
+        emit('phaseChange', { from: previous.phase, to: time.phase, time, world });
 
         const message = phaseAt(time.hour)?.message;
         if (message) {

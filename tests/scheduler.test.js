@@ -59,7 +59,10 @@ mock.method(console, 'error', () => {}); // expected logs from the throwing job 
     reset();
     let flaky = 0;
     let steady = 0;
-    every('flaky', 100, () => { flaky++; throw new Error('boom'); });
+    every('flaky', 100, () => {
+        flaky++;
+        throw new Error('boom');
+    });
     every('steady', 100, () => steady++);
     advance(300);
     assert.equal(flaky, 3);

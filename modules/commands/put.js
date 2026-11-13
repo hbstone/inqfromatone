@@ -1,6 +1,6 @@
-import { canContainAll } from "../containers.js";
-import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
-import { moveMatches } from "../stacking.js";
+import { canContainAll } from '../containers.js';
+import { resolveItemToken, formatItemList, previewMatch } from '../itemSearch.js';
+import { moveMatches } from '../stacking.js';
 
 // `put <item> [in] <container>` - drop/give need no changes at all, since
 // a container's contents move with it as part of the same Item object
@@ -13,10 +13,10 @@ import { moveMatches } from "../stacking.js";
 // take it out first.
 export const put = (world, args, character) => {
     const itemToken = args[0];
-    const containerToken = args.slice(1).join(" ").replace(/^in /i, "");
+    const containerToken = args.slice(1).join(' ').replace(/^in /i, '');
 
     if (!itemToken || !containerToken) {
-        return "Usage: put <item> [in] <container>";
+        return 'Usage: put <item> [in] <container>';
     }
 
     const room = world.getRoomById(character.roomId);
@@ -55,8 +55,9 @@ export const put = (world, args, character) => {
     moveMatches(itemResult.matches, container.inventory);
     // The room's saved state is affected either if an item left the room
     // floor, or if the container gaining it is itself sitting there.
-    const touchesRoom = itemResult.matches.some(m => m.source === room.inventory)
-        || containerResult.matches[0].source === room.inventory;
+    const touchesRoom =
+        itemResult.matches.some((m) => m.source === room.inventory) ||
+        containerResult.matches[0].source === room.inventory;
     if (touchesRoom) {
         room.markDirty();
     }

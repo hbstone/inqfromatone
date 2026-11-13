@@ -17,5 +17,5 @@
  */
 export function keywordMatches(keywords, rawToken) {
     const token = rawToken.toLowerCase();
-    return keywords.some(keyword => keyword.includes(token));
+    return keywords.some((keyword) => keyword.includes(token));
 }

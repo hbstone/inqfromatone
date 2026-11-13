@@ -5,16 +5,16 @@ export const color = (world, args, character) => {
     const arg = args[0]?.toLowerCase();
 
     if (!arg) {
-        return `Color is currently ${character.colorEnabled ? "on" : "off"}.`;
+        return `Color is currently ${character.colorEnabled ? 'on' : 'off'}.`;
     }
-    if (arg === "on") {
+    if (arg === 'on') {
         character.colorEnabled = true;
-        return "Color is now on.";
+        return 'Color is now on.';
     }
-    if (arg === "off") {
+    if (arg === 'off') {
         character.colorEnabled = false;
-        return "Color is now off.";
+        return 'Color is now off.';
     }
 
-    return "Usage: color [on|off]";
+    return 'Usage: color [on|off]';
 };

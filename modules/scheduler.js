@@ -17,7 +17,7 @@
 // time. That's what jobs like "every 2 seconds" or "in 5 minutes" mean.
 // The in-game time of day is a separate thing, derived from the wall clock
 // (see modules/gameClock.js).
-import { guard } from "./guard.js";
+import { guard } from './guard.js';
 
 // How often the real-time driver (start()) wakes up to advance time.
 // Jobs still run in exact due-time order inside each advance, so this only

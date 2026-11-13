@@ -5,15 +5,12 @@
 // storage adapter: callers deal in plain state objects keyed by name, not
 // filesystem details, so swapping the backend for a real embedded DB later
 // shouldn't need to touch call sites.
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import { readJsonFile, writeJsonAtomic } from "./modules/atomicWrite.js";
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { readJsonFile, writeJsonAtomic } from './modules/atomicWrite.js';
 
-const DEFAULT_CHARACTERS_DIR = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "characters"
-);
+const DEFAULT_CHARACTERS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'characters');
 
 // Filenames are the lowercased character name directly. This is only safe
 // because every name reaching this module has already passed modules/login.js's

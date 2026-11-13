@@ -24,7 +24,7 @@ const room = world.getRoomById(world.addRoom('Arena', 'A place to fight'));
 const attacker = makeCharacter('Attacker');
 const defender = makeCharacter('Defender');
 const bystander = makeCharacter('Bystander');
-[attacker, defender, bystander].forEach(c => room.addCharacter(c));
+[attacker, defender, bystander].forEach((c) => room.addCharacter(c));
 
 setWorld(world);
 

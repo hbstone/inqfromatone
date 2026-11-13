@@ -17,7 +17,16 @@ import { stripColors } from '../modules/color.js';
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'presence-'));
 const timeFile = path.join(tmp, 'time.json');
-fs.writeFileSync(timeFile, JSON.stringify({ speed: 1, phases: [{ name: 'dawn', startHour: 5 }, { name: 'night', startHour: 21 }] }));
+fs.writeFileSync(
+    timeFile,
+    JSON.stringify({
+        speed: 1,
+        phases: [
+            { name: 'dawn', startHour: 5 },
+            { name: 'night', startHour: 21 },
+        ],
+    }),
+);
 loadTimeSettings(timeFile);
 
 function setup() {
@@ -28,7 +37,12 @@ function setup() {
     yard.exits.south = 'hall';
     const make = (name, room = hall) => {
         const character = new Character(name, `${name}.`);
-        character.socket = { messages: [], write(m) { this.messages.push(stripColors(m).trim()); } };
+        character.socket = {
+            messages: [],
+            write(m) {
+                this.messages.push(stripColors(m).trim());
+            },
+        };
         room.addCharacter(character);
         return character;
     };
@@ -39,9 +53,15 @@ try {
     // Tidying: first letter lowercased (it follows a name), period added
     // after a letter or digit, length capped
     {
-        assert.deepEqual(normalizePresence('  Sweeps   the cobblestone with a worn broom '), { value: 'sweeps the cobblestone with a worn broom.' });
+        assert.deepEqual(normalizePresence('  Sweeps   the cobblestone with a worn broom '), {
+            value: 'sweeps the cobblestone with a worn broom.',
+        });
         assert.deepEqual(normalizePresence('is lost in thought...'), { value: 'is lost in thought...' });
-        assert.deepEqual(normalizePresence('I-shaped shadow looms'), { value: 'I-shaped shadow looms.' }, 'a lone capital (I, acronyms) is left alone');
+        assert.deepEqual(
+            normalizePresence('I-shaped shadow looms'),
+            { value: 'I-shaped shadow looms.' },
+            'a lone capital (I, acronyms) is left alone',
+        );
         assert.match(normalizePresence('').error, /Usage/);
         assert.match(normalizePresence('x'.repeat(121)).error, /too long/);
     }
@@ -53,7 +73,10 @@ try {
         const bob = make('Bob');
         make('Carol');
         assert.equal(presence(world, ['sweeps', 'the', 'floor'], bob), 'Your presence is now: "sweeps the floor."');
-        assert.equal(stripColors(look(world, [], alice)), 'Hall\nA hall.\nExits: north\nBob sweeps the floor.\nCarol is here.\nItems here: None');
+        assert.equal(
+            stripColors(look(world, [], alice)),
+            'Hall\nA hall.\nExits: north\nBob sweeps the floor.\nCarol is here.\nItems here: None',
+        );
         assert.match(presence(world, [], bob), /Your presence: "sweeps the floor\."/);
         assert.equal(presence(world, ['clear'], bob), 'You clear your presence.');
         assert.match(stripColors(look(world, [], alice)), /\nBob is here\.\n/);
@@ -103,15 +126,18 @@ try {
         hall.addCharacter(cat);
         assert.equal(presenceOf(cat, 12), 'naps in a sunbeam.');
 
-        const keeper = new Npc({
-            id: 'z/keeper',
-            name: 'an old keeper',
-            presence: 'rakes leaves.',
-            routine: [
-                { from: 'dawn', roomId: 'yard' },
-                { from: 'night', roomId: 'hall', presence: 'snores on the sacks.' },
-            ],
-        }, 'yard');
+        const keeper = new Npc(
+            {
+                id: 'z/keeper',
+                name: 'an old keeper',
+                presence: 'rakes leaves.',
+                routine: [
+                    { from: 'dawn', roomId: 'yard' },
+                    { from: 'night', roomId: 'hall', presence: 'snores on the sacks.' },
+                ],
+            },
+            'yard',
+        );
         world.getRoomById('yard').addCharacter(keeper);
         assert.equal(presenceOf(keeper, 12), 'rakes leaves.', 'at a post without its own: the template one');
         assert.equal(presenceOf(keeper, 23), null, 'night, but still in the yard: on the way');
@@ -125,7 +151,7 @@ try {
     {
         const world = new World();
         loadWorldData(world);
-        const keeper = world.npcs.find(n => n.templateId === 'grounds/groundskeeper');
+        const keeper = world.npcs.find((n) => n.templateId === 'grounds/groundskeeper');
         assert.equal(keeper.basePresence, 'rakes leaves into tidy piles.');
         assert.equal(keeper.routine[1].presence, 'snores softly on a pile of sacks.');
     }

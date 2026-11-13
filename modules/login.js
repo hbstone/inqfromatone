@@ -4,14 +4,14 @@
 // characters who predate it). Pulled out of game.js so it can be
 // tested against a throwaway World and save directory - game.js loads the
 // real world and starts timers on import.
-import { stripColors } from "./color.js";
-import { look } from "./commands/look.js";
-import { initializeCharacterStats } from "./content/loadStatDefinitions.js";
-import { findInWorldCharacter, takeOverConnection } from "./connection.js";
-import { writeToSocket, setInputHidden } from "./utils.js";
-import { hashPassword, verifyPassword } from "./auth.js";
-import { characterExists, loadCharacterState, saveCharacterState } from "../data.js";
-import { isRecognitionEnabled, validateShortDesc } from "./recognition/index.js";
+import { stripColors } from './color.js';
+import { look } from './commands/look.js';
+import { initializeCharacterStats } from './content/loadStatDefinitions.js';
+import { findInWorldCharacter, takeOverConnection } from './connection.js';
+import { writeToSocket, setInputHidden } from './utils.js';
+import { hashPassword, verifyPassword } from './auth.js';
+import { characterExists, loadCharacterState, saveCharacterState } from '../data.js';
+import { isRecognitionEnabled, validateShortDesc } from './recognition/index.js';
 
 // Letters and spaces only: character names become part of a filesystem
 // path (see data.js), so this is a real allowlist, not just cosmetic.
@@ -34,7 +34,7 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
     // save, ...) can leave a player typing blind.
     return function handleLogin(socket, input) {
         const response = loginStep(socket, input);
-        setInputHidden(socket, socket.character.stage === "password");
+        setInputHidden(socket, socket.character.stage === 'password');
         return response;
     };
 
@@ -42,7 +42,7 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
         const character = socket.character;
 
         // Handle name input
-        if (character.stage === "name") {
+        if (character.stage === 'name') {
             // Color codes are welcome in most input/output (see modules/color.js),
             // but not here: the name becomes a filename and a keyword-matching
             // key (data.js, Character#setName), so it needs to stay within
@@ -68,20 +68,20 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
 
             if (characterExists(name, charactersDir)) {
                 character.setName(name);
-                character.stage = "password";
-                return "Enter your password:";
+                character.stage = 'password';
+                return 'Enter your password:';
             } else {
                 character.setName(name);
-                character.stage = "password";
+                character.stage = 'password';
                 character.new = true;
-                return "Creating a new character. Enter a password:";
+                return 'Creating a new character. Enter a password:';
             }
         }
 
         // Handle password input
-        if (character.stage === "password") {
+        if (character.stage === 'password') {
             if (!input) {
-                return "Password cannot be blank. Please enter your password:";
+                return 'Password cannot be blank. Please enter your password:';
             }
 
             // A new character's password is only held in memory until the
@@ -90,8 +90,8 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
             // can't leave a half-made save behind.
             if (character.new) {
                 character.pendingPasswordHash = hashPassword(input);
-                character.stage = "description";
-                return "Enter a description for your character:";
+                character.stage = 'description';
+                return 'Enter a description for your character:';
             }
 
             const saved = loadCharacterState(character.name, charactersDir);
@@ -100,7 +100,7 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
                 // there but unreadable - say so, rather than "Incorrect
                 // password" forever.
                 console.error(`Login failed for "${character.name}": save file unreadable.`);
-                character.stage = "name";
+                character.stage = 'name';
                 return "Your character's save file couldn't be loaded - please let an admin know. Enter a name:";
             }
 
@@ -108,13 +108,15 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
             if (!ok) {
                 character.failedPasswordAttempts = (character.failedPasswordAttempts ?? 0) + 1;
                 if (character.failedPasswordAttempts >= MAX_PASSWORD_ATTEMPTS) {
-                    console.warn(`Closing connection after ${MAX_PASSWORD_ATTEMPTS} wrong passwords for "${character.name}".`);
-                    character.stage = "closed"; // matches no stage below, so anything else sent before the socket closes is ignored
-                    writeToSocket(socket, "Too many incorrect passwords. Goodbye.");
+                    console.warn(
+                        `Closing connection after ${MAX_PASSWORD_ATTEMPTS} wrong passwords for "${character.name}".`,
+                    );
+                    character.stage = 'closed'; // matches no stage below, so anything else sent before the socket closes is ignored
+                    writeToSocket(socket, 'Too many incorrect passwords. Goodbye.');
                     socket.end();
                     return;
                 }
-                return "Incorrect password. Try again:";
+                return 'Incorrect password. Try again:';
             }
 
             // Upgrade a legacy (unsalted SHA-256) or weaker-parameter hash in
@@ -130,8 +132,8 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
             if (saved.description == null) {
                 character.pendingPasswordHash = saved.password;
                 character.resumingCreation = true;
-                character.stage = "description";
-                return "Your character was never finished. Enter a description for your character:";
+                character.stage = 'description';
+                return 'Your character was never finished. Enter a description for your character:';
             }
 
             // Already online (another connection, or a dropped one the server
@@ -146,12 +148,14 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
             character.restoreFrom(saved);
             // findRoomAllowingLegacyId: saves from before zones hold a bare
             // room key (see World.js).
-            character.pendingRoomId = (world.findRoomAllowingLegacyId(saved.roomId) ?? world.getRoomById(startingRoomKey)).id;
+            character.pendingRoomId = (
+                world.findRoomAllowingLegacyId(saved.roomId) ?? world.getRoomById(startingRoomKey)
+            ).id;
 
             // From before recognition: ask for a short description before
             // they appear to anyone (see modules/recognition/).
             if (isRecognitionEnabled() && !character.shortDesc) {
-                character.stage = "shortdesc";
+                character.stage = 'shortdesc';
                 return `Welcome back, ${character.name}! Before you go on: ${SHORT_DESC_PROMPT}`;
             }
 
@@ -159,21 +163,21 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
         }
 
         // Handle description input
-        if (character.stage === "description") {
+        if (character.stage === 'description') {
             if (!input) {
-                return "Description cannot be blank. Please enter a description for your character:";
+                return 'Description cannot be blank. Please enter a description for your character:';
             }
 
             character.description = input;
             if (isRecognitionEnabled()) {
-                character.stage = "shortdesc";
+                character.stage = 'shortdesc';
                 return SHORT_DESC_PROMPT;
             }
             return finishCreation(character);
         }
 
         // Handle short description input (recognition only)
-        if (character.stage === "shortdesc") {
+        if (character.stage === 'shortdesc') {
             const result = validateShortDesc(input, character.name);
             if (result.error) {
                 return `${result.error} ${SHORT_DESC_PROMPT}`;
@@ -205,15 +209,19 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
             character.pendingPasswordHash = null;
             character.description = null;
             character.shortDesc = null;
-            character.stage = "name";
-            return "Someone just finished creating a character with that name. Please choose another name:";
+            character.stage = 'name';
+            return 'Someone just finished creating a character with that name. Please choose another name:';
         }
 
         character.isLoggedIn = true;
         character.stage = null;
         initializeCharacterStats(character);
 
-        saveCharacterState(character.name, { password: character.pendingPasswordHash, ...character.toSaveData() }, charactersDir);
+        saveCharacterState(
+            character.name,
+            { password: character.pendingPasswordHash, ...character.toSaveData() },
+            charactersDir,
+        );
         character.pendingPasswordHash = null;
         character.resumingCreation = false;
         character.new = false;
@@ -224,4 +232,5 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
     }
 }
 
-const SHORT_DESC_PROMPT = 'Enter a short description - how people who don\'t know you yet will see you, like "a bearded man" or "a wiry young woman":';
+const SHORT_DESC_PROMPT =
+    'Enter a short description - how people who don\'t know you yet will see you, like "a bearded man" or "a wiry young woman":';

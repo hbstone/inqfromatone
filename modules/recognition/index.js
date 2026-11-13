@@ -13,16 +13,16 @@
 //
 // NPCs aren't part of this yet: their content `name` already reads like a
 // short description, and remembering them needs its own design.
-import { setNamingPolicy, resetNamingPolicy } from "../naming.js";
-import { stripColors } from "../color.js";
-import { registerCommand } from "../commands/registry.js";
-import { remember, forget, rename, shortdesc } from "./commands.js";
+import { setNamingPolicy, resetNamingPolicy } from '../naming.js';
+import { stripColors } from '../color.js';
+import { registerCommand } from '../commands/registry.js';
+import { remember, forget, rename, shortdesc } from './commands.js';
 
-const ARTICLES = new Set(["a", "an", "the"]);
+const ARTICLES = new Set(['a', 'an', 'the']);
 
 // Shown for a player who somehow has no short description yet (login asks
 // for one, so this is a fallback, not the norm).
-const NO_SHORT_DESC = "someone";
+const NO_SHORT_DESC = 'someone';
 
 let enabled = false;
 let commandsRegistered = false;
@@ -47,7 +47,10 @@ export function identityOf(character) {
  * @returns {string[]}
  */
 export function wordsOf(phrase) {
-    return phrase.toLowerCase().split(/\s+/).filter(word => word && !ARTICLES.has(word));
+    return phrase
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((word) => word && !ARTICLES.has(word));
 }
 
 /**
@@ -70,7 +73,7 @@ function keywordsFor(subject, viewer) {
         return subject.keywords;
     }
     const remembered = memoryOf(viewer, subject)?.name;
-    return [...wordsOf(subject.shortDesc ?? ""), ...(remembered ? wordsOf(remembered) : [])];
+    return [...wordsOf(subject.shortDesc ?? ''), ...(remembered ? wordsOf(remembered) : [])];
 }
 
 /**
@@ -83,10 +86,10 @@ export function enableRecognition({ charactersDir } = {}) {
     setNamingPolicy({ nameFor, keywordsFor });
     enabled = true;
     if (!commandsRegistered) {
-        registerCommand("remember", remember);
-        registerCommand("forget", forget, { abbreviate: false }); // deleting a history shouldn't be a typo away
-        registerCommand("rename", rename);
-        registerCommand("shortdesc", shortdesc);
+        registerCommand('remember', remember);
+        registerCommand('forget', forget, { abbreviate: false }); // deleting a history shouldn't be a typo away
+        registerCommand('rename', rename);
+        registerCommand('shortdesc', shortdesc);
         commandsRegistered = true;
     }
 }
@@ -113,7 +116,9 @@ export const SHORT_DESC_MAX = 50;
  * @returns {{ value: string }|{ error: string }}
  */
 export function validateShortDesc(input, realName) {
-    const text = stripColors(input ?? "").trim().replace(/\s+/g, " ");
+    const text = stripColors(input ?? '')
+        .trim()
+        .replace(/\s+/g, ' ');
     if (text.length < 3 || text.length > SHORT_DESC_MAX) {
         return { error: `A short description should be 3-${SHORT_DESC_MAX} characters, like "a bearded man".` };
     }
@@ -121,12 +126,14 @@ export function validateShortDesc(input, realName) {
         return { error: "A short description may only use letters, spaces, and , ' -" };
     }
     const nameWords = new Set(wordsOf(realName));
-    if (wordsOf(text).some(word => nameWords.has(word))) {
-        return { error: "Your short description can't include your name - it's how people see you before they know it." };
+    if (wordsOf(text).some((word) => nameWords.has(word))) {
+        return {
+            error: "Your short description can't include your name - it's how people see you before they know it.",
+        };
     }
     // It's used mid-sentence ("You look at a bearded man"), so a leading
     // article is lowercased; line starts get capitalized on the way out.
-    const [first, ...rest] = text.split(" ");
-    const value = ARTICLES.has(first.toLowerCase()) ? [first.toLowerCase(), ...rest].join(" ") : text;
+    const [first, ...rest] = text.split(' ');
+    const value = ARTICLES.has(first.toLowerCase()) ? [first.toLowerCase(), ...rest].join(' ') : text;
     return { value };
 }

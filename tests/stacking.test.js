@@ -4,7 +4,12 @@ import { addItem, takeMatch, moveMatches } from '../modules/stacking.js';
 import { resolveItemToken } from '../modules/itemSearch.js';
 
 function makeArrow(quantity = 1) {
-    return new Item('an arrow', 'A fletched arrow.', ['arrow'], { size: 'small', weight: 0.05, stackable: true, quantity });
+    return new Item('an arrow', 'A fletched arrow.', ['arrow'], {
+        size: 'small',
+        weight: 0.05,
+        stackable: true,
+        quantity,
+    });
 }
 
 function makeBrick() {

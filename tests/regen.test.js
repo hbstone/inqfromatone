@@ -15,13 +15,12 @@ function makeCharacter(name, hp, online = true) {
 
 function makeRoomWith(world, ...characters) {
     const room = world.getRoomById(world.addRoom('Room', 'A room'));
-    characters.forEach(c => room.addCharacter(c));
+    characters.forEach((c) => room.addCharacter(c));
     return room;
 }
 
 // Online characters regen by 1 every 30s; offline ones (no socket) don't
 {
-
     const world = new World();
     const online = makeCharacter('Online', 5);
     const offline = makeCharacter('Offline', 5, false);
@@ -39,7 +38,6 @@ function makeRoomWith(world, ...characters) {
 
 // Capped at the stat's defined starting value - never overshoots
 {
-
     const world = new World();
     const full = makeCharacter('Full', 10); // already at the starting value
     makeRoomWith(world, full);
@@ -55,7 +53,6 @@ function makeRoomWith(world, ...characters) {
 
 // Keeps healing tick over tick, then holds once it hits the cap
 {
-
     const world = new World();
     const recovering = makeCharacter('Recovering', 8);
     makeRoomWith(world, recovering);

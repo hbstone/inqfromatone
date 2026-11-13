@@ -11,10 +11,7 @@ import { stripTelnetNegotiation } from '../modules/utils.js';
 // is stripped, real text around it survives
 {
     // IAC WILL ECHO (0xFF 0xFB 0x01), then the user's actual input
-    const data = Buffer.concat([
-        Buffer.from([0xff, 0xfb, 0x01]),
-        Buffer.from('Rhaehan\r\n'),
-    ]);
+    const data = Buffer.concat([Buffer.from([0xff, 0xfb, 0x01]), Buffer.from('Rhaehan\r\n')]);
     assert.equal(stripTelnetNegotiation(data).toString(), 'Rhaehan\r\n');
 }
 

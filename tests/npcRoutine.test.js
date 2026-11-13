@@ -15,10 +15,17 @@ import { stripColors } from '../modules/color.js';
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'npc-routine-'));
 const timeFile = path.join(tmp, 'time.json');
-fs.writeFileSync(timeFile, JSON.stringify({
-    speed: 1,
-    phases: [{ name: 'dawn', startHour: 5 }, { name: 'dusk', startHour: 18 }, { name: 'night', startHour: 21 }],
-}));
+fs.writeFileSync(
+    timeFile,
+    JSON.stringify({
+        speed: 1,
+        phases: [
+            { name: 'dawn', startHour: 5 },
+            { name: 'dusk', startHour: 18 },
+            { name: 'night', startHour: 21 },
+        ],
+    }),
+);
 loadTimeSettings(timeFile);
 
 function captureWarnings(fn) {
@@ -35,7 +42,12 @@ function captureWarnings(fn) {
 
 function player(name, room) {
     const character = new Character(name);
-    character.socket = { messages: [], write(m) { this.messages.push(stripColors(m).trim()); } };
+    character.socket = {
+        messages: [],
+        write(m) {
+            this.messages.push(stripColors(m).trim());
+        },
+    };
     room.addCharacter(character);
     return character;
 }
@@ -100,8 +112,14 @@ try {
     {
         const { world, room } = lineWorld();
         const done = [];
-        registerBehavior('test-usual', () => { done.push('usual'); return true; });
-        registerBehavior('test-at-post', () => { done.push('post'); return true; });
+        registerBehavior('test-usual', () => {
+            done.push('usual');
+            return true;
+        });
+        registerBehavior('test-at-post', () => {
+            done.push('post');
+            return true;
+        });
 
         const keeper = spawn(world, 'z/yard', {
             behaviors: { 'test-usual': { chance: 1 } },
@@ -136,7 +154,10 @@ try {
     {
         const { world } = lineWorld();
         const done = [];
-        registerBehavior('test-fallback', () => { done.push('fallback'); return true; });
+        registerBehavior('test-fallback', () => {
+            done.push('fallback');
+            return true;
+        });
         const keeper = spawn(world, 'z/yard', {
             behaviors: { 'test-fallback': { chance: 1 } },
             routine: [{ from: 0, roomId: 'z/island' }],
@@ -155,7 +176,12 @@ try {
     {
         const { world, room } = lineWorld();
         const watcher = player('Watcher', room('z/yard'));
-        const keeper = spawn(world, 'z/yard', { routine: [{ from: 'night', roomId: 'z/store' }, { from: 'dawn', roomId: 'z/yard' }] });
+        const keeper = spawn(world, 'z/yard', {
+            routine: [
+                { from: 'night', roomId: 'z/store' },
+                { from: 'dawn', roomId: 'z/yard' },
+            ],
+        });
         const wanderer = spawn(world, 'z/yard', { name: 'a cat' });
 
         settleAtPosts(world, 23);
@@ -170,7 +196,12 @@ try {
     {
         reset();
         const { world } = lineWorld();
-        spawn(world, 'z/yard', { routine: [{ from: 'teatime', roomId: 'z/hall' }, { from: 'teatime', roomId: 'z/store' }] });
+        spawn(world, 'z/yard', {
+            routine: [
+                { from: 'teatime', roomId: 'z/hall' },
+                { from: 'teatime', roomId: 'z/store' },
+            ],
+        });
         const warnings = captureWarnings(() => startNpcBehaviors(world));
         assert.equal(warnings.length, 1);
         assert.match(warnings[0], /unknown phase "teatime"/);
@@ -189,32 +220,44 @@ try {
         };
         fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(path.join(dir, 'items.json'), '[]');
-        zone('town', [{ key: 'square', name: 'Square', isStartingRoom: true, npcs: ['baker'] }], [{
-            key: 'baker',
-            name: 'a baker',
-            routine: [
-                { from: 'dawn', at: 'square' },
-                { from: 'night', at: 'home/bed' },
-                { from: 9, at: 'nowhere' },
-                { from: 24, at: 'square' },
+        zone(
+            'town',
+            [{ key: 'square', name: 'Square', isStartingRoom: true, npcs: ['baker'] }],
+            [
+                {
+                    key: 'baker',
+                    name: 'a baker',
+                    routine: [
+                        { from: 'dawn', at: 'square' },
+                        { from: 'night', at: 'home/bed' },
+                        { from: 9, at: 'nowhere' },
+                        { from: 24, at: 'square' },
+                    ],
+                },
             ],
-        }]);
+        );
         zone('home', [{ key: 'bed', name: 'Bed' }]);
 
         const world = new World();
         const warnings = captureWarnings(() => loadWorldData(world, dir));
         const [baker] = world.npcs;
-        assert.deepEqual(baker.routine.map(e => e.roomId), ['town/square', 'home/bed']);
-        assert.ok(warnings.some(w => w.includes('unknown room "town/nowhere"')));
-        assert.ok(warnings.some(w => w.includes('"from" must be an hour')));
+        assert.deepEqual(
+            baker.routine.map((e) => e.roomId),
+            ['town/square', 'home/bed'],
+        );
+        assert.ok(warnings.some((w) => w.includes('unknown room "town/nowhere"')));
+        assert.ok(warnings.some((w) => w.includes('"from" must be an hour')));
     }
 
     // The shipped groundskeeper keeps a routine
     {
         const world = new World();
         loadWorldData(world);
-        const keeper = world.npcs.find(n => n.templateId === 'grounds/groundskeeper');
-        assert.deepEqual(keeper.routine.map(e => e.roomId), ['grounds/courtyard', 'start/storage-room']);
+        const keeper = world.npcs.find((n) => n.templateId === 'grounds/groundskeeper');
+        assert.deepEqual(
+            keeper.routine.map((e) => e.roomId),
+            ['grounds/courtyard', 'start/storage-room'],
+        );
     }
 } finally {
     reset();

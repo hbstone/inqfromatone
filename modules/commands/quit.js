@@ -1,7 +1,7 @@
-import { writeToSocket } from "../utils.js";
-import { nameFor } from "../naming.js";
-import { saveWorld } from "../worldPersistence.js";
-import { getSession, disengageCombat } from "../combat/session.js";
+import { writeToSocket } from '../utils.js';
+import { nameFor } from '../naming.js';
+import { saveWorld } from '../worldPersistence.js';
+import { getSession, disengageCombat } from '../combat/session.js';
 
 // Shared by the `quit` command and server.js's socket "close" handler
 // (ungraceful disconnect) — both need to leave combat, save, announce the
@@ -29,7 +29,7 @@ export const disconnectCharacter = (world, character, departureMessage, saveDirs
     // combat/session.js's checkForSessionEnd) - tell them so.
     const session = getSession(character);
     if (session) {
-        const opponents = Array.from(session.participants.keys()).filter(c => c !== character);
+        const opponents = Array.from(session.participants.keys()).filter((c) => c !== character);
         disengageCombat(character);
         for (const opponent of opponents) {
             if (opponent.socket && !getSession(opponent)) {
@@ -39,7 +39,7 @@ export const disconnectCharacter = (world, character, departureMessage, saveDirs
     }
 
     // Broadcast to the room about the disconnection
-    room.characters.forEach(char => {
+    room.characters.forEach((char) => {
         if (char !== character && char.socket) {
             writeToSocket(char.socket, departureMessage);
         }
@@ -68,8 +68,9 @@ export const quit = (world, args, character, socket) => {
     character.isLoggedIn = false; // so the close event this triggers below doesn't clean up twice
 
     // Socket cleanup
-    socket.write("Disconnecting..."); // send the closing message separately...
-    setTimeout(() => { // ...so that the client has some time to process and display it...
-        socket.end() // ... before closing the connection.
+    socket.write('Disconnecting...'); // send the closing message separately...
+    setTimeout(() => {
+        // ...so that the client has some time to process and display it...
+        socket.end(); // ... before closing the connection.
     }, 500);
 };

@@ -22,10 +22,10 @@
 //
 // NPCs, once they exist and can get/drop/craft on their own, belong in
 // saveWorld too, for the same reason characters do.
-import { deleteRoomState, loadRoomState, roomStateExists, saveRoomState } from "../worldData.js";
-import { characterExists, loadCharacterState, saveCharacterState } from "../data.js";
-import { guard } from "./guard.js";
-import { every } from "./scheduler.js";
+import { deleteRoomState, loadRoomState, roomStateExists, saveRoomState } from '../worldData.js';
+import { characterExists, loadCharacterState, saveCharacterState } from '../data.js';
+import { guard } from './guard.js';
+import { every } from './scheduler.js';
 
 const WORLD_SAVE_INTERVAL_MS = 60 * 1000;
 
@@ -65,7 +65,7 @@ export function loadRoomStates(world, dir) {
  * @param {string} [dir]
  */
 function migratePreZoneRoomSave(world, room, dir) {
-    const slash = room.id.indexOf("/");
+    const slash = room.id.indexOf('/');
     if (slash === -1) {
         return;
     }
@@ -160,5 +160,5 @@ export function saveWorld(world, { roomsDir, charactersDir } = {}) {
  * @returns {{ cancel: () => void }} The scheduler job.
  */
 export function startWorldSaveTicker(world) {
-    return every("periodic world save", WORLD_SAVE_INTERVAL_MS, () => saveWorld(world));
+    return every('periodic world save', WORLD_SAVE_INTERVAL_MS, () => saveWorld(world));
 }

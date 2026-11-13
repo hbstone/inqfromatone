@@ -27,10 +27,10 @@ function withFixtureDir(attributesData, fn) {
 {
     loadStatDefinitions();
 
-    const keys = getStatDefinitions().map(def => def.key).sort();
-    assert.deepStrictEqual(keys, [
-        'charisma', 'constitution', 'dexterity', 'hp', 'intelligence', 'strength', 'wisdom',
-    ]);
+    const keys = getStatDefinitions()
+        .map((def) => def.key)
+        .sort();
+    assert.deepStrictEqual(keys, ['charisma', 'constitution', 'dexterity', 'hp', 'intelligence', 'strength', 'wisdom']);
 
     assert.equal(getStatKeyForRole('vitality'), 'hp');
     assert.equal(getStatKeyForRole('offense'), 'strength');
@@ -54,14 +54,15 @@ function withFixtureDir(attributesData, fn) {
 // than silently picking one
 {
     assert.throws(
-        () => withFixtureDir(
-            [
-                { key: 'hp', label: 'Hit Points', startingValue: 10, role: 'vitality' },
-                { key: 'sanity', label: 'Sanity', startingValue: 10, role: 'vitality' },
-            ],
-            (dir) => loadStatDefinitions(dir)
-        ),
-        /Duplicate role "vitality"/
+        () =>
+            withFixtureDir(
+                [
+                    { key: 'hp', label: 'Hit Points', startingValue: 10, role: 'vitality' },
+                    { key: 'sanity', label: 'Sanity', startingValue: 10, role: 'vitality' },
+                ],
+                (dir) => loadStatDefinitions(dir),
+            ),
+        /Duplicate role "vitality"/,
     );
 }
 
@@ -69,25 +70,26 @@ function withFixtureDir(attributesData, fn) {
 // (shared assertUniqueKeys helper)
 {
     assert.throws(
-        () => withFixtureDir(
-            [
-                { key: 'strength', label: 'Strength', startingValue: 10 },
-                { key: 'strength', label: 'Also Strength', startingValue: 12 },
-            ],
-            (dir) => loadStatDefinitions(dir)
-        ),
-        /Duplicate stat key "strength"/
+        () =>
+            withFixtureDir(
+                [
+                    { key: 'strength', label: 'Strength', startingValue: 10 },
+                    { key: 'strength', label: 'Also Strength', startingValue: 12 },
+                ],
+                (dir) => loadStatDefinitions(dir),
+            ),
+        /Duplicate stat key "strength"/,
     );
 }
 
 // Reloading replaces previously loaded definitions rather than merging
 // with them
 {
-    withFixtureDir(
-        [{ key: 'onlyThis', label: 'Only This', startingValue: 1 }],
-        (dir) => loadStatDefinitions(dir)
+    withFixtureDir([{ key: 'onlyThis', label: 'Only This', startingValue: 1 }], (dir) => loadStatDefinitions(dir));
+    assert.deepStrictEqual(
+        getStatDefinitions().map((def) => def.key),
+        ['onlyThis'],
     );
-    assert.deepStrictEqual(getStatDefinitions().map(def => def.key), ['onlyThis']);
     assert.equal(getStatKeyForRole('vitality'), undefined, 'stale role from a previous load should be cleared');
 }
 

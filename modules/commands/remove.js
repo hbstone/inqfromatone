@@ -1,5 +1,5 @@
-import { keywordMatches } from "../keywordMatch.js";
-import { removeModifier } from "../stats.js";
+import { keywordMatches } from '../keywordMatch.js';
+import { removeModifier } from '../stats.js';
 
 // `remove <item>` - the inverse of wear/wield. Equipment is a slot ->
 // item map, not an array, so this doesn't go through itemSearch.js's
@@ -11,13 +11,13 @@ import { removeModifier } from "../stats.js";
 // to apply them, so a purely decorative item with no modifiers is just a
 // no-op loop here.
 export const remove = (world, args, character) => {
-    const itemToken = args.join(" ");
+    const itemToken = args.join(' ');
     if (!itemToken) {
-        return "What do you want to remove?";
+        return 'What do you want to remove?';
     }
 
-    const slot = Object.keys(character.equipment).find(slot =>
-        keywordMatches(character.equipment[slot].keywords, itemToken)
+    const slot = Object.keys(character.equipment).find((slot) =>
+        keywordMatches(character.equipment[slot].keywords, itemToken),
     );
     if (!slot) {
         return "You aren't wearing that.";

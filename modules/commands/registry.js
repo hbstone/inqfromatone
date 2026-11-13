@@ -69,7 +69,7 @@ export function resolveCommand(input) {
  */
 export function explainCommand(typed) {
     if (!typed) {
-        return "Type a command followed by ? to see what it would run, e.g. n?";
+        return 'Type a command followed by ? to see what it would run, e.g. n?';
     }
 
     const resolved = resolveCommand(typed);
@@ -82,7 +82,7 @@ export function explainCommand(typed) {
         .filter(([name, entry]) => !entry.abbreviate && name.startsWith(lower))
         .map(([name]) => name);
     if (fullWordOnly.length > 0) {
-        return `"${typed}" doesn't match any command. (${fullWordOnly.join(", ")} must be typed in full.)`;
+        return `"${typed}" doesn't match any command. (${fullWordOnly.join(', ')} must be typed in full.)`;
     }
     return `"${typed}" doesn't match any command.`;
 }

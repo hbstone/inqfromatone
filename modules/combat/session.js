@@ -13,13 +13,13 @@
 // participant just gets an independent repeating timer instead of a
 // batched round. The full round engine is still the plan once cemote
 // needs multiple sides to submit before anything resolves.
-import { randomUUID } from "crypto";
-import { getStatKeyForRole } from "../content/loadStatDefinitions.js";
-import { getStatValue } from "../stats.js";
-import { produceAttack } from "./registry.js";
-import { resolveAttack } from "./resolveAttack.js";
-import { emit } from "../events.js";
-import { every, after } from "../scheduler.js";
+import { randomUUID } from 'crypto';
+import { getStatKeyForRole } from '../content/loadStatDefinitions.js';
+import { getStatValue } from '../stats.js';
+import { produceAttack } from './registry.js';
+import { resolveAttack } from './resolveAttack.js';
+import { emit } from '../events.js';
+import { every, after } from '../scheduler.js';
 
 const AUTO_ATTACK_INTERVAL_MS = 2000;
 // A safety net against a stuck session, not a real combat timer - should
@@ -29,12 +29,12 @@ const SESSION_SAFETY_TIMEOUT_MS = 5 * 60 * 1000;
 const sessions = new Map(); // id -> session
 
 function isAlive(character) {
-    return getStatValue(character, getStatKeyForRole("vitality")) > 0;
+    return getStatValue(character, getStatKeyForRole('vitality')) > 0;
 }
 
 function createSession() {
     const session = { id: randomUUID(), participants: new Map() };
-    session.safetyTimer = after("combat session safety timeout", SESSION_SAFETY_TIMEOUT_MS, () => {
+    session.safetyTimer = after('combat session safety timeout', SESSION_SAFETY_TIMEOUT_MS, () => {
         console.error(`Combat session ${session.id} hit its safety timeout - force-ending.`);
         endSession(session);
     });
@@ -75,10 +75,8 @@ function addParticipant(session, character, target) {
     character.components.combat = { sessionId: session.id };
     const entry = { target, timer: null };
     session.participants.set(character, entry);
-    entry.timer = every(
-        `auto-attack for "${character.name}"`,
-        AUTO_ATTACK_INTERVAL_MS,
-        () => performAutoAttack(session, character)
+    entry.timer = every(`auto-attack for "${character.name}"`, AUTO_ATTACK_INTERVAL_MS, () =>
+        performAutoAttack(session, character),
     );
 }
 
@@ -100,7 +98,7 @@ function performAutoAttack(session, character) {
 
     if (!isAlive(target)) {
         removeParticipant(session, target);
-        emit("defeat", { character: target, defeatedBy: character });
+        emit('defeat', { character: target, defeatedBy: character });
     }
 
     checkForSessionEnd(session);
@@ -121,7 +119,7 @@ function endSession(session) {
         removeParticipant(session, character);
     }
     sessions.delete(session.id);
-    emit("combatEnd", { participants });
+    emit('combatEnd', { participants });
 }
 
 /**

@@ -1,11 +1,11 @@
 [
-  {
-    "key": "courtyard",
-    "name": "Courtyard",
-    "description": "A small, open courtyard under the sky, paved in worn flagstones. A door to the north leads back inside.",
-    "exits": {
-      "north": "start/starting-room"
-    },
-    "npcs": ["groundskeeper"]
-  }
+    {
+        "key": "courtyard",
+        "name": "Courtyard",
+        "description": "A small, open courtyard under the sky, paved in worn flagstones. A door to the north leads back inside.",
+        "exits": {
+            "north": "start/starting-room"
+        },
+        "npcs": ["groundskeeper"]
+    }
 ]

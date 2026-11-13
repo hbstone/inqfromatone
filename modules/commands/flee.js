@@ -1,5 +1,5 @@
-import { getSession, disengageCombat } from "../combat/session.js";
-import { movePlayer, OPPOSITES } from "./move.js";
+import { getSession, disengageCombat } from '../combat/session.js';
+import { movePlayer, OPPOSITES } from './move.js';
 
 // A disengage combined with a move - but only if the move is actually
 // possible. An invalid direction fails outright (no disengage happens)
@@ -7,7 +7,7 @@ import { movePlayer, OPPOSITES } from "./move.js";
 export const flee = (world, args, character) => {
     const direction = args[0]?.toLowerCase();
     if (!OPPOSITES[direction]) {
-        return "Flee which direction? (north, south, east, or west)";
+        return 'Flee which direction? (north, south, east, or west)';
     }
 
     const room = world.getRoomById(character.roomId);

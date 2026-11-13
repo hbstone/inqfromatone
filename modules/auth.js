@@ -12,7 +12,7 @@
 // milliseconds, and the command pipeline is synchronous end to end. Worth
 // revisiting (async scrypt + an async login path) if login volume ever
 // makes that pause noticeable for everyone else.
-import crypto from "crypto";
+import crypto from 'crypto';
 
 const N = 16384; // CPU/memory cost (Node's default); ~16 MB per hash with r=8
 const R = 8;
@@ -31,7 +31,7 @@ const LEGACY_SHA256 = /^[0-9a-f]{64}$/;
 export function hashPassword(password) {
     const salt = crypto.randomBytes(SALT_BYTES);
     const hash = crypto.scryptSync(password, salt, KEY_LENGTH, { N, r: R, p: P });
-    return ["scrypt", N, R, P, salt.toString("hex"), hash.toString("hex")].join("$");
+    return ['scrypt', N, R, P, salt.toString('hex'), hash.toString('hex')].join('$');
 }
 
 /**
@@ -44,30 +44,30 @@ export function hashPassword(password) {
  *   a fresh hashPassword(password) in its place.
  */
 export function verifyPassword(password, stored) {
-    if (typeof stored !== "string") {
+    if (typeof stored !== 'string') {
         return { ok: false, needsRehash: false };
     }
 
     if (LEGACY_SHA256.test(stored)) {
-        const candidate = crypto.createHash("sha256").update(password).digest();
-        const ok = safeEqual(candidate, Buffer.from(stored, "hex"));
+        const candidate = crypto.createHash('sha256').update(password).digest();
+        const ok = safeEqual(candidate, Buffer.from(stored, 'hex'));
         return { ok, needsRehash: ok };
     }
 
-    const parts = stored.split("$");
-    if (parts.length !== 6 || parts[0] !== "scrypt") {
+    const parts = stored.split('$');
+    if (parts.length !== 6 || parts[0] !== 'scrypt') {
         return { ok: false, needsRehash: false };
     }
     const [, n, r, p, saltHex, hashHex] = parts;
     const params = { N: Number(n), r: Number(r), p: Number(p) };
-    const expected = Buffer.from(hashHex, "hex");
+    const expected = Buffer.from(hashHex, 'hex');
     if (expected.length === 0) {
         return { ok: false, needsRehash: false }; // empty would "match" an empty candidate
     }
 
     let candidate;
     try {
-        candidate = crypto.scryptSync(password, Buffer.from(saltHex, "hex"), expected.length, params);
+        candidate = crypto.scryptSync(password, Buffer.from(saltHex, 'hex'), expected.length, params);
     } catch {
         return { ok: false, needsRehash: false }; // malformed parameters in the stored string
     }

@@ -4,7 +4,7 @@
 // What differs is flagged by `isNpc`: they have no socket, aren't saved
 // (they respawn from content each boot), and act through behaviors (see
 // modules/npcs/behaviors.js) rather than typed commands.
-import { Character } from "./Character.js";
+import { Character } from './Character.js';
 
 export class Npc extends Character {
     /**
@@ -23,12 +23,12 @@ export class Npc extends Character {
      *   room id as `roomId` by the loader.
      * @param {string} homeRoomId - Where this NPC spawned.
      */
-    constructor({ id, name, keywords, description = "", behaviors = {}, routine = null, presence = null }, homeRoomId) {
+    constructor({ id, name, keywords, description = '', behaviors = {}, routine = null, presence = null }, homeRoomId) {
         super(name, description);
         if (keywords?.length) {
-            this.keywords = keywords.map(k => k.toLowerCase());
+            this.keywords = keywords.map((k) => k.toLowerCase());
         } else {
-            this.keywords = this.keywords.filter(k => !ARTICLES.has(k));
+            this.keywords = this.keywords.filter((k) => !ARTICLES.has(k));
         }
         this.isNpc = true;
         this.templateId = id;
@@ -40,4 +40,4 @@ export class Npc extends Character {
     }
 }
 
-const ARTICLES = new Set(["a", "an", "the"]);
+const ARTICLES = new Set(['a', 'an', 'the']);

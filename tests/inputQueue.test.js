@@ -1,6 +1,12 @@
 import assert from 'assert/strict';
 import { advance, reset } from '../modules/scheduler.js';
-import { receiveInput, clearInput, MAX_LINE_LENGTH, COMMAND_GAP_MS, MAX_QUEUED_COMMANDS } from '../modules/inputQueue.js';
+import {
+    receiveInput,
+    clearInput,
+    MAX_LINE_LENGTH,
+    COMMAND_GAP_MS,
+    MAX_QUEUED_COMMANDS,
+} from '../modules/inputQueue.js';
 
 function connect({ loggedIn = true } = {}) {
     const socket = { written: [], ran: [] };
@@ -11,7 +17,7 @@ function connect({ loggedIn = true } = {}) {
 
 const run = (socket, line) => socket.ran.push(line);
 const send = (socket, text) => receiveInput(socket, text, run);
-const saw = (socket, pattern) => socket.written.some(m => pattern.test(m));
+const saw = (socket, pattern) => socket.written.some((m) => pattern.test(m));
 
 // The first command runs at once; the rest wait COMMAND_GAP_MS each
 {
@@ -61,7 +67,7 @@ const saw = (socket, pattern) => socket.written.some(m => pattern.test(m));
     // A whole paste is queued before the first line runs, so that's the cap
     assert.equal(socket.ran.length, MAX_QUEUED_COMMANDS);
     assert.deepEqual(socket.ran, lines.slice(0, MAX_QUEUED_COMMANDS), 'the first ones are kept, in order');
-    assert.equal(socket.written.filter(m => /faster than they can run/.test(m)).length, 1);
+    assert.equal(socket.written.filter((m) => /faster than they can run/.test(m)).length, 1);
 }
 
 // Bare Enter in-game re-prompts without using a turn; at login it's queued
@@ -96,7 +102,7 @@ const saw = (socket, pattern) => socket.written.some(m => pattern.test(m));
     send(socket, 'y'.repeat(MAX_LINE_LENGTH + 1));
     assert.equal(socket.lineBuffer, '', 'buffer dropped');
     send(socket, 'y'.repeat(MAX_LINE_LENGTH + 1));
-    assert.equal(socket.written.filter(m => /too long/.test(m)).length, 1, 'one notice per long line');
+    assert.equal(socket.written.filter((m) => /too long/.test(m)).length, 1, 'one notice per long line');
     send(socket, 'tail end\nlook\n');
     assert.deepEqual(socket.ran, ['look']);
 }

@@ -1,9 +1,9 @@
-import net from "net";
-import { handleCommand, handleDisconnect, saveWorldOnShutdown } from "./game.js";
-import { writeToSocket, writePrompt, stripTelnetNegotiation } from "./modules/utils.js";
-import { receiveInput, clearInput } from "./modules/inputQueue.js";
-import { Character } from "./modules/Character.js";
-import { guard } from "./modules/guard.js";
+import net from 'net';
+import { handleCommand, handleDisconnect, saveWorldOnShutdown } from './game.js';
+import { writeToSocket, writePrompt, stripTelnetNegotiation } from './modules/utils.js';
+import { receiveInput, clearInput } from './modules/inputQueue.js';
+import { Character } from './modules/Character.js';
+import { guard } from './modules/guard.js';
 
 // Allow PORT to be overridden via environment variable for deployment flexibility
 const PORT = process.env.PORT || 8484;
@@ -27,23 +27,27 @@ const server = net.createServer((socket) => {
     writePrompt(socket);
 
     // Length cap and command pacing live in modules/inputQueue.js.
-    socket.on("data", (data) => guard("socket input", () => {
-        receiveInput(socket, stripTelnetNegotiation(data).toString(), runLine);
-    }));
+    socket.on('data', (data) =>
+        guard('socket input', () => {
+            receiveInput(socket, stripTelnetNegotiation(data).toString(), runLine);
+        }),
+    );
 
     // "close", not "end": "end" only fires when the client closes its side
     // cleanly, while a connection that dies with an error (reset, timeout)
     // may skip straight to "close" - which always fires, either way.
-    socket.on("close", () => guard("socket close", () => {
-        if (socket.character.name && !socket.character.stage && socket.character.socket === socket) {
-            console.log(`${socket.character.name} has disconnected.`);
-        }
-        clearInput(socket);
-        handleDisconnect(socket);
-    }));
+    socket.on('close', () =>
+        guard('socket close', () => {
+            if (socket.character.name && !socket.character.stage && socket.character.socket === socket) {
+                console.log(`${socket.character.name} has disconnected.`);
+            }
+            clearInput(socket);
+            handleDisconnect(socket);
+        }),
+    );
 
-    socket.on("error", (err) => {
-        console.error("Socket error:", err);
+    socket.on('error', (err) => {
+        console.error('Socket error:', err);
     });
 });
 
@@ -56,12 +60,12 @@ server.listen(PORT, () => {
 // caught - that's what the periodic checkpoint is for.
 function shutdown(signal) {
     console.log(`Received ${signal}, saving world state and exiting...`);
-    guard("shutdown save", () => saveWorldOnShutdown("The server is shutting down. Saving your progress."));
+    guard('shutdown save', () => saveWorldOnShutdown('The server is shutting down. Saving your progress.'));
     process.exit(0);
 }
 
-process.on("SIGINT", () => shutdown("SIGINT"));
-process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 // Last line of defense. Commands, timers and socket handlers are already
 // guarded individually (modules/guard.js), so reaching here means
@@ -72,9 +76,11 @@ process.on("SIGTERM", () => shutdown("SIGTERM"));
 // is the worse outcome.
 function fatal(kind, err) {
     console.error(`Fatal ${kind}:`, err);
-    guard("emergency save", () => saveWorldOnShutdown("The server hit an error and is restarting - saving your progress."));
+    guard('emergency save', () =>
+        saveWorldOnShutdown('The server hit an error and is restarting - saving your progress.'),
+    );
     process.exit(1);
 }
 
-process.on("uncaughtException", (err) => fatal("uncaught exception", err));
-process.on("unhandledRejection", (err) => fatal("unhandled rejection", err));
+process.on('uncaughtException', (err) => fatal('uncaught exception', err));
+process.on('unhandledRejection', (err) => fatal('unhandled rejection', err));

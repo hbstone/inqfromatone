@@ -78,7 +78,7 @@ Concrete changes to get there from the current codebase:
   brains to mean anything.
 
 Expect the first theme pack to still leak into the core somewhat. The way to
-find the real seams is to stub a thin *second* theme pack early (even just
+find the real seams is to stub a thin _second_ theme pack early (even just
 re-skinned rooms/items with one custom verb) as a forcing function, rather
 than trying to design the separation perfectly on paper.
 
@@ -87,12 +87,12 @@ than trying to design the separation perfectly on paper.
 Four tiers, with one addition beyond "brain": a **knowledge store** that is
 separate from whichever brain is currently active.
 
-| Tier | Name | Behavior | Cost |
-|---|---|---|---|
-| 0 | Reflex | Attribute/behavior-tag driven (aggressive, can_move, wanders) — weighted-random action selection | ~free |
-| 1 | Routine | Authored schedule / behavior tree per "job" (e.g. blacksmith's day), with fallback branches for blocked paths or missing items/NPCs | cheap, deterministic |
-| 2 | Scripted Dialogue | Keyword/topic-triggered branching dialogue trees — canned but structured, can reference NPC knowledge | cheap |
-| 3 | Autonomous AI | LLM-driven, has goals + memory, takes actions via tool calls into real game verbs | expensive, use sparingly |
+| Tier | Name              | Behavior                                                                                                                            | Cost                     |
+| ---- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| 0    | Reflex            | Attribute/behavior-tag driven (aggressive, can_move, wanders) — weighted-random action selection                                    | ~free                    |
+| 1    | Routine           | Authored schedule / behavior tree per "job" (e.g. blacksmith's day), with fallback branches for blocked paths or missing items/NPCs | cheap, deterministic     |
+| 2    | Scripted Dialogue | Keyword/topic-triggered branching dialogue trees — canned but structured, can reference NPC knowledge                               | cheap                    |
+| 3    | Autonomous AI     | LLM-driven, has goals + memory, takes actions via tool calls into real game verbs                                                   | expensive, use sparingly |
 
 ### Knowledge store
 
@@ -114,7 +114,7 @@ A dispatcher runs on each interaction: check trigger rules (a keyword hits a
 "needs nuance" flag, the speaker is tagged `authority_figure`, quest state
 requires it) and either handle it at the current tier or request a tier
 bump. The switchboard itself lives in the engine (theme-agnostic); the
-*trigger rules* are content-authored per NPC/theme.
+_trigger rules_ are content-authored per NPC/theme.
 
 ### Cost-saving "compile down"
 
@@ -182,7 +182,7 @@ scripted job-loop NPCs with pathfinding fallbacks. Validates the engine can
 drive NPC behavior without any AI yet.
 
 **Phase 4 — Prove the separation**
-Build the first real theme pack (fantasy) as the reference, then a *thin*
+Build the first real theme pack (fantasy) as the reference, then a _thin_
 second pack (even minimal) purely to stress-test that verbs/components/data
 loading actually stay separable. Fix leaks here, not after three themes
 exist.

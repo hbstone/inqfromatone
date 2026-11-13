@@ -9,7 +9,7 @@
 // Unlike the command registry (many verbs, one handler each), there's
 // only ever one "how do checks resolve" answer for a running server -
 // registering again replaces the previous resolver rather than erroring.
-import { getStatValue } from "../stats.js";
+import { getStatValue } from '../stats.js';
 
 let resolver = null;
 
@@ -33,7 +33,7 @@ export function registerCheckResolver(fn) {
  */
 export function resolveCheck(character, statKey, context = {}) {
     if (!resolver) {
-        throw new Error("No check resolver registered (see registerCheckResolver).");
+        throw new Error('No check resolver registered (see registerCheckResolver).');
     }
 
     const value = getStatValue(character, statKey);

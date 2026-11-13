@@ -1,11 +1,11 @@
 // Recognition's commands: remember, forget, rename, shortdesc. See
 // index.js for the model and ARCHITECTURE.md's "Recognition" for the
 // reasoning.
-import { findCharacter, nameFor } from "../naming.js";
-import { keywordMatches } from "../keywordMatch.js";
-import { findInWorldCharacter } from "../connection.js";
-import { loadCharacterState } from "../../data.js";
-import { identityOf, memoryOf, wordsOf, validateShortDesc, recognitionSettings } from "./index.js";
+import { findCharacter, nameFor } from '../naming.js';
+import { keywordMatches } from '../keywordMatch.js';
+import { findInWorldCharacter } from '../connection.js';
+import { loadCharacterState } from '../../data.js';
+import { identityOf, memoryOf, wordsOf, validateShortDesc, recognitionSettings } from './index.js';
 
 const NAME_MAX_LENGTH = 30;
 const NAME_MAX_WORDS = 4;
@@ -19,9 +19,12 @@ const NOTES_MAX = 50;
  * @returns {{ value: string }|{ error: string, tooLong?: boolean }}
  */
 function validateName(text) {
-    const value = text.trim().replace(/\s+/g, " ");
-    if (value.length > NAME_MAX_LENGTH || value.split(" ").length > NAME_MAX_WORDS) {
-        return { error: `That's too long for a name (${NAME_MAX_LENGTH} characters and ${NAME_MAX_WORDS} words at most).`, tooLong: true };
+    const value = text.trim().replace(/\s+/g, ' ');
+    if (value.length > NAME_MAX_LENGTH || value.split(' ').length > NAME_MAX_WORDS) {
+        return {
+            error: `That's too long for a name (${NAME_MAX_LENGTH} characters and ${NAME_MAX_WORDS} words at most).`,
+            tooLong: true,
+        };
     }
     if (!NAME_PATTERN.test(value)) {
         return { error: "A name may only use letters, spaces, and ' . -" };
@@ -38,7 +41,8 @@ function validateName(text) {
 function matchMemories(character, token) {
     const entries = Object.entries(character.memories ?? {});
     const exact = entries.filter(([, memory]) => wordsOf(memory.name).includes(token.toLowerCase()));
-    const found = exact.length > 0 ? exact : entries.filter(([, memory]) => keywordMatches(wordsOf(memory.name), token));
+    const found =
+        exact.length > 0 ? exact : entries.filter(([, memory]) => keywordMatches(wordsOf(memory.name), token));
     return found.map(([key, memory]) => ({ key, memory }));
 }
 
@@ -51,13 +55,19 @@ function matchMemories(character, token) {
 function findMemory(world, character, token) {
     const matches = matchMemories(character, token);
     if (matches.length > 1) {
-        return { error: `"${token}" could be ${matches.map(m => m.memory.name).join(" or ")}. Be more specific.` };
+        return { error: `"${token}" could be ${matches.map((m) => m.memory.name).join(' or ')}. Be more specific.` };
     }
     if (matches.length === 1) {
         return matches[0];
     }
     const room = world.getRoomById(character.roomId);
-    const present = room && findCharacter(character, room.characters.filter(c => c !== character && !c.isNpc), token);
+    const present =
+        room &&
+        findCharacter(
+            character,
+            room.characters.filter((c) => c !== character && !c.isNpc),
+            token,
+        );
     const memory = present && memoryOf(character, present);
     return memory ? { key: identityOf(present), memory } : null;
 }
@@ -82,12 +92,12 @@ function describeMemory(world, key, memory) {
         lines.push(`  When you named them: ${memory.knewAs}`);
     }
     if (memory.notes.length === 0) {
-        lines.push(`  No notes yet. Add one with: remember ${wordsOf(memory.name)[0] ?? "<keyword>"} <note>`);
+        lines.push(`  No notes yet. Add one with: remember ${wordsOf(memory.name)[0] ?? '<keyword>'} <note>`);
     } else {
-        lines.push("  Notes:");
+        lines.push('  Notes:');
         memory.notes.forEach((note, i) => lines.push(`    ${i + 1}. [${note.at.slice(0, 10)}] ${note.text}`));
     }
-    return lines.join("\n");
+    return lines.join('\n');
 }
 
 function addNote(memory, text) {
@@ -102,16 +112,17 @@ function addNote(memory, text) {
 }
 
 function listMemories(character) {
-    const memories = Object.values(character.memories ?? {})
-        .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+    const memories = Object.values(character.memories ?? {}).sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+    );
     if (memories.length === 0) {
         return "You don't remember anyone yet. Usage: remember <keyword> <name>";
     }
-    const lines = memories.map(memory => {
-        const notes = memory.notes.length === 1 ? "1 note" : `${memory.notes.length} notes`;
-        return `  ${memory.name}${memory.knewAs ? ` (${memory.knewAs})` : ""} - ${notes}`;
+    const lines = memories.map((memory) => {
+        const notes = memory.notes.length === 1 ? '1 note' : `${memory.notes.length} notes`;
+        return `  ${memory.name}${memory.knewAs ? ` (${memory.knewAs})` : ''} - ${notes}`;
     });
-    return ["You remember:", ...lines].join("\n");
+    return ['You remember:', ...lines].join('\n');
 }
 
 // `remember` - list who you remember.
@@ -122,7 +133,7 @@ function listMemories(character) {
 // you know can never become a stranger's name.
 export const remember = (world, args, character) => {
     const [token, ...rest] = args;
-    const text = rest.join(" ").trim();
+    const text = rest.join(' ').trim();
     if (!token) {
         return listMemories(character);
     }
@@ -136,7 +147,11 @@ export const remember = (world, args, character) => {
     }
 
     const room = world.getRoomById(character.roomId);
-    const target = findCharacter(character, room.characters.filter(c => c !== character), token);
+    const target = findCharacter(
+        character,
+        room.characters.filter((c) => c !== character),
+        token,
+    );
     if (!target) {
         return `You don't remember anyone matching "${token}", and don't see anyone like that here.`;
     }
@@ -155,7 +170,7 @@ export const remember = (world, args, character) => {
     }
     const knewAs = target.shortDesc ?? null;
     character.memories[identityOf(target)] = { name: name.value, knewAs, notes: [] };
-    return `You'll remember ${knewAs ?? "them"} as ${name.value}.`;
+    return `You'll remember ${knewAs ?? 'them'} as ${name.value}.`;
 };
 
 // `forget <keyword>` - forget someone entirely, but only once their notes
@@ -163,9 +178,9 @@ export const remember = (world, args, character) => {
 // a long history can't vanish with one command.
 export const forget = (world, args, character) => {
     const [token, ...rest] = args;
-    const extra = rest.join(" ").trim().toLowerCase();
-    if (!token || (extra && extra !== "memories")) {
-        return "Usage: forget <keyword>, or forget <keyword> memories to clear your notes first.";
+    const extra = rest.join(' ').trim().toLowerCase();
+    if (!token || (extra && extra !== 'memories')) {
+        return 'Usage: forget <keyword>, or forget <keyword> memories to clear your notes first.';
     }
 
     const found = findMemory(world, character, token);
@@ -177,15 +192,15 @@ export const forget = (world, args, character) => {
     }
     const { key, memory } = found;
 
-    if (extra === "memories") {
+    if (extra === 'memories') {
         const count = memory.notes.length;
         memory.notes = [];
         return count === 0
             ? `You have no notes about ${memory.name}.`
-            : `You clear your ${count === 1 ? "note" : `${count} notes`} about ${memory.name}.`;
+            : `You clear your ${count === 1 ? 'note' : `${count} notes`} about ${memory.name}.`;
     }
     if (memory.notes.length > 0) {
-        const notes = memory.notes.length === 1 ? "a note" : `${memory.notes.length} notes`;
+        const notes = memory.notes.length === 1 ? 'a note' : `${memory.notes.length} notes`;
         return `You still have ${notes} about ${memory.name}. To forget them entirely, first clear those with: forget ${token} memories`;
     }
     delete character.memories[key];
@@ -196,9 +211,9 @@ export const forget = (world, args, character) => {
 // Also updates the look you knew them by, if their current one is known.
 export const rename = (world, args, character) => {
     const [token, ...rest] = args;
-    const text = rest.join(" ").trim();
+    const text = rest.join(' ').trim();
     if (!token || !text) {
-        return "Usage: rename <keyword> <new name>";
+        return 'Usage: rename <keyword> <new name>';
     }
     const found = findMemory(world, character, token);
     if (found?.error) {
@@ -225,7 +240,7 @@ export const shortdesc = (world, args, character) => {
             ? `Strangers see you as "${character.shortDesc}". Change it with: shortdesc <description>`
             : "You don't have a short description yet. Set one with: shortdesc <description>";
     }
-    const result = validateShortDesc(args.join(" "), character.name);
+    const result = validateShortDesc(args.join(' '), character.name);
     if (result.error) {
         return result.error;
     }

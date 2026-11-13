@@ -1,15 +1,15 @@
-import { writeToSocket } from "../utils.js";
-import { findCharacter, nameFor, tellRoom } from "../naming.js";
-import { resolveItemToken, formatItemList, previewMatch } from "../itemSearch.js";
-import { moveMatches } from "../stacking.js";
+import { writeToSocket } from '../utils.js';
+import { findCharacter, nameFor, tellRoom } from '../naming.js';
+import { resolveItemToken, formatItemList, previewMatch } from '../itemSearch.js';
+import { moveMatches } from '../stacking.js';
 
 export const give = (world, args, character) => {
     const itemToken = args[0];
-    const recipientName = args.slice(1).join(" ").replace(/^to /i, "");
+    const recipientName = args.slice(1).join(' ').replace(/^to /i, '');
     const room = world.getRoomById(character.roomId);
 
     if (!itemToken || !recipientName) {
-        return "Usage: give (keyword) [to] (target)";
+        return 'Usage: give (keyword) [to] (target)';
     }
 
     const { matches, error } = resolveItemToken(itemToken, [character.inventory]);
@@ -38,14 +38,14 @@ export const give = (world, args, character) => {
 
     // Notify the recipient
     if (recipient.socket) {
-        writeToSocket(
-            recipient.socket,
-            `${nameFor(character, recipient)} gives you ${message}.`
-        );
+        writeToSocket(recipient.socket, `${nameFor(character, recipient)} gives you ${message}.`);
     }
 
     // Broadcast the action to the room
-    tellRoom(room, (viewer) => `${nameFor(character, viewer)} gives ${message} to ${nameFor(recipient, viewer)}.`, [character, recipient]);
+    tellRoom(room, (viewer) => `${nameFor(character, viewer)} gives ${message} to ${nameFor(recipient, viewer)}.`, [
+        character,
+        recipient,
+    ]);
 
     return `You give ${message} to ${nameFor(recipient, character)}.`;
 };

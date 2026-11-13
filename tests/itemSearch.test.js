@@ -38,7 +38,11 @@ function makeStack(name, keywords, quantity, weight = 1) {
     const result = resolveItemToken('2.pouch', [inventory, room]);
     assert.equal(result.error, null);
     assert.equal(result.matches.length, 1);
-    assert.equal(result.matches[0].item.name, 'a pouch (floor 1)', 'inventory match is #1, so #2 is the first floor one');
+    assert.equal(
+        result.matches[0].item.name,
+        'a pouch (floor 1)',
+        'inventory match is #1, so #2 is the first floor one',
+    );
 }
 
 // Ordinal asking for more than exist: fails the whole thing, exact
@@ -56,7 +60,10 @@ function makeStack(name, keywords, quantity, weight = 1) {
 
     const result = resolveItemToken('3*brick', [inventory, room]);
     assert.equal(result.error, null);
-    assert.deepStrictEqual(result.matches.map(m => m.item.name), ['a brick (held)', 'a brick (floor 1)', 'a brick (floor 2)']);
+    assert.deepStrictEqual(
+        result.matches.map((m) => m.item.name),
+        ['a brick (held)', 'a brick (floor 1)', 'a brick (floor 2)'],
+    );
     assert.equal(result.matches[0].source, inventory);
     assert.equal(result.matches[1].source, room, 'a cardinal match can span sources');
 }
@@ -91,7 +98,11 @@ function makeStack(name, keywords, quantity, weight = 1) {
 
 // formatItemList: identical names group under one "xN", not pluralized
 {
-    const bricks = [makeItem('a 0.5 lb brick', ['brick']), makeItem('a 0.5 lb brick', ['brick']), makeItem('a 0.5 lb brick', ['brick'])];
+    const bricks = [
+        makeItem('a 0.5 lb brick', ['brick']),
+        makeItem('a 0.5 lb brick', ['brick']),
+        makeItem('a 0.5 lb brick', ['brick']),
+    ];
     assert.equal(formatItemList(bricks), 'a 0.5 lb brick (x3)');
 }
 
@@ -169,7 +180,11 @@ function makeStack(name, keywords, quantity, weight = 1) {
     const result = resolveItemToken('12*arrow', [[heldStack], [floorStack]]);
 
     assert.equal(result.error, null);
-    assert.deepStrictEqual(result.matches.map(m => m.quantity), [5, 7], 'takes the held stack whole, then 7 of the floor stack');
+    assert.deepStrictEqual(
+        result.matches.map((m) => m.quantity),
+        [5, 7],
+        'takes the held stack whole, then 7 of the floor stack',
+    );
     assert.equal(result.matches[0].item, heldStack);
     assert.equal(result.matches[1].item, floorStack);
 }
