@@ -9,10 +9,12 @@ import { ask } from '../modules/commands/ask.js';
 import { movePlayer } from '../modules/commands/move.js';
 import { emit } from '../modules/events.js';
 import { enableRecognition } from '../modules/recognition/index.js';
+import { shortdesc } from '../modules/recognition/commands.js';
 import {
     loadNpcKnowledge,
     noticeArrival,
     noticeDeparture,
+    noticeNewLook,
     recallSighting,
     saveNpcKnowledge,
     sightingAnswer,
@@ -185,6 +187,86 @@ const reply = (result) => result.split('\n').slice(1).join('\n');
     const later = new Npc(BARTENDER, saloon.id);
     loadNpcKnowledge({ npcs: [later] }, dir, 1002 + SIGHTING_MEMORY_MINUTES + 1);
     assert.deepEqual(later.knowledge.sightings, {}, 'too old by the time it loads');
+}
+
+function lastMessage(character) {
+    const written = character.socket.written;
+    return written[written.length - 1].replace(/^\r\n/, '').replace(/\r\n$/, '');
+}
+
+// Changing your look in a room: everyone there sees it, each naming you as
+// they did before; their memories of you are left alone
+{
+    const { world, saloon, street, alice, baeron } = setUp();
+    const carol = makeCharacter('Carol', 'a stout woman');
+    carol.memories = { alice: { name: 'Ally', knewAs: 'a bearded man', notes: [] } };
+    saloon.addCharacter(carol);
+    movePlayer(world, alice, street, 'north', 'south');
+    assert.equal(shortdesc(world, ['a', 'wiry', 'lad'], alice), 'Strangers now see you as "a wiry lad".');
+    assert.equal(lastMessage(baeron), 'A bearded man now looks like a wiry lad.');
+    assert.equal(lastMessage(carol), 'Ally now looks like a wiry lad.');
+    assert.deepEqual(carol.memories.alice, { name: 'Ally', knewAs: 'a bearded man', notes: [] });
+    assert.equal(shortdesc(world, ['a', 'wiry', 'lad'], alice), 'Strangers already see you as "a wiry lad".');
+}
+
+// An NPC that sees the change keeps the old look for the day: asked by
+// either look, it answers with how they look now
+{
+    const { world, saloon, street, bartender, alice, baeron } = setUp();
+    alice.shortDesc = 'a wiry lad';
+    movePlayer(world, alice, street, 'north', 'south');
+    shortdesc(world, ['a', 'lanky', 'adolescent'], alice);
+    assert.equal(bartender.knowledge.sightings['pc:alice'].seenAs, 'a lanky adolescent');
+    assert.equal(bartender.knowledge.sightings['pc:alice'].arrivedFrom, 'south', 'arrival kept');
+    assert.equal(
+        reply(ask(world, ['bartender', 'about', 'the', 'wiry', 'lad'], baeron)),
+        'A mustachioed bartender nods across the room.\n' +
+            'A mustachioed bartender says, "A wiry lad? Looks more like a lanky adolescent now. Right there."',
+    );
+    assert.match(
+        reply(ask(world, ['bartender', 'about', 'lanky', 'adolescent'], baeron)),
+        /"A lanky adolescent\? Right there\."/,
+    );
+
+    movePlayer(world, alice, saloon, 'south', 'north');
+    assert.match(
+        reply(ask(world, ['bartender', 'about', 'wiry', 'lad'], baeron)),
+        /"A wiry lad\? Looks more like a lanky adolescent now\. Came in from the south just now, headed south\."/,
+    );
+}
+
+// Passing by again with a new look counts too; a change the NPC never saw
+// doesn't
+{
+    const { world, saloon, street, bartender, alice, baeron } = setUp();
+    alice.shortDesc = 'a wiry lad';
+    movePlayer(world, alice, street, 'north', 'south');
+    movePlayer(world, alice, saloon, 'south', 'north');
+    shortdesc(world, ['a', 'lanky', 'adolescent'], alice); // out on the street, unseen
+    assert.match(
+        reply(ask(world, ['bartender', 'about', 'wiry', 'lad'], baeron)),
+        /"A wiry lad\? Came in from the south/,
+    );
+    assert.match(reply(ask(world, ['bartender', 'about', 'lanky', 'adolescent'], baeron)), /doesn't seem to know/);
+
+    movePlayer(world, alice, street, 'north', 'south');
+    assert.deepEqual(
+        bartender.knowledge.sightings['pc:alice'].earlierLooks.map((look) => look.seenAs),
+        ['a wiry lad'],
+    );
+    assert.match(reply(ask(world, ['bartender', 'about', 'lanky', 'adolescent'], baeron)), /Right there/);
+}
+
+// Someone the NPC hadn't noted yet (logged in right there) still has their
+// old look remembered; earlier looks fade after a game day like sightings
+{
+    const { saloon, bartender, baeron } = setUp();
+    baeron.shortDesc = 'a lanky adolescent';
+    noticeNewLook({ character: baeron, room: saloon, from: 'a wiry lad' }, 100);
+    assert.equal(recallSighting(bartender, 'wiry lad', null, 100).askedAs, 'a wiry lad');
+    noticeArrival({ character: baeron, room: saloon, from: 'east' }, 100 + SIGHTING_MEMORY_MINUTES);
+    assert.equal(recallSighting(bartender, 'wiry lad', null, 101 + SIGHTING_MEMORY_MINUTES), null);
+    assert.equal(recallSighting(bartender, 'lanky', null, 101 + SIGHTING_MEMORY_MINUTES).askedAs, 'a lanky adolescent');
 }
 
 fs.rmSync(tmp, { recursive: true, force: true });

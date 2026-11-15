@@ -1,7 +1,8 @@
 // Recognition's commands: remember, forget, rename, shortdesc. See
 // index.js for the model and ARCHITECTURE.md's "Recognition" for the
 // reasoning.
-import { findCharacter, nameFor } from '../naming.js';
+import { findCharacter, nameFor, tellRoom } from '../naming.js';
+import { emit } from '../events.js';
 import { keywordMatches } from '../keywordMatch.js';
 import { findInWorldCharacter } from '../connection.js';
 import { loadCharacterState } from '../../data.js';
@@ -244,6 +245,21 @@ export const shortdesc = (world, args, character) => {
     if (result.error) {
         return result.error;
     }
+    const before = character.shortDesc;
+    if (result.value === before) {
+        return `Strangers already see you as "${result.value}".`;
+    }
+    // Everyone here sees the change, each naming you as they did before:
+    // "A wiry lad now looks like a lanky adolescent." Their memories of you
+    // aren't touched. NPCs that notice people update what they saw (see
+    // modules/npcs/knowledge.js, via the event).
+    const room = world.getRoomById(character.roomId);
+    if (room) {
+        tellRoom(room, (viewer) => `${nameFor(character, viewer)} now looks like ${result.value}.`, [character]);
+    }
     character.shortDesc = result.value;
+    if (room) {
+        emit('shortDescChange', { character, room, from: before ?? null, to: result.value, world });
+    }
     return `Strangers now see you as "${result.value}".`;
 };

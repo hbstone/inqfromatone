@@ -11,7 +11,9 @@
 // day (SIGHTING_MEMORY_MINUTES). People are filed by identity but
 // remembered as the NPC saw them - by short description, under
 // recognition - and the asker can name them that way or by a name they've
-// given them with `remember`.
+// given them with `remember`. If the NPC saw someone's look change (they
+// passed by again, or changed it right there), the earlier looks still
+// count for the day: "A wiry lad? Looks more like a lanky adolescent now."
 //
 // Shared freely for now: anyone can ask about anyone. Ways around it will
 // matter later (sneaking, bribes, how well the NPC knows the asker,
@@ -60,9 +62,18 @@ function watchersIn(room, except) {
 }
 
 function note(npc, subject, fields, now) {
-    npc.knowledge.sightings[subjectKey(subject)] = {
-        seenAs: nameFor(subject, npc),
+    const key = subjectKey(subject);
+    const before = npc.knowledge.sightings[key];
+    const seenAs = nameFor(subject, npc);
+    // Looks the NPC saw earlier, each with when it last saw it
+    const earlierLooks = (before?.earlierLooks ?? []).filter((look) => look.seenAs !== seenAs);
+    if (before && before.seenAs !== seenAs) {
+        earlierLooks.push({ seenAs: before.seenAs, keywords: before.keywords, at: now });
+    }
+    npc.knowledge.sightings[key] = {
+        seenAs,
         keywords: keywordsFor(subject, npc),
+        earlierLooks,
         arrivedFrom: null,
         leftTo: null,
         gone: false,
@@ -73,9 +84,13 @@ function note(npc, subject, fields, now) {
 }
 
 function forget(npc, now) {
+    const tooOld = (at) => now - at > SIGHTING_MEMORY_MINUTES;
     for (const [key, sighting] of Object.entries(npc.knowledge.sightings)) {
-        if (now - sighting.at > SIGHTING_MEMORY_MINUTES) {
+        if (tooOld(sighting.at)) {
             delete npc.knowledge.sightings[key];
+            npc.knowledgeDirty = true;
+        } else if (sighting.earlierLooks?.some((look) => tooOld(look.at))) {
+            sighting.earlierLooks = sighting.earlierLooks.filter((look) => !tooOld(look.at));
             npc.knowledgeDirty = true;
         }
     }
@@ -108,6 +123,20 @@ export function noticeDeparture({ character, room, direction }, now = gameMinute
     }
 }
 
+// Someone changed how they look (recognition's `shortdesc`) in front of
+// NPCs that notice people. `from` is their old short description, for an
+// NPC that hadn't noted them yet (they logged in there, say).
+export function noticeNewLook({ character, room, from }, now = gameMinutes()) {
+    for (const npc of watchersIn(room, character)) {
+        const key = subjectKey(character);
+        const before = npc.knowledge.sightings[key];
+        if (!before && from) {
+            npc.knowledge.sightings[key] = { seenAs: from, keywords: wordsOf(from), earlierLooks: [], at: now };
+        }
+        note(npc, character, { arrivedFrom: before?.arrivedFrom ?? null }, now);
+    }
+}
+
 let watching = false;
 
 /** Start noticing comings and goings. Called once from game.js. */
@@ -120,17 +149,21 @@ export function watchForSightings() {
     on('leaveRoom', (payload) => noticeDeparture(payload));
     // Leaving the game: gone, with no direction.
     on('characterLeaving', ({ character, room }) => noticeDeparture({ character, room, direction: null }));
+    on('shortDescChange', (payload) => noticeNewLook(payload));
 }
 
 /**
  * The NPC's latest sighting of whoever `asked` names: every word of it has
- * to be among the words the NPC knows them by, or the words of a name the
- * asker gave them (recognition's `remember`). The most recent match wins.
+ * to be among the words of a look the NPC saw them with (latest, or earlier
+ * that day), or of a name the asker gave them (recognition's `remember`).
+ * The most recent sighting wins.
  * @param {import("../Npc.js").Npc} npc
  * @param {string} asked
  * @param {object} [asker]
  * @param {number} [now] - Game minutes.
- * @returns {object|null} The sighting, with its subject key.
+ * @returns {object|null} The sighting, with its subject key and
+ *   `askedAs`: the look the question matched (the latest one, when it
+ *   matched the latest look or the asker's name).
  */
 export function recallSighting(npc, asked, asker, now = gameMinutes()) {
     forget(npc, now);
@@ -138,14 +171,23 @@ export function recallSighting(npc, asked, asker, now = gameMinutes()) {
     if (words.length === 0) {
         return null;
     }
-    const matches = Object.entries(npc.knowledge.sightings)
-        .filter(([key, sighting]) => {
-            // Recognition files memories by lowercased real name (pc:<name> here).
-            const given = key.startsWith('pc:') ? asker?.memories?.[key.slice(3)]?.name : null;
-            const names = [sighting.keywords.flatMap(wordsOf), given ? wordsOf(given) : null].filter(Boolean);
-            return names.some((known) => words.every((word) => known.includes(word)));
-        })
-        .map(([key, sighting]) => ({ ...sighting, key }));
+    const fits = (keywords) => {
+        const known = keywords.flatMap(wordsOf);
+        return words.every((word) => known.includes(word));
+    };
+    const matches = [];
+    for (const [key, sighting] of Object.entries(npc.knowledge.sightings)) {
+        // Recognition files memories by lowercased real name (pc:<name> here).
+        const given = key.startsWith('pc:') ? asker?.memories?.[key.slice(3)]?.name : null;
+        if (fits(sighting.keywords) || (given && fits([given]))) {
+            matches.push({ ...sighting, key, askedAs: sighting.seenAs });
+            continue;
+        }
+        const earlier = (sighting.earlierLooks ?? []).find((look) => fits(look.keywords));
+        if (earlier) {
+            matches.push({ ...sighting, key, askedAs: earlier.seenAs });
+        }
+    }
     return matches.sort((a, b) => b.at - a.at)[0] ?? null;
 }
 
@@ -168,19 +210,22 @@ function whenSeen(at, now) {
  * @returns {{ says: string, emote?: string }}
  */
 export function sightingAnswer(sighting, room, now = gameMinutes()) {
-    const who = sighting.seenAs.charAt(0).toUpperCase() + sighting.seenAs.slice(1);
+    const askedAs = sighting.askedAs ?? sighting.seenAs;
+    // "A wiry lad?", plus how they look now if that's changed
+    const changed = askedAs === sighting.seenAs ? '' : ` Looks more like ${sighting.seenAs} now.`;
+    const who = `${askedAs.charAt(0).toUpperCase()}${askedAs.slice(1)}?${changed}`;
     if (room?.characters.some((c) => subjectKey(c) === sighting.key)) {
-        return { emote: 'nods across the room.', says: `${who}? Right there.` };
+        return { emote: 'nods across the room.', says: `${who} Right there.` };
     }
     const when = whenSeen(sighting.at, now);
     if (sighting.leftTo) {
         const came = sighting.arrivedFrom ? `Came in from the ${sighting.arrivedFrom}` : 'Saw them';
-        return { says: `${who}? ${came} ${when}, headed ${sighting.leftTo}.` };
+        return { says: `${who} ${came} ${when}, headed ${sighting.leftTo}.` };
     }
     if (sighting.gone) {
-        return { says: `${who}? Saw them ${when}. Haven't seen them since.` };
+        return { says: `${who} Saw them ${when}. Haven't seen them since.` };
     }
-    return { says: `${who}? Saw them ${when}.` };
+    return { says: `${who} Saw them ${when}.` };
 }
 
 /**

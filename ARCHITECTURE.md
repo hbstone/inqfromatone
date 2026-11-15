@@ -928,6 +928,13 @@ A mustachioed bartender says, "A bearded man? Came in from the south a little wh
   asker can name someone by the words the NPC knows them by ("the bearded
   man", or just "bearded"), or by a name the asker gave them with
   `remember`. Every word of the question has to fit; the latest match wins.
+- **Changed looks:** if the NPC sees someone's look change (they pass by
+  again looking different, or use `shortdesc` right there), the earlier
+  looks still match for the rest of the day, and the answer says how they
+  look now: "A wiry lad? Looks more like a lanky adolescent now. Headed
+  west." A change the NPC never saw doesn't count, so a new look works as
+  a disguise against people asking by description, not against someone
+  who knows your name.
 - **How long:** one sighting per person per NPC, the latest, forgotten
   after a game day. Answers say "just now", "a little while ago", "earlier
   today" or "yesterday", and "right there" if they still are.
@@ -1015,6 +1022,12 @@ must not contain the character's own name, and get a leading article
 lowercased since they're used mid-sentence. Login asks for one after the
 long description for new characters, and before entering the world for
 existing characters that don't have one. `shortdesc` shows or changes it.
+Changing it in front of others tells the room, each viewer naming you as
+they did before ("A wiry lad now looks like a lanky adolescent.", or
+"Ally now looks like ..." to someone who remembers you as Ally), and emits
+`shortDescChange` `{ character, room, from, to, world }`. Nobody's
+memories of you change; NPCs that notice people update what they saw (see
+"Knowledge: sightings").
 
 **Memories** live on the viewer (`character.memories`, saved with them),
 keyed by the subject's lowercased real name, so identity, not looks:
