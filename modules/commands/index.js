@@ -22,6 +22,7 @@ import { put } from './put.js';
 import { presence } from '../presence.js';
 import { quit } from './quit.js';
 import { remove } from './remove.js';
+import { ask } from './ask.js';
 import { say } from './say.js';
 import { score } from './score.js';
 import { south } from './south.js';
@@ -54,6 +55,7 @@ registerCommand('say', say);
 registerCommand('tell', tell);
 registerCommand('whisper', whisper);
 registerCommand('emote', emote);
+registerCommand('ask', ask);
 registerCommand('presence', presence); // p/pu stay put; pr is presence
 
 // Combat verbs (kill, flee, disengage) live in packs/combat/.
