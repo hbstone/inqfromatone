@@ -119,10 +119,14 @@ function setUp() {
         'test/town/yard',
     );
     keeper.roomId = 'test/town/yard';
-    assert.equal(answerFor(keeper, 'weather', 12).says, 'Rain soon.', 'day post has no dialogue of its own');
-    assert.equal(answerFor(keeper, 'weather', 22).says, 'Rain soon.', 'not at the night post yet');
+    assert.equal(answerFor(keeper, 'weather', { hour: 12 }).says, 'Rain soon.', 'day post has no dialogue of its own');
+    assert.equal(answerFor(keeper, 'weather', { hour: 22 }).says, 'Rain soon.', 'not at the night post yet');
     keeper.roomId = 'test/town/loft';
-    assert.deepEqual(answerFor(keeper, 'weather', 22), { emote: 'snores.' }, 'asleep: topics are replaced too');
+    assert.deepEqual(
+        answerFor(keeper, 'weather', { hour: 22 }),
+        { emote: 'snores.' },
+        'asleep: topics are replaced too',
+    );
 }
 
 // Content checks: problems fail at startup, naming the NPC

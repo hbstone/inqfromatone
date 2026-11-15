@@ -26,7 +26,7 @@ export const ask = (world, args, character) => {
         return `Ask ${nameFor(target, character)} about what?`;
     }
 
-    const answer = target.isNpc ? answerFor(target, topic) : null;
+    const answer = target.isNpc ? answerFor(target, topic, { asker: character, room }) : null;
     // One block per viewer: the question, then the NPC's answer, if any.
     const block = (question, viewer) =>
         [question, ...(answer ? answerLines(target, answer, viewer) : [])].map(capitalizeFirst).join('\n');

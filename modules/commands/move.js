@@ -23,7 +23,7 @@ export const movePlayer = (world, character, room, direction, opposite) => {
         return 'That path leads nowhere.';
     }
 
-    emit('leaveRoom', { character, room, world });
+    emit('leaveRoom', { character, room, world, direction });
 
     const changingZone = room.zone !== nextRoom.zone;
     const fromZone = world.getZone(room.zone);
@@ -51,7 +51,7 @@ export const movePlayer = (world, character, room, direction, opposite) => {
         emit('zoneEnter', { character, zone: toZone, from: fromZone, world });
     }
 
-    emit('enterRoom', { character, room: nextRoom, world });
+    emit('enterRoom', { character, room: nextRoom, world, from: opposite });
 
     // Who's here, but not items: those wait for an explicit `look`.
     return [

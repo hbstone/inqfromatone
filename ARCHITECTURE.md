@@ -70,7 +70,9 @@ and code in a single `index.js` entry point.)
 2. **Event bus** (done) — `modules/events.js` (`on`/`emit`), multiple
    listeners per event. Wired so far: `command` (after dispatch, in
    `game.js`) and `enterRoom`/`leaveRoom` (room movement, in
-   `modules/commands/move.js`, shared by the directional commands). Combat
+   `modules/commands/move.js`, shared by the directional commands;
+   `leaveRoom` carries the `direction` taken and `enterRoom` the `from`
+   side, for NPCs noticing comings and goings). Combat
    later added `attack`/`damage`/`defeat`/`combatEnd`, the game clock
    added `hourChange`/`phaseChange`, and zones added `zoneLeave`/`zoneEnter`. There's no generic per-pulse `tick`
    event; recurring work registers a scheduler job instead (see "Scheduler
@@ -901,10 +903,54 @@ with `say`. An NPC answers from topics written in its content
 - **Checked at startup:** a malformed topic (no keywords, no line) fails
   the load with the NPC's id, rather than when someone happens to ask.
 
-Deliberately stateless for now: same question, same answer, nothing
-remembered. The knowledge store (what an NPC has seen and been told) is
-the next slice, and is what will let an answer depend on more than the
-words asked.
+Topics themselves are stateless: same question, same answer. What an NPC
+has seen is the knowledge store's job, below.
+
+## Knowledge: sightings
+
+The second slice of Phase 5, and the start of the roadmap's knowledge
+store (`modules/npcs/knowledge.js`). An NPC with `"sightings": true` in its
+content notices who comes and goes in the room it's in, and answers `ask`
+about them:
+
+```
+You ask a mustachioed bartender about the bearded man.
+A mustachioed bartender says, "A bearded man? Came in from the south a little while ago, headed west."
+```
+
+- **What's noticed:** someone arriving (and from where), leaving (and
+  which way), or leaving the game; and, when the NPC itself walks into a
+  room, who's already there. Opt-in, so the dog doesn't report on
+  passers-by; the bartender and groundskeeper have it.
+- **Who's who:** sightings are filed by identity (a player's real name, an
+  NPC's template id) but remembered as the NPC saw them: by short
+  description under recognition, since NPCs don't learn names yet. The
+  asker can name someone by the words the NPC knows them by ("the bearded
+  man", or just "bearded"), or by a name the asker gave them with
+  `remember`. Every word of the question has to fit; the latest match wins.
+- **How long:** one sighting per person per NPC, the latest, forgotten
+  after a game day. Answers say "just now", "a little while ago", "earlier
+  today" or "yesterday", and "right there" if they still are.
+- **Where it sits in `ask`:** a topic that is the whole question first
+  (the groundskeeper's line about the cat beats his sighting of it), then
+  a person, then a topic word anywhere in the question (so a stranger
+  described as "a whiskey-soaked drifter" is asked about as a person). A
+  routine post with its own dialogue replaces sightings too: the sleeping
+  groundskeeper only snores.
+- **Saved** under `saves/<game>/npcs/<npc id>.json` in the world
+  checkpoint, only when something changed, and loaded at startup minus
+  anything already too old.
+
+**Shared freely, for now.** Anyone can ask any NPC about anyone. That's
+deliberate for a first slice, but there will need to be ways around it:
+sneaking past unnoticed, bribes, how well the NPC knows the person asking,
+and NPCs who are forgetful or uncooperative by nature.
+
+Not built yet: an NPC noticing people while asleep is still noticing (a
+post or `when` condition could switch it off); someone logging in isn't
+noticed until they move; answers use one generic voice (an NPC's own
+phrasing would be content); and NPCs being _told_ things, the other half
+of the knowledge store.
 
 ## Naming: what each viewer calls someone
 
@@ -1059,8 +1105,9 @@ clearly when none does.
 without `GAME` it's `default`.
 
 **Saves are per game.** Each game is its own world: its characters and
-room state live under `saves/<game>/characters/` and `saves/<game>/rooms/`
-(`modules/saveDirs.js`, set once by `game.js`). Packs are shared between
+room state live under `saves/<game>/characters/` and `saves/<game>/rooms/`,
+and what NPCs remember under `saves/<game>/npcs/` (`modules/saveDirs.js`,
+set once by `game.js`). Packs are shared between
 games, but saves aren't. A shared items or systems pack is unaffected
 (saves hold their own copy of each item), and a shared pack with zones
 gets separate room state in each game instead of leaking floor items from

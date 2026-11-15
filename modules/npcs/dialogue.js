@@ -16,13 +16,23 @@
 // ones. An answer is an emote, a spoken line, or both (the emote first).
 // With no match, unknownTopic answers, else DEFAULT_UNKNOWN.
 //
+// An NPC that notices people ("sightings": true, see knowledge.js) can also
+// answer about someone it has seen. The order: a topic whose keyword is
+// the whole question; then a person it saw, if every word of the question
+// names them; then any topic whose keyword appears in the question. So
+// "ask the groundskeeper about the cat" gets his line about the cat, while
+// a stranger described as "a whiskey-soaked drifter" is asked about as a
+// person, not as whiskey.
+//
 // A routine post (see routine.js) can give its own topics and/or
 // unknownTopic, which replace the NPC's while they're at that post: a
 // groundskeeper asleep in the storeroom just snores. Like a post's
-// behaviors, they replace rather than add to the usual ones.
+// behaviors, they replace rather than add to the usual ones, sightings
+// included.
 import { getGameTime } from '../gameClock.js';
 import { nameFor } from '../naming.js';
 import { currentRoutineEntry } from './routine.js';
+import { recallSighting, sightingAnswer, wordsOf } from './knowledge.js';
 
 const DEFAULT_UNKNOWN = { emote: "doesn't seem to know anything about that." };
 
@@ -93,15 +103,28 @@ function currentDialogue(npc, hour) {
  * Which answer an NPC gives to a question.
  * @param {import("../Npc.js").Npc} npc
  * @param {string} asked - What the player asked about, as typed.
- * @param {number} [hour] - The game hour, for routine posts; overridable
- *   for tests.
+ * @param {{ asker?: object, room?: object, hour?: number, now?: number }} [context] -
+ *   Who's asking and where (for sightings); hour and now (game minutes)
+ *   are overridable for tests.
  * @returns {{ says?: string, emote?: string }}
  */
-export function answerFor(npc, asked, hour = getGameTime().hour) {
-    const { topics, unknownTopic } = currentDialogue(npc, hour);
+export function answerFor(npc, asked, { asker, room, hour = getGameTime().hour, now } = {}) {
+    const dialogue = currentDialogue(npc, hour);
+    const topics = dialogue.topics ?? [];
+    const question = wordsOf(asked).join(' ');
+    const exact = topics.find((t) => t.keywords.some((k) => wordsOf(k).join(' ') === question));
+    if (exact) {
+        return exact;
+    }
+    if (dialogue === npc && npc.sightings) {
+        const sighting = recallSighting(npc, asked, asker, now);
+        if (sighting) {
+            return sightingAnswer(sighting, room, now);
+        }
+    }
     const padded = ` ${normalize(asked)} `;
-    const topic = (topics ?? []).find((t) => t.keywords.some((k) => padded.includes(` ${normalize(k)} `)));
-    return topic ?? unknownTopic ?? DEFAULT_UNKNOWN;
+    const topic = topics.find((t) => t.keywords.some((k) => padded.includes(` ${normalize(k)} `)));
+    return topic ?? dialogue.unknownTopic ?? DEFAULT_UNKNOWN;
 }
 
 /**
