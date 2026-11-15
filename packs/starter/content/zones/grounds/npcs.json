@@ -5,6 +5,41 @@
         "keywords": ["old", "groundskeeper", "keeper"],
         "presence": "rakes leaves into tidy piles.",
         "description": "A stooped, weathered man in a patched coat, never far from his rake. He looks like he's tended these flagstones longer than anyone can remember.",
+        "topics": [
+            {
+                "keywords": ["moss", "flagstones", "stones"],
+                "says": "Moss grows back faster than I can scrape it. I've made my peace with it. Mostly."
+            },
+            {
+                "keywords": ["weather", "wind", "rain", "sky"],
+                "emote": "squints up at the sky.",
+                "says": "Wind's turning. My knee says rain by nightfall, and my knee's never been wrong."
+            },
+            {
+                "keywords": ["rake"],
+                "emote": "pats the rake's handle fondly.",
+                "says": "Had her longer than I've had most of my teeth."
+            },
+            { "keywords": ["cat"], "says": "That grey menace? It was here before me. Likely be here after." },
+            {
+                "keywords": ["key", "keys"],
+                "emote": "pats his coat pockets, then shakes his head.",
+                "says": "Lost a key once. Never did find what it opened."
+            },
+            {
+                "keywords": ["storeroom", "storage room", "sacks", "crates"],
+                "says": "Storeroom's down the hall. Nobody's sorted it in years. I sleep there, nights."
+            },
+            { "keywords": ["courtyard", "grounds"], "says": "I keep it tidy. Not that anybody notices, but I do." },
+            {
+                "keywords": ["yourself", "you"],
+                "says": "Just the groundskeeper. Been here long enough that nobody remembers asking my name."
+            }
+        ],
+        "unknownTopic": {
+            "emote": "scratches his chin.",
+            "says": "Can't help you there. Ask me about the weather, though."
+        },
         "behaviors": {
             "ambient": {
                 "chance": 0.15,
@@ -28,6 +63,7 @@
                 "from": "night",
                 "at": "start/storage-room",
                 "presence": "snores softly on a pile of sacks.",
+                "unknownTopic": { "emote": "snores on, undisturbed." },
                 "behaviors": {
                     "ambient": {
                         "chance": 0.1,

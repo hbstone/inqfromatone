@@ -5,6 +5,53 @@
         "keywords": ["mustachioed", "bartender", "barkeep"],
         "presence": "polishes a glass behind the bar.",
         "description": "A broad man in a striped shirt and sleeve garters, with a waxed mustache he's plainly proud of. He keeps one eye on the door and the other on the till.",
+        "topics": [
+            {
+                "keywords": ["card game", "cards", "poker", "faro"],
+                "emote": "jerks his chin at the corner table.",
+                "says": "Game starts when there's enough fools to play it. House takes a cut, and the house is me."
+            },
+            {
+                "keywords": ["whiskey", "drink", "liquor", "bottle"],
+                "says": "Best whiskey in Dry Creek, on account of it being the only whiskey in Dry Creek."
+            },
+            {
+                "keywords": ["mustache", "moustache"],
+                "emote": "smooths one waxed end with obvious pride.",
+                "says": "Takes discipline, friend. Discipline and wax."
+            },
+            { "keywords": ["dog", "mutt"], "says": "That yellow mutt? Belongs to nobody. Eats better than I do." },
+            {
+                "keywords": ["livery", "stable", "horse", "horses"],
+                "says": "Livery's down the street. Leave your horse there, not tied to my porch."
+            },
+            {
+                "keywords": ["trail", "mesa", "mesas"],
+                "emote": "glances toward the batwing doors.",
+                "says": "Trail runs west to the mesas. Folks go out that way. Fewer come back than you'd like."
+            },
+            {
+                "keywords": ["sheriff", "law", "marshal"],
+                "emote": "snorts.",
+                "says": "Nearest law's three days' ride. Out here you mind your own manners."
+            },
+            {
+                "keywords": ["saloon", "silver spur", "bar", "mirror"],
+                "says": "The Silver Spur. Built her myself, mirror and all. Mirror cracked the first night."
+            },
+            {
+                "keywords": ["town", "dry creek", "creek"],
+                "says": "Dry Creek. Creek's been dry since before I came. Town's been drying up after it."
+            },
+            {
+                "keywords": ["yourself", "you"],
+                "says": "Me? I pour, I listen, and I don't repeat what I hear. That's the whole job."
+            }
+        ],
+        "unknownTopic": {
+            "emote": "keeps polishing the glass.",
+            "says": "Can't say I know much about that, stranger."
+        },
         "behaviors": {
             "ambient": {
                 "chance": 0.12,
@@ -40,6 +87,13 @@
         "keywords": ["rangy", "yellow", "dog"],
         "presence": "sniffs along the edge of the boardwalk.",
         "description": "A long-legged yellow dog with burrs in its coat and one ear that won't stand up. It belongs to nobody and everybody.",
+        "topics": [
+            {
+                "keywords": ["bone", "food", "treat", "dinner"],
+                "emote": "perks up and thumps its tail hopefully."
+            }
+        ],
+        "unknownTopic": { "emote": "tilts its head, one ear up and one ear down." },
         "behaviors": {
             "wander": { "chance": 0.1 },
             "ambient": {
