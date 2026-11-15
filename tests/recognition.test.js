@@ -159,6 +159,23 @@ try {
         assert.equal(remember(world, ['big', 'note'], alice), 'You add a note about Big Tom.');
     }
 
+    // The "add a note" hint suggests a word that picks out just that memory,
+    // not one another memory shares; with none, a placeholder
+    {
+        const { world, alice, make } = setup();
+        remember(world, ['bearded', 'Grand', 'Inquisitor', 'Loreth'], alice);
+        make('Claude', 'a pompous man');
+        remember(world, ['pompous', 'Grand', 'Poobah', 'Claude'], alice);
+        assert.match(remember(world, ['poobah'], alice), /Add one with: remember poobah <note>/);
+        assert.match(remember(world, ['loreth'], alice), /Add one with: remember inquisitor <note>/);
+        assert.match(remember(world, ['inquisitor', 'a', 'note'], alice), /about Grand Inquisitor Loreth/);
+
+        // Every word of "Grand Poobah" is shared with Grand Poobah Claude
+        make('Twin', 'a sullen twin');
+        remember(world, ['sullen', 'Grand', 'Poobah'], alice);
+        assert.match(remember(world, ['sullen'], alice), /Add one with: remember <keyword> <note>/);
+    }
+
     // forget: two steps when there are notes
     {
         const { world, alice, rhaehan } = setup();

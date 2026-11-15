@@ -2,10 +2,10 @@
 // (dialogue topics, NPC sightings). Look here before writing another
 // lowercase-and-strip-punctuation function.
 //
-// Not the same as recognition's wordsOf (modules/recognition/index.js),
-// which splits on spaces only: there "whiskey-soaked" stays one keyword,
-// because that's what players target someone by. Keep the two apart unless
-// that's changed on purpose.
+// Not the same as recognition's targetableKeywordsOf, which splits on
+// spaces only: there "whiskey-soaked" stays one keyword, because that's
+// what players target someone by. Keep the two apart unless that's
+// changed on purpose.
 
 export const ARTICLES = new Set(['a', 'an', 'the']);
 
@@ -20,6 +20,16 @@ export function normalizeText(text) {
         .toLowerCase()
         .replace(/[^a-z0-9']+/g, ' ')
         .trim();
+}
+
+/**
+ * Finish a sentence someone typed: a period if it ends in a letter or
+ * digit, else left as typed ("Really?", "Wait -", a closing quote).
+ * @param {string} text
+ * @returns {string}
+ */
+export function endSentence(text) {
+    return /[a-z0-9]$/i.test(text) ? `${text}.` : text;
 }
 
 /**

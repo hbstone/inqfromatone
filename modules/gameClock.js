@@ -17,9 +17,10 @@ import fs from 'fs';
 import path from 'path';
 import { emit } from './events.js';
 import { every } from './scheduler.js';
-import { writeToSocket } from './utils.js';
+import { sendTo } from './utils.js';
 import { defaultContentDirs } from './packs/game.js';
 import { sourceName } from './content/mergeByKey.js';
+import { readJson } from './content/readJson.js';
 
 // Day 1 begins at midnight game time on this instant. Fixed rather than
 // "when the server first started", so game time never depends on any
@@ -60,7 +61,7 @@ export function loadTimeSettings(source = defaultContentDirs()) {
         }
         filePath = dirs.length ? path.join(dirs.at(-1), 'time.json') : undefined;
     }
-    const settings = filePath ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : NO_TIME_SETTINGS;
+    const settings = filePath ? readJson(filePath) : NO_TIME_SETTINGS;
     if (!(settings.speed > 0)) {
         throw new Error(`Time settings need a positive "speed", got ${settings.speed}.`);
     }
@@ -156,9 +157,7 @@ export function startGameClock(world, now = Date.now) {
             for (const room of world.getAllRooms()) {
                 if (room.indoors) continue;
                 for (const character of room.characters) {
-                    if (character.socket) {
-                        writeToSocket(character.socket, message);
-                    }
+                    sendTo(character, message);
                 }
             }
         }

@@ -17,20 +17,15 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { createPackContext } from './context.js';
+import { KEY_PATTERN } from '../content/keys.js';
+import { readJson } from '../content/readJson.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const GAMES_DIR = path.join(ROOT, 'games');
 export const PACKS_DIR = path.join(ROOT, 'packs');
 
-const NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
-
-function readJson(filePath, what) {
-    try {
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    } catch (err) {
-        throw new Error(`Couldn't read ${what} (${filePath}): ${err.message}`);
-    }
-}
+// Game and pack names follow the content key rules.
+const NAME_PATTERN = KEY_PATTERN;
 
 /**
  * Read a game's config and its packs' manifests.

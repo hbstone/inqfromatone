@@ -6,7 +6,7 @@ import { emit } from '../events.js';
 import { keywordMatches } from '../keywordMatch.js';
 import { findInWorldCharacter } from '../connection.js';
 import { loadCharacterState } from '../../data.js';
-import { identityOf, memoryOf, wordsOf, validateShortDesc, recognitionSettings } from './index.js';
+import { identityOf, memoryOf, targetableKeywordsOf, validateShortDesc, recognitionSettings } from './index.js';
 
 const NAME_MAX_LENGTH = 30;
 const NAME_MAX_WORDS = 4;
@@ -41,9 +41,11 @@ function validateName(text) {
  */
 function matchMemories(character, token) {
     const entries = Object.entries(character.memories ?? {});
-    const exact = entries.filter(([, memory]) => wordsOf(memory.name).includes(token.toLowerCase()));
+    const exact = entries.filter(([, memory]) => targetableKeywordsOf(memory.name).includes(token.toLowerCase()));
     const found =
-        exact.length > 0 ? exact : entries.filter(([, memory]) => keywordMatches(wordsOf(memory.name), token));
+        exact.length > 0
+            ? exact
+            : entries.filter(([, memory]) => keywordMatches(targetableKeywordsOf(memory.name), token));
     return found.map(([key, memory]) => ({ key, memory }));
 }
 
@@ -66,7 +68,7 @@ function findMemory(world, character, token) {
         room &&
         findCharacter(
             character,
-            room.characters.filter((c) => c !== character && !c.isNpc),
+            room.others(character).filter((c) => !c.isNpc),
             token,
         );
     const memory = present && memoryOf(character, present);
@@ -83,7 +85,18 @@ function currentShortDescOf(world, key) {
     return loadCharacterState(key, recognitionSettings.charactersDir)?.shortDesc ?? null;
 }
 
-function describeMemory(world, key, memory) {
+// A keyword that picks out just this memory, for the "add a note" hint:
+// the first word of their name that no other memory shares ("poobah" for
+// Grand Poobah Claude when you also remember Grand Inquisitor Loreth).
+function keywordFor(character, key, memory) {
+    const unique = targetableKeywordsOf(memory.name).find((word) => {
+        const matches = matchMemories(character, word);
+        return matches.length === 1 && matches[0].key === key;
+    });
+    return unique ?? '<keyword>';
+}
+
+function describeMemory(world, character, key, memory) {
     const now = currentShortDescOf(world, key);
     const lines = [memory.name];
     if (now) {
@@ -93,7 +106,7 @@ function describeMemory(world, key, memory) {
         lines.push(`  When you named them: ${memory.knewAs}`);
     }
     if (memory.notes.length === 0) {
-        lines.push(`  No notes yet. Add one with: remember ${wordsOf(memory.name)[0] ?? '<keyword>'} <note>`);
+        lines.push(`  No notes yet. Add one with: remember ${keywordFor(character, key, memory)} <note>`);
     } else {
         lines.push('  Notes:');
         memory.notes.forEach((note, i) => lines.push(`    ${i + 1}. [${note.at.slice(0, 10)}] ${note.text}`));
@@ -144,15 +157,11 @@ export const remember = (world, args, character) => {
         return found.error;
     }
     if (found) {
-        return text ? addNote(found.memory, text) : describeMemory(world, found.key, found.memory);
+        return text ? addNote(found.memory, text) : describeMemory(world, character, found.key, found.memory);
     }
 
     const room = world.getRoomById(character.roomId);
-    const target = findCharacter(
-        character,
-        room.characters.filter((c) => c !== character),
-        token,
-    );
+    const target = findCharacter(character, room.others(character), token);
     if (!target) {
         return `You don't remember anyone matching "${token}", and don't see anyone like that here.`;
     }

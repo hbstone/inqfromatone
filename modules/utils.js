@@ -115,6 +115,19 @@ function isClosed(socket) {
     return Boolean(socket.destroyed || socket.writableEnded);
 }
 
+/**
+ * Write a message to a character, if anyone's there to read it: NPCs and
+ * characters without a connection get nothing. The usual way to message one
+ * character; for a whole room, see naming.js's tellRoom.
+ * @param {object} character
+ * @param {string} message
+ */
+export function sendTo(character, message) {
+    if (character.socket) {
+        writeToSocket(character.socket, message);
+    }
+}
+
 export function writeToSocket(socket, message) {
     if (isClosed(socket)) {
         return;
@@ -157,13 +170,4 @@ export function writePrompt(socket) {
     const prompt = '> ';
     const colored = isColorEnabled(socket) ? renderColors(prompt) : stripColors(prompt);
     socket.write('\r\n' + colored);
-}
-
-export function broadcast(room, message, excludeSocket = null) {
-    const clients = room.characters || room.occupants || [];
-    clients.forEach((client) => {
-        if (client !== excludeSocket) {
-            writeToSocket(client, message);
-        }
-    });
 }

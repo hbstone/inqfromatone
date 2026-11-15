@@ -1,4 +1,6 @@
 import { nameFor, tellRoom } from '../naming.js';
+import { capitalizeFirst } from '../color.js';
+import { endSentence } from '../text.js';
 
 // `say <message>` - IC, broadcasts to the whole room (unlike `tell`,
 // which is OOC and direct to one recipient, and `whisper`, which is IC
@@ -7,8 +9,7 @@ import { nameFor, tellRoom } from '../naming.js';
 // first letter and adding a trailing period, and only when it ends in a
 // letter or number. Any other trailing character is left as typed.
 function formatMessage(rawMessage) {
-    const capitalized = rawMessage.charAt(0).toUpperCase() + rawMessage.slice(1);
-    return /[a-z0-9]$/i.test(capitalized) ? `${capitalized}.` : capitalized;
+    return endSentence(capitalizeFirst(rawMessage));
 }
 
 export const say = (world, args, character) => {

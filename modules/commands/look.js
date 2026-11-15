@@ -1,4 +1,4 @@
-import { writeToSocket } from '../utils.js';
+import { sendTo } from '../utils.js';
 import { findCharacter, nameFor } from '../naming.js';
 import { isContainer } from '../containers.js';
 import { resolveItemToken, itemDisplayName, previewMatch } from '../itemSearch.js';
@@ -47,9 +47,7 @@ export const look = (world, args, character) => {
     const targetCharacter = findCharacter(character, room.characters, itemToken);
     if (targetCharacter) {
         // Notify the target character
-        if (targetCharacter.socket) {
-            writeToSocket(targetCharacter.socket, `${nameFor(character, targetCharacter)} looks at you.`);
-        }
+        sendTo(targetCharacter, `${nameFor(character, targetCharacter)} looks at you.`);
         return `You look at ${nameFor(targetCharacter, character)}: ${targetCharacter.description}`;
     }
 

@@ -1,4 +1,4 @@
-import { writeToSocket } from '../utils.js';
+import { sendTo } from '../utils.js';
 
 export const tell = (world, args, character) => {
     const recipientName = args[0];
@@ -8,16 +8,14 @@ export const tell = (world, args, character) => {
         return 'Usage: tell <character> <message>';
     }
 
-    const recipient = world.getOnlineCharacterByName(recipientName);
+    const recipient = world.findOnlineCharacterByKeyword(recipientName);
 
     if (!recipient) {
         return `You don't see ${recipientName} online.`;
     }
 
     // Notify the recipient
-    if (recipient.socket) {
-        writeToSocket(recipient.socket, `${character.name} tells you: "${message}"`);
-    }
+    sendTo(recipient, `${character.name} tells you: "${message}"`);
 
     return `You tell ${recipient.name}: "${message}"`;
 };

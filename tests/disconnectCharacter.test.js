@@ -10,6 +10,7 @@ import { on } from '../modules/events.js';
 import { loadStatDefinitions } from '../modules/content/loadStatDefinitions.js';
 import { loadCharacterState } from '../data.js';
 import { loadRoomState } from '../worldData.js';
+import { fakeSocket } from './helpers.js';
 
 loadStatDefinitions(); // the default game's stats
 
@@ -18,11 +19,6 @@ const saveDirs = {
     charactersDir: path.join(tempDir, 'characters'),
     roomsDir: path.join(tempDir, 'rooms'),
 };
-
-function fakeSocket() {
-    const messages = [];
-    return { messages, write: (msg) => messages.push(msg) };
-}
 
 function makeWorld() {
     const world = new World();

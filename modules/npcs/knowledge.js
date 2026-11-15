@@ -83,7 +83,7 @@ export function noticeArrival({ character, room, from }, now = gameMinutes()) {
     }
     // An NPC walking in notices who's already there.
     if (character.isNpc && character.sightings) {
-        for (const other of room.characters.filter((c) => c !== character)) {
+        for (const other of room.others(character)) {
             note(character, other, {}, now);
         }
     }
@@ -96,7 +96,7 @@ export function noticeDeparture({ character, room, direction }, now = gameMinute
     }
     // An NPC walking out last saw everyone else here, just now.
     if (character.isNpc && character.sightings) {
-        for (const other of room.characters.filter((c) => c !== character)) {
+        for (const other of room.others(character)) {
             const before = character.knowledge.sightings[subjectKey(other)];
             note(character, other, { arrivedFrom: before?.arrivedFrom ?? null }, now);
         }

@@ -12,6 +12,7 @@ import { nameFor } from './naming.js';
 import { capitalizeFirst } from './color.js';
 import { getGameTime } from './gameClock.js';
 import { currentRoutineEntry } from './npcs/routine.js';
+import { endSentence } from './text.js';
 
 export const PRESENCE_MAX = 120;
 const DEFAULT_PRESENCE = 'is here.';
@@ -66,10 +67,7 @@ export function normalizePresence(input) {
     if (/^[A-Z][a-z]/.test(text)) {
         text = text.charAt(0).toLowerCase() + text.slice(1);
     }
-    if (/[a-z0-9]$/i.test(text)) {
-        text += '.';
-    }
-    return { value: text };
+    return { value: endSentence(text) };
 }
 
 // `presence` - show yours; `presence <text>` - set it; `presence clear`.

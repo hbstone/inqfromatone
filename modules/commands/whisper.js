@@ -1,4 +1,4 @@
-import { writeToSocket } from '../utils.js';
+import { sendTo } from '../utils.js';
 import { findCharacter, nameFor } from '../naming.js';
 
 export const whisper = (world, args, character) => {
@@ -17,9 +17,7 @@ export const whisper = (world, args, character) => {
     }
 
     // Notify the recipient
-    if (recipient.socket) {
-        writeToSocket(recipient.socket, `${nameFor(character, recipient)} whispers to you, "${message}"`);
-    }
+    sendTo(recipient, `${nameFor(character, recipient)} whispers to you, "${message}"`);
 
     return `You whisper to ${nameFor(recipient, character)}: "${message}"`;
 };

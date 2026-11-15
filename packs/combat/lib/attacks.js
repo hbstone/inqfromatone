@@ -14,7 +14,7 @@ import { nameFor, tellRoom } from '../../../modules/naming.js';
 import { getStatKeyForRole } from '../../../modules/content/loadStatDefinitions.js';
 import { getStatValue } from '../../../modules/stats.js';
 import { on } from '../../../modules/events.js';
-import { writeToSocket } from '../../../modules/utils.js';
+import { sendTo } from '../../../modules/utils.js';
 
 const UNARMED_DAMAGE = 1;
 
@@ -64,12 +64,8 @@ on('attack', ({ attacker, defender, hit }) => {
     if (hit) {
         return; // the "damage" listener below covers the hit case
     }
-    if (attacker.socket) {
-        writeToSocket(attacker.socket, `You swing at ${nameFor(defender, attacker)} and miss.`);
-    }
-    if (defender.socket) {
-        writeToSocket(defender.socket, `${nameFor(attacker, defender)} swings at you and misses.`);
-    }
+    sendTo(attacker, `You swing at ${nameFor(defender, attacker)} and miss.`);
+    sendTo(defender, `${nameFor(attacker, defender)} swings at you and misses.`);
     broadcastToRoom(
         attacker,
         (viewer) => `${nameFor(attacker, viewer)} swings at ${nameFor(defender, viewer)} and misses.`,
@@ -78,12 +74,8 @@ on('attack', ({ attacker, defender, hit }) => {
 });
 
 on('damage', ({ attacker, defender, amount }) => {
-    if (attacker.socket) {
-        writeToSocket(attacker.socket, `You hit ${nameFor(defender, attacker)} for ${amount} damage!`);
-    }
-    if (defender.socket) {
-        writeToSocket(defender.socket, `${nameFor(attacker, defender)} hits you for ${amount} damage!`);
-    }
+    sendTo(attacker, `You hit ${nameFor(defender, attacker)} for ${amount} damage!`);
+    sendTo(defender, `${nameFor(attacker, defender)} hits you for ${amount} damage!`);
     broadcastToRoom(
         attacker,
         (viewer) => `${nameFor(attacker, viewer)} hits ${nameFor(defender, viewer)} for ${amount} damage!`,
@@ -92,12 +84,8 @@ on('damage', ({ attacker, defender, amount }) => {
 });
 
 on('defeat', ({ character, defeatedBy }) => {
-    if (character.socket) {
-        writeToSocket(character.socket, 'You have been defeated!');
-    }
-    if (defeatedBy.socket) {
-        writeToSocket(defeatedBy.socket, `You have defeated ${nameFor(character, defeatedBy)}!`);
-    }
+    sendTo(character, 'You have been defeated!');
+    sendTo(defeatedBy, `You have defeated ${nameFor(character, defeatedBy)}!`);
     broadcastToRoom(
         character,
         (viewer) => `${nameFor(defeatedBy, viewer)} has defeated ${nameFor(character, viewer)}!`,

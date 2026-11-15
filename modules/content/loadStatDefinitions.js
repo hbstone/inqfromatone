@@ -19,10 +19,7 @@ import path from 'path';
 import { mergeByKey, sourceName } from './mergeByKey.js';
 import { defaultContentDirs } from '../packs/game.js';
 import { initStat } from '../stats.js';
-
-function readJson(filePath) {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-}
+import { readJson } from './readJson.js';
 
 const definitions = new Map(); // key -> { key, label, startingValue, role? }
 const roleIndex = {}; // role -> key

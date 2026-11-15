@@ -32,23 +32,8 @@ import { assertUniqueKeys } from './assertUniqueKeys.js';
 import { mergeByKey, sourceName } from './mergeByKey.js';
 import { defaultContentDirs } from '../packs/game.js';
 import { addItem } from '../stacking.js';
-
-// Pack, zone and room keys end up in save-file paths
-// (rooms/<pack>/<zone>/<key>.json, see worldData.js), so keep them to a
-// filename-safe shape rather than relying on content always being
-// well-behaved (see ROADMAP.md's note on treating packs as semi-trusted).
-// It also keeps "/" free to separate the parts of an id.
-const KEY_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
-
-function readJson(filePath) {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-}
-
-function assertValidKey(key, label) {
-    if (!KEY_PATTERN.test(key)) {
-        throw new Error(`Invalid ${label} key "${key}": use lowercase letters, digits, and dashes.`);
-    }
-}
+import { assertValidKey } from './keys.js';
+import { readJson } from './readJson.js';
 
 /**
  * A room's (or NPC template's) World id from a reference written inside a

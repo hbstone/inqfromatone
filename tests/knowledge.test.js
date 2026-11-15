@@ -3,7 +3,6 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { World } from '../modules/World.js';
-import { Character } from '../modules/Character.js';
 import { Npc } from '../modules/Npc.js';
 import { ask } from '../modules/commands/ask.js';
 import { movePlayer } from '../modules/commands/move.js';
@@ -21,18 +20,11 @@ import {
     watchForSightings,
     SIGHTING_MEMORY_MINUTES,
 } from '../modules/npcs/knowledge.js';
+import { makeCharacter, lastMessage } from './helpers.js';
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'knowledge-'));
 enableRecognition({ charactersDir: path.join(tmp, 'characters') }); // NPCs see strangers by short description
 watchForSightings();
-
-function makeCharacter(name, shortDesc) {
-    const character = new Character(name, `${name}, a tester.`);
-    character.shortDesc = shortDesc;
-    character.socket = { written: [] };
-    character.socket.write = (msg) => character.socket.written.push(msg);
-    return character;
-}
 
 const BARTENDER = {
     id: 'test/town/bartender',
@@ -56,8 +48,8 @@ function setUp() {
     world.npcs.push(bartender, dog);
     saloon.addCharacter(bartender);
     saloon.addCharacter(dog);
-    const alice = makeCharacter('Alice', 'a bearded man');
-    const baeron = makeCharacter('Baeron', 'a tall woman');
+    const alice = makeCharacter('Alice', { shortDesc: 'a bearded man' });
+    const baeron = makeCharacter('Baeron', { shortDesc: 'a tall woman' });
     street.addCharacter(alice);
     saloon.addCharacter(baeron);
     return { world, saloon, street, bartender, dog, alice, baeron };
@@ -189,16 +181,11 @@ const reply = (result) => result.split('\n').slice(1).join('\n');
     assert.deepEqual(later.knowledge.sightings, {}, 'too old by the time it loads');
 }
 
-function lastMessage(character) {
-    const written = character.socket.written;
-    return written[written.length - 1].replace(/^\r\n/, '').replace(/\r\n$/, '');
-}
-
 // Changing your look in a room: everyone there sees it, each naming you as
 // they did before; their memories of you are left alone
 {
     const { world, saloon, street, alice, baeron } = setUp();
-    const carol = makeCharacter('Carol', 'a stout woman');
+    const carol = makeCharacter('Carol', { shortDesc: 'a stout woman' });
     carol.memories = { alice: { name: 'Ally', knewAs: 'a bearded man', notes: [] } };
     saloon.addCharacter(carol);
     movePlayer(world, alice, street, 'north', 'south');
