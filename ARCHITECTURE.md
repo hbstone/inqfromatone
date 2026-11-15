@@ -1026,8 +1026,18 @@ the starter pack in particular, and the stat override already fails
 clearly when none does.
 
 **Which game runs:** `GAME=<name> pnpm start` reads `games/<name>.json`;
-without `GAME` it's `default`. Saves (`characters/`, `rooms/`) are shared, not
-per game, for now.
+without `GAME` it's `default`.
+
+**Saves are per game.** Each game is its own world: its characters and
+room state live under `saves/<game>/characters/` and `saves/<game>/rooms/`
+(`modules/saveDirs.js`, set once by `game.js`). Packs are shared between
+games, but saves aren't. A shared items or systems pack is unaffected
+(saves hold their own copy of each item), and a shared pack with zones
+gets separate room state in each game instead of leaking floor items from
+one to the other. The same name can be a different character in each
+game. There's no travel between games. Saves used to be shared
+(`characters/`, `rooms/` at the top level); those were moved by hand, and
+the server warns at startup if it still finds any there.
 
 **The old `content/` folder is now `packs/starter/content/`.** Earlier
 sections of this document that mention `content/...` paths mean that pack.
@@ -1049,7 +1059,7 @@ posts, `key` is in the same zone, `zone/key` in the same pack and
 pack's item and `pack/key` another pack's. Only the game's `startingRoom`
 is always a full id. Keys themselves are bare: lowercase letters, digits
 and dashes, so `/` only ever separates the parts. Room save files follow
-the id: `rooms/starter/start/narrow-hallway.json`.
+the id: `saves/<game>/rooms/starter/start/narrow-hallway.json`.
 
 These are internal ids, not what players see or type. Any number of items
 can be named "a rope" with the keyword `rope`, across packs or within one,
@@ -1121,9 +1131,8 @@ street, saloon, livery, trail), items, a bartender and a stray dog, its
 own stats (strength and dexterity, which combat gives roles, plus grit,
 wits and charm), its own day with a `high-noon` phase, and one verb:
 `tip [someone]`, which uses whatever is in the head slot. It's the check
-that a theme can be swapped without touching core. Saves are still shared
-across games, so a character last saved in Dry Creek starts at the default
-game's starting room when they log into that game, and the reverse.
+that a theme can be swapped without touching core. Its characters are
+its own (see "Saves are per game" above).
 
 It surfaced one cross-pack conflict: combat's stat override used to
 replace the whole entry, so the western `dexterity` showed as

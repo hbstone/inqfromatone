@@ -17,11 +17,13 @@ import { createLoginHandler } from './modules/login.js';
 import { loadFeatures } from './modules/content/loadFeatures.js';
 import { enableRecognition } from './modules/recognition/index.js';
 import { readGame, contentDirsOf, setUpPackCode } from './modules/packs/game.js';
+import { useSavesForGame } from './modules/saveDirs.js';
 import path from 'path';
 
 const game = readGame(); // which packs this game is made of: games/$GAME.json, else games/default.json (see modules/packs/game.js)
 console.log(`Starting game "${game.name}" with packs: ${game.packs.map((pack) => pack.name).join(', ')}`);
 const contentDirs = contentDirsOf(game);
+useSavesForGame(game.name); // this game's own characters and rooms, under saves/<game>/ (see modules/saveDirs.js)
 
 const world = new World(); // Initialize the world
 await setUpPackCode(game, world); // each pack's index.js registers its verbs/behaviors/listeners, before content refers to them
