@@ -170,10 +170,49 @@ try {
         assert.match(remember(world, ['loreth'], alice), /Add one with: remember inquisitor <note>/);
         assert.match(remember(world, ['inquisitor', 'a', 'note'], alice), /about Grand Inquisitor Loreth/);
 
-        // Every word of "Grand Poobah" is shared with Grand Poobah Claude
+        // A memory with no word of its own (only possible in saves from
+        // before names were checked, see below): a placeholder
         make('Twin', 'a sullen twin');
-        remember(world, ['sullen', 'Grand', 'Poobah'], alice);
+        alice.memories.twin = { name: 'Grand Poobah', knewAs: 'a sullen twin', notes: [] };
         assert.match(remember(world, ['sullen'], alice), /Add one with: remember <keyword> <note>/);
+    }
+
+    // A name has to leave every memory a word of its own, or that memory
+    // can only be found while they're in the room
+    {
+        const { world, alice, make } = setup();
+        remember(world, ['bearded', 'Tom'], alice);
+        make('Tomas', 'a lanky youth');
+        assert.equal(
+            remember(world, ['lanky', 'tom'], alice),
+            'You already remember someone as Tom, so "tom" wouldn\'t have a word of its own to find them by. Try a name with a word that\'s only theirs.',
+        );
+        // Swallowing an existing name whole is refused too: "tom" would then
+        // mean Tom or Little Tom
+        assert.match(
+            remember(world, ['lanky', 'Little', 'Tom'], alice),
+            /^Every word of Tom would be in "Little Tom" too, so you couldn't find Tom by name any more/,
+        );
+        assert.match(remember(world, ['lanky', 'Tomas'], alice), /You'll remember a lanky youth as Tomas/);
+        make('Claude', 'a pompous man');
+        assert.match(remember(world, ['pompous', 'Little', 'Claude'], alice), /as Little Claude/);
+
+        // rename: the same checks, not counting the name being replaced
+        assert.match(rename(world, ['claude', 'Tom'], alice), /You already remember someone as Tom/);
+        assert.match(rename(world, ['tomas', 'Big', 'Tom', 'Tomas'], alice), /^Every word of Tom would be in/);
+        assert.match(rename(world, ['claude', 'Little', 'Claude', 'Jr'], alice), /as Little Claude Jr/);
+        assert.match(rename(world, ['tom', 'Big', 'Tom'], alice), /now think of Tom as Big Tom/);
+    }
+
+    // An old clash already in someone's memories doesn't block other names
+    {
+        const { world, alice, make } = setup();
+        alice.memories = {
+            one: { name: 'Tom', knewAs: null, notes: [] },
+            two: { name: 'Tom', knewAs: null, notes: [] },
+        };
+        make('Ferris', 'a quiet man');
+        assert.match(remember(world, ['quiet', 'Ferris'], alice), /You'll remember a quiet man as Ferris/);
     }
 
     // forget: two steps when there are notes
