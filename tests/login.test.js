@@ -1,5 +1,4 @@
 import assert from 'assert/strict';
-import crypto from 'crypto';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -44,8 +43,6 @@ function leaveWorld(character) {
     world.getRoomById(character.roomId)?.removeCharacter(character);
 }
 
-const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
-
 try {
     // New character: nothing on disk until the description step finishes,
     // then a complete save with a scrypt hash and initialized stats
@@ -72,14 +69,12 @@ try {
         leaveWorld(socket.character);
     }
 
-    // A save from before zones holds a bare room key; it still finds the
-    // room, now under its zone-qualified id
+    // A saved room that's no longer in content: back to the starting room
     {
-        world.addRoom('Well', 'An old well.', 'yard/well');
-        saveCharacterState('Newbie', { ...loadCharacterState('Newbie', charactersDir), roomId: 'well' }, charactersDir);
+        saveCharacterState('Newbie', { ...loadCharacterState('Newbie', charactersDir), roomId: 'gone' }, charactersDir);
         const socket = connect();
         assert.match(send(socket, 'Newbie', 'pw'), /Welcome back, Newbie!/);
-        assert.equal(socket.character.roomId, 'yard/well');
+        assert.equal(socket.character.roomId, 'start');
         leaveWorld(socket.character);
         // later tests expect Newbie back in the starting room
         saveCharacterState(
@@ -118,38 +113,6 @@ try {
             'still only one Newbie in the world',
         );
         leaveWorld(second.character);
-    }
-
-    // A legacy SHA-256 password works once, and is upgraded on disk
-    {
-        saveCharacterState(
-            'Oldtimer',
-            { password: sha256('old'), description: 'From before.', components: {} },
-            charactersDir,
-        );
-        const socket = connect();
-        assert.match(send(socket, 'Oldtimer', 'old'), /Welcome back/);
-        assert.match(loadCharacterState('Oldtimer', charactersDir).password, /^scrypt\$/);
-        leaveWorld(socket.character);
-
-        const again = connect();
-        assert.match(send(again, 'Oldtimer', 'old'), /Welcome back/, 'the upgraded hash still verifies');
-        leaveWorld(again.character);
-    }
-
-    // A half-created save from the old flow (password only) resumes
-    // creation instead of logging in a character with no stats
-    {
-        saveCharacterState('Halfway', { password: sha256('pw') }, charactersDir);
-        const socket = connect();
-        assert.match(send(socket, 'Halfway', 'pw'), /never finished/);
-        assert.match(send(socket, 'Finally done.'), /Welcome, Halfway!/);
-
-        const saved = loadCharacterState('Halfway', charactersDir);
-        assert.equal(saved.description, 'Finally done.');
-        assert.ok(saved.components.stats);
-        assert.match(saved.password, /^scrypt\$/, 'the password survives (rehashed)');
-        leaveWorld(socket.character);
     }
 
     // Two connections creating the same new name: first to finish wins

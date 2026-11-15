@@ -610,9 +610,10 @@ save directory instead of `game.js`'s real one.
 **Passwords: scrypt, salted, self-describing.** `modules/auth.js` stores
 `scrypt$N$r$p$salt$hash`, replacing unsalted SHA-256. Node built-in, so
 no dependency. Cost parameters live in the stored string, so they can be
-raised later: `verifyPassword` reports `needsRehash` for a legacy SHA-256
-hash or weaker-than-current parameters, and login rewrites the hash in
-place on the next successful login. Comparisons are constant-time.
+raised later: `verifyPassword` reports `needsRehash` for
+weaker-than-current parameters, and login rewrites the hash in place on
+the next successful login. (Old SHA-256 hashes were upgraded the same way;
+that support is gone now that no saves use them.) Comparisons are constant-time.
 `scryptSync` blocks the event loop for tens of ms per login - fine at this
 scale, and the command pipeline is synchronous anyway; revisit with async
 scrypt if login volume ever makes that noticeable.
@@ -622,8 +623,7 @@ is held in memory (`pendingPasswordHash`) until the description step, so a
 dropped connection mid-creation leaves no half-made save. Since nothing
 reserves the name on disk, two connections can both be creating the same
 name; whoever finishes first gets it, and the other is sent back to the
-name prompt. A password-only save from before this change resumes at the
-description step instead of logging in a character with no stats.
+name prompt.
 
 **Three wrong passwords closes the connection** - a cheap brake on scripted
 guessing, alongside the 0.5s command gap (see "Input limits" below).
@@ -762,14 +762,8 @@ on movement only, not on login or logout.
 `where` command yet. Players learn where they are in character. A future
 `where` is likely, but opt-in, for people who want to be found.
 
-**Migration from pre-zone saves (temporary).** Saves from before zones
-use bare keys: a character's `roomId: "narrow-hallway"`,
-`rooms/narrow-hallway.json`. Pre-zone keys were unique world-wide, so a
-bare key resolves when exactly one zone has a room with that key:
-`World.findRoomAllowingLegacyId` at login (the character saves with the
-new id at the next checkpoint), and `loadRoomStates` moves an old room
-file to its zone path at startup. Both now also cover pre-pack saves (see
-"Packs") and can be deleted once no older saves remain.
+**Pre-zone saves** (bare room keys) were migrated by code at login and
+startup; that code is gone now that no saves predate zones.
 
 Not built yet: zone-wide messaging (e.g. a theme's weather broadcast) and
 per-zone resets or respawns. Add them when a theme needs one; the zone
@@ -1067,15 +1061,10 @@ as long as their keys differ. Stats aren't namespaced: they're a shared
 vocabulary packs deliberately build on (combat gives the starter pack's
 `strength` a role), and pack code looks them up by name.
 
-**Older saves migrate as they load.** Room ids grew from `narrow-hallway`
-(pre-zone) to `start/narrow-hallway` (pre-pack) to today's form, so an old
-id is always the tail of the current one. `World.findRoomAllowingLegacyId`
-resolves an old character `roomId` when exactly one room's id ends in it
-(the character saves with the new id at the next checkpoint), and
-`loadRoomStates` moves an old room file to its current path at startup.
-An old id that's now ambiguous isn't guessed at: the character starts in
-the starting room, and the room file stays where it is with a warning.
-Both are temporary, to delete once no older saves remain.
+**Older saves were migrated, and that code is gone.** Pre-pack room ids
+(`start/narrow-hallway`) were resolved and moved at login and startup
+until every save had its full id. A character whose saved room isn't in
+content now just starts at the starting room.
 
 **Composition rules** (later packs in the list come later):
 

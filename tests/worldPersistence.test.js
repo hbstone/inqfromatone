@@ -5,7 +5,7 @@ import path from 'path';
 import { World } from '../modules/World.js';
 import { Item } from '../modules/Item.js';
 import { loadRoomStates, saveDirtyRooms } from '../modules/worldPersistence.js';
-import { roomStateExists, loadRoomState, saveRoomState } from '../worldData.js';
+import { roomStateExists, loadRoomState } from '../worldData.js';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'world-persistence-'));
 
@@ -58,84 +58,6 @@ try {
             'room-b has no save yet, so its content-seeded default should be untouched',
         );
         assert.equal(world.getRoomById(idA).dirty, false, 'a freshly-loaded room should not be dirty');
-    }
-
-    // A save from before zones (rooms/<key>.json) moves to the room's
-    // zone-qualified path (rooms/<zone>/<key>.json) and loads from there.
-    // One whose key is now in two zones is left alone, since it can't be
-    // told which room it belonged to.
-    {
-        saveRoomState(
-            'cellar',
-            { inventory: [new Item('a barrel', 'A barrel.', ['barrel']).toSaveData()], components: {} },
-            dir,
-        );
-        saveRoomState('gate', { inventory: [], components: {} }, dir);
-
-        const world = new World();
-        world.addRoom('Cellar', 'A cellar.', 'keep/cellar');
-        world.addRoom('Gate', 'A gate.', 'keep/gate');
-        world.addRoom('Gate', 'Another gate.', 'town/gate');
-
-        const originalLog = console.log;
-        const originalWarn = console.warn;
-        console.log = console.warn = () => {};
-        try {
-            loadRoomStates(world, dir);
-        } finally {
-            console.log = originalLog;
-            console.warn = originalWarn;
-        }
-
-        assert.equal(roomStateExists('cellar', dir), false, 'the old file is gone');
-        assert.equal(roomStateExists('keep/cellar', dir), true, 'and saved at the new path');
-        assert.deepStrictEqual(
-            world.getRoomById('keep/cellar').inventory.map((i) => i.name),
-            ['a barrel'],
-        );
-
-        assert.equal(roomStateExists('gate', dir), true, 'ambiguous legacy save is left in place');
-        assert.equal(roomStateExists('keep/gate', dir), false);
-        assert.equal(roomStateExists('town/gate', dir), false);
-    }
-
-    // Same for a save from before packs (rooms/<zone>/<key>.json): it moves
-    // to rooms/<pack>/<zone>/<key>.json, unless two packs now have that
-    // zone/room. A pre-zone save also skips straight to the pack path.
-    {
-        saveRoomState(
-            'tower/top',
-            { inventory: [new Item('a bell', 'A bell.', ['bell']).toSaveData()], components: {} },
-            dir,
-        );
-        saveRoomState('mill/wheel', { inventory: [], components: {} }, dir);
-        saveRoomState('loft', { inventory: [new Item('hay', 'Hay.', ['hay']).toSaveData()], components: {} }, dir);
-
-        const world = new World();
-        world.addRoom('Top', 'A tower top.', 'fantasy/tower/top');
-        world.addRoom('Wheel', 'A wheel.', 'fantasy/mill/wheel');
-        world.addRoom('Wheel', 'Another wheel.', 'western/mill/wheel');
-        world.addRoom('Loft', 'A loft.', 'fantasy/barn/loft');
-
-        const originalLog = console.log;
-        const originalWarn = console.warn;
-        console.log = console.warn = () => {};
-        try {
-            loadRoomStates(world, dir);
-        } finally {
-            console.log = originalLog;
-            console.warn = originalWarn;
-        }
-
-        assert.equal(roomStateExists('tower/top', dir), false);
-        assert.deepStrictEqual(
-            world.getRoomById('fantasy/tower/top').inventory.map((i) => i.name),
-            ['a bell'],
-        );
-        assert.equal(roomStateExists('fantasy/tower/top', dir), true);
-        assert.equal(roomStateExists('mill/wheel', dir), true, 'ambiguous: two packs have mill/wheel');
-        assert.equal(roomStateExists('loft', dir), false);
-        assert.equal(roomStateExists('fantasy/barn/loft', dir), true);
     }
 } finally {
     fs.rmSync(dir, { recursive: true, force: true });

@@ -22,7 +22,7 @@
 //
 // NPCs, once they exist and can get/drop/craft on their own, belong in
 // saveWorld too, for the same reason characters do.
-import { deleteRoomState, loadRoomState, roomStateExists, saveRoomState } from '../worldData.js';
+import { loadRoomState, roomStateExists, saveRoomState } from '../worldData.js';
 import { characterExists, loadCharacterState, saveCharacterState } from '../data.js';
 import { guard } from './guard.js';
 import { every } from './scheduler.js';
@@ -40,7 +40,6 @@ const WORLD_SAVE_INTERVAL_MS = 60 * 1000;
  */
 export function loadRoomStates(world, dir) {
     for (const room of world.getAllRooms()) {
-        migrateLegacyRoomSave(world, room, dir);
         if (!roomStateExists(room.id, dir)) {
             continue;
         }
@@ -51,42 +50,6 @@ export function loadRoomStates(world, dir) {
         }
         room.restoreFrom(saved);
     }
-}
-
-/**
- * Older saves sit at an older room id's path: rooms/narrow-hallway.json
- * from before zones, rooms/start/narrow-hallway.json from before packs.
- * Move the newest one found to the room's current path
- * (rooms/starter/start/narrow-hallway.json) if that doesn't exist yet. An
- * old id only migrates when exactly one room's id still ends in it (see
- * World's findRoomAllowingLegacyId). Remove once no older saves remain
- * (see ARCHITECTURE.md's "Packs").
- * @param {import("./World.js").World} world
- * @param {import("./Room.js").Room} room
- * @param {string} [dir]
- */
-function migrateLegacyRoomSave(world, room, dir) {
-    if (roomStateExists(room.id, dir)) {
-        return;
-    }
-    // "starter/start/narrow-hallway" -> ["start/narrow-hallway", "narrow-hallway"]
-    const parts = room.id.split('/');
-    const legacyIds = parts.slice(1).map((_, i) => parts.slice(i + 1).join('/'));
-    const legacyId = legacyIds.find((id) => roomStateExists(id, dir));
-    if (!legacyId) {
-        return;
-    }
-    if (world.findRoomAllowingLegacyId(legacyId) !== room) {
-        console.warn(`Not migrating rooms/${legacyId}.json: more than one room's id ends in "${legacyId}".`);
-        return;
-    }
-    const saved = loadRoomState(legacyId, dir);
-    if (!saved) {
-        return; // unreadable; leave it where it is for a human to look at
-    }
-    saveRoomState(room.id, saved, dir);
-    deleteRoomState(legacyId, dir);
-    console.log(`Moved room save rooms/${legacyId}.json to rooms/${room.id}.json.`);
 }
 
 /**

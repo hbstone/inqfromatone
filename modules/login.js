@@ -119,21 +119,11 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
                 return 'Incorrect password. Try again:';
             }
 
-            // Upgrade a legacy (unsalted SHA-256) or weaker-parameter hash in
-            // place, now that we have the plaintext to rehash - see auth.js.
+            // Upgrade a weaker-parameter hash in place, now that we have the
+            // plaintext to rehash - see auth.js.
             if (needsRehash) {
                 saved.password = hashPassword(input);
                 saveCharacterState(character.name, saved, charactersDir);
-            }
-
-            // A save from before creation was deferred to the end (password
-            // written, description never entered): pick creation back up
-            // rather than logging in a character with no stats.
-            if (saved.description == null) {
-                character.pendingPasswordHash = saved.password;
-                character.resumingCreation = true;
-                character.stage = 'description';
-                return 'Your character was never finished. Enter a description for your character:';
             }
 
             // Already online (another connection, or a dropped one the server
@@ -146,11 +136,8 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
             }
 
             character.restoreFrom(saved);
-            // findRoomAllowingLegacyId: saves from before zones or packs hold
-            // a shorter room id (see World.js).
-            character.pendingRoomId = (
-                world.findRoomAllowingLegacyId(saved.roomId) ?? world.getRoomById(startingRoomKey)
-            ).id;
+            // A room that's since left content: start over at the starting room.
+            character.pendingRoomId = (world.getRoomById(saved.roomId) ?? world.getRoomById(startingRoomKey)).id;
 
             // From before recognition: ask for a short description before
             // they appear to anyone (see modules/recognition/).
@@ -183,7 +170,7 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
                 return `${result.error} ${SHORT_DESC_PROMPT}`;
             }
             character.shortDesc = result.value;
-            if (character.new || character.resumingCreation) {
+            if (character.new) {
                 return finishCreation(character);
             }
             return enterExistingCharacter(character, `Strangers will see you as "${result.value}".`);
@@ -204,7 +191,7 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
         // Nothing was reserved on disk at the name step, so two
         // connections can both be partway through creating the same new
         // name. Whoever finishes first gets it.
-        if (!character.resumingCreation && characterExists(character.name, charactersDir)) {
+        if (characterExists(character.name, charactersDir)) {
             character.new = false;
             character.pendingPasswordHash = null;
             character.description = null;
@@ -223,7 +210,6 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
             charactersDir,
         );
         character.pendingPasswordHash = null;
-        character.resumingCreation = false;
         character.new = false;
 
         world.getRoomById(startingRoomKey).addCharacter(character);

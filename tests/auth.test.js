@@ -17,11 +17,11 @@ import { hashPassword, verifyPassword } from '../modules/auth.js';
     assert.deepStrictEqual(verifyPassword('hunter3', stored), { ok: false, needsRehash: false });
 }
 
-// Legacy unsalted SHA-256 still verifies, flagged for rehash
+// Anything that isn't a scrypt hash never verifies (e.g. the old unsalted
+// SHA-256 format)
 {
-    const legacy = crypto.createHash('sha256').update('hunter2').digest('hex');
-    assert.deepStrictEqual(verifyPassword('hunter2', legacy), { ok: true, needsRehash: true });
-    assert.deepStrictEqual(verifyPassword('wrong', legacy), { ok: false, needsRehash: false });
+    const sha256 = crypto.createHash('sha256').update('hunter2').digest('hex');
+    assert.deepStrictEqual(verifyPassword('hunter2', sha256), { ok: false, needsRehash: false });
 }
 
 // Weaker-than-current scrypt parameters verify, flagged for rehash

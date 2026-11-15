@@ -54,14 +54,3 @@ export function loadRoomState(key, dir = roomsDir()) {
 export function saveRoomState(key, state, dir = roomsDir()) {
     writeJsonAtomic(filePathFor(key, dir), state);
 }
-
-/**
- * Delete a room's saved state, if any. Used to clear out a pre-zone save
- * once it's been moved to its zone-qualified path (see
- * modules/worldPersistence.js's loadRoomStates).
- * @param {string} key
- * @param {string} [dir]
- */
-export function deleteRoomState(key, dir = roomsDir()) {
-    fs.rmSync(filePathFor(key, dir), { force: true });
-}

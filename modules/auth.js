@@ -20,9 +20,6 @@ const P = 1;
 const KEY_LENGTH = 64;
 const SALT_BYTES = 16;
 
-// Pre-scrypt saves: bare hex SHA-256 of the password, no salt.
-const LEGACY_SHA256 = /^[0-9a-f]{64}$/;
-
 /**
  * Hash a password for storage.
  * @param {string} password
@@ -35,23 +32,17 @@ export function hashPassword(password) {
 }
 
 /**
- * Check a password against a stored hash (either format).
+ * Check a password against a stored hash.
  * @param {string} password
  * @param {string} stored
  * @returns {{ ok: boolean, needsRehash: boolean }} needsRehash is true
- *   when the password matched but the stored hash is legacy SHA-256 or
- *   uses weaker-than-current scrypt parameters - the caller should save
- *   a fresh hashPassword(password) in its place.
+ *   when the password matched but the stored hash uses weaker-than-current
+ *   scrypt parameters - the caller should save a fresh
+ *   hashPassword(password) in its place.
  */
 export function verifyPassword(password, stored) {
     if (typeof stored !== 'string') {
         return { ok: false, needsRehash: false };
-    }
-
-    if (LEGACY_SHA256.test(stored)) {
-        const candidate = crypto.createHash('sha256').update(password).digest();
-        const ok = safeEqual(candidate, Buffer.from(stored, 'hex'));
-        return { ok, needsRehash: ok };
     }
 
     const parts = stored.split('$');
