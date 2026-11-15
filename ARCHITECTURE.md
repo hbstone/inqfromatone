@@ -1111,6 +1111,21 @@ safe to take from strangers (the roadmap's "semi-trusted content" note).
 arguments, reads the default game's packs (`defaultContentDirs()`); passing
 a single path still works for test fixtures.
 
+**A second theme: the western pack** (`packs/western/`), run with
+`GAME=western pnpm start` (`games/western.json`: western, then combat). It
+shares nothing with the starter pack. It has its own zone (Dry Creek:
+street, saloon, livery, trail), items, a bartender and a stray dog, its
+own stats (strength and dexterity, which combat gives roles, plus grit,
+wits and charm), its own day with a `high-noon` phase, and one verb:
+`tip [someone]`, which uses whatever is in the head slot. It's the check
+that a theme can be swapped without touching core. Saves are still shared
+across games, so a character last saved in Dry Creek starts at the default
+game's starting room when they log into that game, and the reverse.
+
+Known wrinkle it surfaced: combat's stat override replaces the whole
+entry, so in the western game `dexterity` shows as "Dexterity", not the
+pack's "Quickness". Combat only means to add a role. Not fixed yet.
+
 **Combat is a pack** (`packs/combat/`), included in the default game.
 Leaving it out of a game's list removes `kill`/`flee`/`disengage`, `hp` and
 regen entirely. Earlier sections' `modules/combat/*` and

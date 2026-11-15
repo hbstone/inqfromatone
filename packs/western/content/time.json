@@ -1,0 +1,23 @@
+{
+    "speed": 4,
+    "phases": [
+        {
+            "name": "dawn",
+            "startHour": 5,
+            "message": "The sky pales behind the mesas, and a rooster somewhere takes credit for it."
+        },
+        { "name": "day", "startHour": 7, "message": "The sun clears the ridge and the heat starts in." },
+        {
+            "name": "high-noon",
+            "startHour": 12,
+            "message": "The sun hangs straight overhead, and every shadow shrinks to nothing."
+        },
+        { "name": "afternoon", "startHour": 13, "message": "The worst of the heat eases, a little." },
+        {
+            "name": "dusk",
+            "startHour": 18,
+            "message": "The sun sinks red into the desert, and shadows stretch long across the street."
+        },
+        { "name": "night", "startHour": 20, "message": "Coyotes start up somewhere past the edge of town." }
+    ]
+}

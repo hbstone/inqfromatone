@@ -1,0 +1,43 @@
+[
+    {
+        "key": "stetson",
+        "name": "a dusty stetson",
+        "description": "A wide-brimmed felt hat, sweat-stained at the band and dusty everywhere else. Made for tipping.",
+        "keywords": ["dusty", "stetson", "hat"],
+        "size": "small",
+        "weight": 0.4,
+        "equip": { "slot": "head" }
+    },
+    {
+        "key": "lasso",
+        "name": "a coiled lasso",
+        "description": "A stiff loop of braided rope, coiled neatly and tied off with a thong.",
+        "keywords": ["coiled", "lasso", "rope"],
+        "size": "small",
+        "weight": 1.5
+    },
+    {
+        "key": "canteen",
+        "name": "a dented canteen",
+        "description": "A tin canteen in a wool cover, dented from more than one fall off a saddle. It sloshes when shaken.",
+        "keywords": ["dented", "canteen"],
+        "size": "small",
+        "weight": 1
+    },
+    {
+        "key": "deck-of-cards",
+        "name": "a deck of cards",
+        "description": "A well-thumbed deck with soft corners. You'd bet a dollar at least one ace is marked.",
+        "keywords": ["deck", "cards"],
+        "size": "small",
+        "weight": 0.1
+    },
+    {
+        "key": "whiskey-bottle",
+        "name": "a bottle of whiskey",
+        "description": "Amber rotgut in a squat brown bottle, the label long since peeled away.",
+        "keywords": ["bottle", "whiskey"],
+        "size": "small",
+        "weight": 1
+    }
+]
