@@ -5,23 +5,36 @@ import path from 'path';
 import { World } from '../modules/World.js';
 import { loadWorldData } from '../modules/content/loadWorldData.js';
 
+// Writes a pack's content under root/<pack>/content and returns that path
+// (a pack's name, which namespaces its ids, is the folder above content/).
 // zones: { zoneKey: rooms[] | { zone, rooms } } - a bare rooms array gets a
 // default zone.json.
-function withFixtureDir(zones, itemsData, fn) {
-    const fixtureDir = fs.mkdtempSync(path.join(os.tmpdir(), 'load-world-data-'));
-    fs.writeFileSync(path.join(fixtureDir, 'items.json'), JSON.stringify(itemsData));
+function writePack(root, pack, zones, itemsData) {
+    const contentDir = path.join(root, pack, 'content');
+    fs.mkdirSync(contentDir, { recursive: true });
+    fs.writeFileSync(path.join(contentDir, 'items.json'), JSON.stringify(itemsData));
     for (const [zoneKey, spec] of Object.entries(zones)) {
         const { zone = { name: zoneKey }, rooms } = Array.isArray(spec) ? { rooms: spec } : spec;
-        const zoneDir = path.join(fixtureDir, 'zones', zoneKey);
+        const zoneDir = path.join(contentDir, 'zones', zoneKey);
         fs.mkdirSync(zoneDir, { recursive: true });
         fs.writeFileSync(path.join(zoneDir, 'zone.json'), JSON.stringify(zone));
         fs.writeFileSync(path.join(zoneDir, 'rooms.json'), JSON.stringify(rooms));
     }
+    return contentDir;
+}
+
+function withTempRoot(fn) {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'load-world-data-'));
     try {
-        return fn(fixtureDir);
+        return fn(root);
     } finally {
-        fs.rmSync(fixtureDir, { recursive: true, force: true });
+        fs.rmSync(root, { recursive: true, force: true });
     }
+}
+
+// A single pack, named "test".
+function withFixtureDir(zones, itemsData, fn) {
+    return withTempRoot((root) => fn(writePack(root, 'test', zones, itemsData)));
 }
 
 // Loading the real shipped content/ data should produce a working starting
@@ -32,10 +45,10 @@ function withFixtureDir(zones, itemsData, fn) {
     const world = new World();
     const { startingRoomKey } = loadWorldData(world);
 
-    assert.equal(startingRoomKey, 'start/starting-room');
+    assert.equal(startingRoomKey, 'starter/start/starting-room');
 
-    const startingRoom = world.getRoomById('start/starting-room');
-    const hallway = world.getRoomById('start/narrow-hallway');
+    const startingRoom = world.getRoomById('starter/start/starting-room');
+    const hallway = world.getRoomById('starter/start/narrow-hallway');
     assert.ok(startingRoom, 'starting room should exist');
     assert.ok(hallway, 'second room should exist');
 
@@ -43,11 +56,11 @@ function withFixtureDir(zones, itemsData, fn) {
     assert.equal(hallway.exits.south, startingRoom.id, 'hallway should exit south back to the starting room');
 
     // A cross-zone exit both ways, and indoors from each zone's default
-    const courtyard = world.getRoomById('grounds/courtyard');
+    const courtyard = world.getRoomById('starter/grounds/courtyard');
     assert.equal(startingRoom.exits.south, courtyard.id);
     assert.equal(courtyard.exits.north, startingRoom.id);
-    assert.equal(startingRoom.zone, 'start');
-    assert.equal(courtyard.zone, 'grounds');
+    assert.equal(startingRoom.zone, 'starter/start');
+    assert.equal(courtyard.zone, 'starter/grounds');
     assert.equal(startingRoom.indoors, true);
     assert.equal(courtyard.indoors, false, 'no flag means outdoors');
 
@@ -88,8 +101,8 @@ function withFixtureDir(zones, itemsData, fn) {
         console.warn = originalWarn;
     }
 
-    const onlyRoom = world.getRoomById('solo/only-room');
-    assert.equal(result.startingRoomKey, 'solo/only-room');
+    const onlyRoom = world.getRoomById('test/solo/only-room');
+    assert.equal(result.startingRoomKey, 'test/solo/only-room');
     assert.ok(onlyRoom, 'the well-formed room should still load');
     assert.deepStrictEqual(onlyRoom.exits, {}, 'the bad exit reference should be skipped');
     assert.deepStrictEqual(onlyRoom.inventory, [], 'the bad item reference should be skipped');
@@ -121,7 +134,7 @@ function withFixtureDir(zones, itemsData, fn) {
         (fixtureDir) => loadWorldData(world, fixtureDir),
     );
 
-    const armory = world.getRoomById('keep/armory');
+    const armory = world.getRoomById('test/keep/armory');
     const arrows = armory.inventory.filter((item) => item.name === 'an arrow');
     const bricks = armory.inventory.filter((item) => item.name === 'a brick');
 
@@ -148,7 +161,7 @@ function withFixtureDir(zones, itemsData, fn) {
                 [],
                 (fixtureDir) => loadWorldData(world, fixtureDir),
             ),
-        /Duplicate room \(zone "halls"\) key "dup"/,
+        /Duplicate room \(zone "test\/halls"\) key "dup"/,
         'a duplicate room key should throw rather than silently merge',
     );
 }
@@ -167,7 +180,7 @@ function withFixtureDir(zones, itemsData, fn) {
                 ],
                 (fixtureDir) => loadWorldData(world, fixtureDir),
             ),
-        /Duplicate item key "dup"/,
+        /Duplicate item key "test\/dup"/,
         'a duplicate item key should throw rather than silently shadow',
     );
 }
@@ -204,27 +217,116 @@ function withFixtureDir(zones, itemsData, fn) {
         (fixtureDir) => loadWorldData(world, fixtureDir),
     );
 
-    assert.equal(startingRoomKey, 'town/gate');
-    assert.equal(world.getRoomById('town/gate').exits.north, 'town/square');
-    assert.equal(world.getRoomById('town/gate').exits.east, 'woods/gate');
-    assert.equal(world.getRoomById('woods/gate').exits.west, 'town/gate');
-    assert.equal(world.getRoomById('woods/gate').name, 'Woods Gate', 'same key, different zone, different room');
+    assert.equal(startingRoomKey, 'test/town/gate');
+    assert.equal(world.getRoomById('test/town/gate').exits.north, 'test/town/square');
+    assert.equal(world.getRoomById('test/town/gate').exits.east, 'test/woods/gate');
+    assert.equal(world.getRoomById('test/woods/gate').exits.west, 'test/town/gate');
+    assert.equal(world.getRoomById('test/woods/gate').name, 'Woods Gate', 'same key, different zone, different room');
 
-    assert.equal(world.getRoomById('town/square').indoors, false, 'inherits the zone default (unset = outdoors)');
-    assert.equal(world.getRoomById('town/inn').indoors, true, 'room overrides the zone');
-    assert.equal(world.getRoomById('woods/gate').indoors, true);
-    assert.equal(world.getRoomById('woods/clearing').indoors, false);
+    assert.equal(world.getRoomById('test/town/square').indoors, false, 'inherits the zone default (unset = outdoors)');
+    assert.equal(world.getRoomById('test/town/inn').indoors, true, 'room overrides the zone');
+    assert.equal(world.getRoomById('test/woods/gate').indoors, true);
+    assert.equal(world.getRoomById('test/woods/clearing').indoors, false);
 
-    assert.deepEqual(world.getZone('woods'), { key: 'woods', name: 'The Woods', description: '', indoors: true });
+    assert.deepEqual(world.getZone('test/woods'), {
+        key: 'test/woods',
+        name: 'The Woods',
+        description: '',
+        indoors: true,
+    });
 
-    // Legacy (pre-zone) lookup: a bare key resolves only when unambiguous
-    assert.equal(world.findRoomAllowingLegacyId('square').id, 'town/square');
+    // Legacy lookup: an older id (pre-zone "square", pre-pack "town/square")
+    // resolves only when unambiguous
+    assert.equal(world.findRoomAllowingLegacyId('square').id, 'test/town/square');
+    assert.equal(world.findRoomAllowingLegacyId('town/square').id, 'test/town/square');
     assert.equal(world.findRoomAllowingLegacyId('gate'), null, 'two zones have a gate');
-    assert.equal(world.findRoomAllowingLegacyId('town/inn').id, 'town/inn');
+    assert.equal(world.findRoomAllowingLegacyId('test/town/inn').id, 'test/town/inn');
     assert.equal(world.findRoomAllowingLegacyId('nowhere'), null);
 }
 
-// Zone and room keys become save-file paths, so they must be filename-safe
+// Packs: two packs can both have a "town" zone and a "rope" item. Bare
+// references stay in their own pack; "zone/key" stays in the pack too; a
+// full "pack/zone/key" id crosses over, and so does a "pack/key" item.
+withTempRoot((root) => {
+    const world = new World();
+    const ropeItem = (name) => ({ key: 'rope', name, description: 'Rope.', keywords: ['rope'] });
+    const fantasy = writePack(
+        root,
+        'fantasy',
+        {
+            town: [{ key: 'gate', name: 'Fantasy Gate', exits: { east: 'western/town/gate' }, items: ['rope'] }],
+            woods: [{ key: 'clearing', name: 'Clearing', exits: { west: 'town/gate' } }],
+        },
+        [ropeItem('a hemp rope')],
+    );
+    const western = writePack(
+        root,
+        'western',
+        {
+            town: [
+                {
+                    key: 'gate',
+                    name: 'Western Gate',
+                    exits: { west: 'fantasy/town/gate' },
+                    items: ['rope', 'fantasy/rope'],
+                },
+            ],
+        },
+        [ropeItem('a lariat')],
+    );
+    loadWorldData(world, [fantasy, western], { startingRoom: 'fantasy/town/gate' });
+
+    const fantasyGate = world.getRoomById('fantasy/town/gate');
+    const westernGate = world.getRoomById('western/town/gate');
+    assert.equal(fantasyGate.name, 'Fantasy Gate');
+    assert.equal(westernGate.name, 'Western Gate');
+    assert.equal(fantasyGate.exits.east, westernGate.id);
+    assert.equal(westernGate.exits.west, fantasyGate.id);
+    assert.equal(
+        world.getRoomById('fantasy/woods/clearing').exits.west,
+        fantasyGate.id,
+        '"zone/key" stays in its pack',
+    );
+    assert.deepEqual(
+        fantasyGate.inventory.map((item) => item.name),
+        ['a hemp rope'],
+    );
+    assert.deepEqual(
+        westernGate.inventory.map((item) => item.name),
+        ['a lariat', 'a hemp rope'],
+    );
+    assert.equal(world.findRoomAllowingLegacyId('town/gate'), null, 'both packs have a town/gate');
+});
+
+// Item overrides name the other pack's item by its full id; a "pack/key"
+// without "override" is an error, and so is overriding nothing.
+withTempRoot((root) => {
+    const world = new World();
+    const base = writePack(root, 'base', { hall: [{ key: 'hall', name: 'Hall', items: ['rope'] }] }, [
+        { key: 'rope', name: 'a rope', description: 'Rope.', keywords: ['rope'] },
+    ]);
+    const better = writePack(root, 'better', {}, [
+        { key: 'base/rope', override: true, name: 'a silk rope', description: 'Silk.', keywords: ['rope'] },
+    ]);
+    loadWorldData(world, [base, better]);
+    assert.equal(world.getRoomById('base/hall/hall').inventory[0].name, 'a silk rope');
+
+    const sneaky = writePack(root, 'sneaky', {}, [{ key: 'base/rope', name: 'a fake rope', description: '' }]);
+    assert.throws(() => loadWorldData(new World(), [base, sneaky]), /only an "override": true entry may do/);
+    const typo = writePack(root, 'typo', {}, [{ key: 'base/rpoe', override: true, name: 'x', description: '' }]);
+    assert.throws(() => loadWorldData(new World(), [base, typo]), /marked "override" but nothing defines it/);
+});
+
+// The game's startingRoom must be a full id
+withTempRoot((root) => {
+    const pack = writePack(root, 'solo', { town: [{ key: 'gate', name: 'Gate' }] }, []);
+    assert.throws(
+        () => loadWorldData(new World(), pack, { startingRoom: 'town/gate' }),
+        /needs the full "pack\/zone\/room" id/,
+    );
+});
+
+// Pack, zone and room keys become save-file paths, so they must be filename-safe
 {
     assert.throws(
         () =>

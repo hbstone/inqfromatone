@@ -87,10 +87,10 @@ try {
     }
 
     // The loader spawns NPCs from each zone's npcs.json into rooms that list
-    // them (bare key = same zone, zone/key = another zone), and warns about
+    // them (bare key = same zone, zone/key = another zone in the pack), and warns about
     // unknown NPCs and unknown behaviors
     {
-        const dir = path.join(tmp, 'content');
+        const dir = path.join(tmp, 'test', 'content'); // pack "test"
         const zone = (key, rooms, npcs) => {
             fs.mkdirSync(path.join(dir, 'zones', key), { recursive: true });
             fs.writeFileSync(path.join(dir, 'zones', key, 'zone.json'), JSON.stringify({ name: key }));
@@ -108,7 +108,7 @@ try {
 
         const world = new World();
         const warnings = quiet(() => loadWorldData(world, dir));
-        const square = world.getRoomById('town/square');
+        const square = world.getRoomById('test/town/square');
 
         assert.deepEqual(
             square.characters.map((c) => c.name),
@@ -116,8 +116,8 @@ try {
         );
         assert.equal(world.npcs.length, 3);
         assert.notEqual(world.npcs[0], world.npcs[1], 'each listing spawns its own NPC');
-        assert.equal(world.npcs[2].templateId, 'woods/owl');
-        assert.equal(world.npcs[2].roomId, 'town/square');
+        assert.equal(world.npcs[2].templateId, 'test/woods/owl');
+        assert.equal(world.npcs[2].roomId, 'test/town/square');
         assert.ok(warnings.some((w) => w.includes('unknown behavior "juggle"')));
         assert.ok(warnings.some((w) => w.includes('NPC "ghost"')));
     }
@@ -262,9 +262,11 @@ try {
         const world = new World();
         loadWorldData(world);
         assert.ok(
-            world.getRoomById('grounds/courtyard').characters.some((c) => c.templateId === 'grounds/groundskeeper'),
+            world
+                .getRoomById('starter/grounds/courtyard')
+                .characters.some((c) => c.templateId === 'starter/grounds/groundskeeper'),
         );
-        assert.ok(world.npcs.some((n) => n.templateId === 'start/cat'));
+        assert.ok(world.npcs.some((n) => n.templateId === 'starter/start/cat'));
     }
 } finally {
     reset();

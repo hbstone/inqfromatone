@@ -4,12 +4,12 @@
 // components) - name/description/exits always come from content (content/zones/,
 // loadWorldData.js's job), not this module's.
 //
-// Room ids are content-authored "<zone>/<key>" identifiers (e.g.
-// "start/narrow-hallway"), not player input, so - unlike character names in
+// Room ids are content-authored "<pack>/<zone>/<key>" identifiers (e.g.
+// "starter/start/narrow-hallway"), not player input, so - unlike character names in
 // data.js - there's no untrusted-input concern about them landing in a
-// filesystem path; the content loader also restricts both parts to
-// lowercase letters, digits, and dashes. The "/" makes each zone a
-// subdirectory: rooms/start/narrow-hallway.json.
+// filesystem path; the content loader also restricts every part to
+// lowercase letters, digits, and dashes. Each "/" makes a
+// subdirectory: rooms/starter/start/narrow-hallway.json.
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

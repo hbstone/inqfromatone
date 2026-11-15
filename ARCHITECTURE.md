@@ -738,7 +738,8 @@ Two zones can both have a `gate`, and Phase 4 packs get a namespace for
 free. In content, an exit to a bare key stays in its own zone and a
 `zone/key` exit crosses over. Zone and room keys are limited to lowercase
 letters, digits, and dashes, since they become save paths:
-`rooms/<zone>/<key>.json`.
+`rooms/<zone>/<key>.json`. (Packs later added a third level in front:
+see "Packs" below.)
 
 **Indoors.** Places are outdoors unless flagged `"indoors": true`, so a
 missing flag and a false one mean the same thing (the usual MUD
@@ -767,8 +768,8 @@ use bare keys: a character's `roomId: "narrow-hallway"`,
 bare key resolves when exactly one zone has a room with that key:
 `World.findRoomAllowingLegacyId` at login (the character saves with the
 new id at the next checkpoint), and `loadRoomStates` moves an old room
-file to its zone path at startup. Both can be deleted once no pre-zone
-saves remain.
+file to its zone path at startup. Both now also cover pre-pack saves (see
+"Packs") and can be deleted once no older saves remain.
 
 Not built yet: zone-wide messaging (e.g. a theme's weather broadcast) and
 per-zone resets or respawns. Add them when a theme needs one; the zone
@@ -1010,7 +1011,7 @@ list of **packs**; packs add content and code, and later packs build on
 earlier ones.
 
 ```
-games/default.json        { "packs": ["starter"], "startingRoom": "start/starting-room" }
+games/default.json        { "packs": ["starter", "combat"], "startingRoom": "starter/start/starting-room" }
 packs/<name>/
   pack.json               { "name", "version", "description" } - name must match the folder
   content/                (optional) any of: items.json, zones/, stats/*.json, time.json, features.json
@@ -1023,21 +1024,57 @@ per game, for now.
 
 **The old `content/` folder is now `packs/starter/content/`.** Earlier
 sections of this document that mention `content/...` paths mean that pack.
-Zone keys didn't change, so saves needed no migration.
+
+**Content ids are namespaced by pack**, so packs from different authors
+can each have a `town` zone or a `rope` item:
+
+| What | World id              | Example                         |
+| ---- | --------------------- | ------------------------------- |
+| zone | `<pack>/<zone>`       | `starter/start`                 |
+| room | `<pack>/<zone>/<key>` | `starter/start/narrow-hallway`  |
+| NPC  | `<pack>/<zone>/<key>` | `starter/grounds/groundskeeper` |
+| item | `<pack>/<key>`        | `starter/rusty-key`             |
+
+Content refers to things relative to where it's written, so pack files
+rarely spell out their own pack. In exits, a room's `npcs` list and routine
+posts, `key` is in the same zone, `zone/key` in the same pack and
+`pack/zone/key` anywhere. In a room's `items` list, `key` is the same
+pack's item and `pack/key` another pack's. Only the game's `startingRoom`
+is always a full id. Keys themselves are bare: lowercase letters, digits
+and dashes, so `/` only ever separates the parts. Room save files follow
+the id: `rooms/starter/start/narrow-hallway.json`.
+
+These are internal ids, not what players see or type. Any number of items
+can be named "a rope" with the keyword `rope`, across packs or within one,
+as long as their keys differ. Stats aren't namespaced: they're a shared
+vocabulary packs deliberately build on (combat gives the starter pack's
+`strength` a role), and pack code looks them up by name.
+
+**Older saves migrate as they load.** Room ids grew from `narrow-hallway`
+(pre-zone) to `start/narrow-hallway` (pre-pack) to today's form, so an old
+id is always the tail of the current one. `World.findRoomAllowingLegacyId`
+resolves an old character `roomId` when exactly one room's id ends in it
+(the character saves with the new id at the next checkpoint), and
+`loadRoomStates` moves an old room file to its current path at startup.
+An old id that's now ambiguous isn't guessed at: the character starts in
+the starting room, and the room file stays where it is with a warning.
+Both are temporary, to delete once no older saves remain.
 
 **Composition rules** (later packs in the list come later):
 
-- **Items and stats** merge by key (`modules/content/mergeByKey.js`). A
-  clash between packs is an error unless the later entry says
-  `"override": true`, which replaces the earlier one everywhere it's used.
-  Overriding something no earlier pack defines is an error (likely a
-  typo). Stats: every `.json` in a pack's `stats/` is read, and a role may
+- **Items and stats** merge by id (`modules/content/mergeByKey.js`). Items
+  can't clash across packs now that ids include the pack. A later pack
+  replaces another's item with an entry keyed by the full id and marked
+  `"override": true` (`{ "key": "starter/rope", "override": true, ... }`),
+  which replaces it everywhere it's used. A `pack/key` key without
+  `override` is an error, and so is overriding something no earlier pack
+  defines (likely a typo or the wrong pack order). Stats keep bare keys,
+  so two packs defining the same stat clash unless the later one says
+  `override`. Every `.json` in a pack's `stats/` is read, and a role may
   still be claimed by only one stat.
-- **Zones** belong to exactly one pack: the same zone key in two packs is
-  an error. Exits, NPC lists and routine posts can point into any pack's
-  zones. (Prefixing zone ids with the pack name was considered and
-  deferred: it would mean a save migration, and a game's author picks its
-  few packs.)
+- **Zones** are each pack's own, so two packs may use the same zone key.
+  Exits, NPC lists and routine posts can point into any pack's zones with
+  a full id.
 - **`time.json`**: the last pack that has one wins outright. Phases aren't
   merged, since a theme's day is one design. No pack with one means real
   time and no phases.

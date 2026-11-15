@@ -2,7 +2,7 @@
 //
 // A game is an ordered list of packs, in games/<name>.json:
 //
-//   { "packs": ["starter", "combat"], "startingRoom": "start/starting-room" }
+//   { "packs": ["starter", "combat"], "startingRoom": "starter/start/starting-room" }
 //
 // Each pack is a folder under packs/ with a pack.json manifest, and
 // optionally content/ (zones, items, stats, time.json, features.json) and

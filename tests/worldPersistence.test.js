@@ -98,6 +98,45 @@ try {
         assert.equal(roomStateExists('keep/gate', dir), false);
         assert.equal(roomStateExists('town/gate', dir), false);
     }
+
+    // Same for a save from before packs (rooms/<zone>/<key>.json): it moves
+    // to rooms/<pack>/<zone>/<key>.json, unless two packs now have that
+    // zone/room. A pre-zone save also skips straight to the pack path.
+    {
+        saveRoomState(
+            'tower/top',
+            { inventory: [new Item('a bell', 'A bell.', ['bell']).toSaveData()], components: {} },
+            dir,
+        );
+        saveRoomState('mill/wheel', { inventory: [], components: {} }, dir);
+        saveRoomState('loft', { inventory: [new Item('hay', 'Hay.', ['hay']).toSaveData()], components: {} }, dir);
+
+        const world = new World();
+        world.addRoom('Top', 'A tower top.', 'fantasy/tower/top');
+        world.addRoom('Wheel', 'A wheel.', 'fantasy/mill/wheel');
+        world.addRoom('Wheel', 'Another wheel.', 'western/mill/wheel');
+        world.addRoom('Loft', 'A loft.', 'fantasy/barn/loft');
+
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        console.log = console.warn = () => {};
+        try {
+            loadRoomStates(world, dir);
+        } finally {
+            console.log = originalLog;
+            console.warn = originalWarn;
+        }
+
+        assert.equal(roomStateExists('tower/top', dir), false);
+        assert.deepStrictEqual(
+            world.getRoomById('fantasy/tower/top').inventory.map((i) => i.name),
+            ['a bell'],
+        );
+        assert.equal(roomStateExists('fantasy/tower/top', dir), true);
+        assert.equal(roomStateExists('mill/wheel', dir), true, 'ambiguous: two packs have mill/wheel');
+        assert.equal(roomStateExists('loft', dir), false);
+        assert.equal(roomStateExists('fantasy/barn/loft', dir), true);
+    }
 } finally {
     fs.rmSync(dir, { recursive: true, force: true });
 }
