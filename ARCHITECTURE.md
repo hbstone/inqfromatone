@@ -1073,7 +1073,10 @@ Both are temporary, to delete once no older saves remain.
   can't clash across packs now that ids include the pack. A later pack
   replaces another's item with an entry keyed by the full id and marked
   `"override": true` (`{ "key": "starter/rope", "override": true, ... }`),
-  which replaces it everywhere it's used. A `pack/key` key without
+  which changes it everywhere it's used. An override **merges** field by
+  field: only the fields it gives change, the rest stay as the earlier
+  pack wrote them, and `null` clears one. Giving every field still
+  replaces the whole thing. A `pack/key` key without
   `override` is an error, and so is overriding something no earlier pack
   defines (likely a typo or the wrong pack order). Stats keep bare keys,
   so two packs defining the same stat clash unless the later one says
@@ -1122,9 +1125,10 @@ that a theme can be swapped without touching core. Saves are still shared
 across games, so a character last saved in Dry Creek starts at the default
 game's starting room when they log into that game, and the reverse.
 
-Known wrinkle it surfaced: combat's stat override replaces the whole
-entry, so in the western game `dexterity` shows as "Dexterity", not the
-pack's "Quickness". Combat only means to add a role. Not fixed yet.
+It surfaced one cross-pack conflict: combat's stat override used to
+replace the whole entry, so the western `dexterity` showed as
+"Dexterity" instead of "Quickness". Overrides now merge (see the
+composition rules above).
 
 **Combat is a pack** (`packs/combat/`), included in the default game.
 Leaving it out of a game's list removes `kill`/`flee`/`disengage`, `hp` and
@@ -1132,8 +1136,9 @@ regen entirely. Earlier sections' `modules/combat/*` and
 `modules/commands/{kill,flee,disengage}.js` paths now live in
 `packs/combat/lib/` (`modules/combat/index.js` became `lib/attacks.js`).
 Its `content/stats/combat.json` adds `hp` (vitality) and gives strength and
-dexterity their offense/defense roles by overriding the starter pack's
-role-less versions, so a pack defining those must come before it.
+dexterity their offense/defense roles with overrides that give only a
+`role`, so each theme keeps its own label and starting value. A pack
+defining those must come before it.
 
 Core no longer knows about combat. Two generic hooks replaced its direct
 calls in `quit.js`:
