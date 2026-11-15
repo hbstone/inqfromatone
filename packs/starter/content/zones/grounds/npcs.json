@@ -5,6 +5,7 @@
         "keywords": ["old", "groundskeeper", "keeper"],
         "presence": "rakes leaves into tidy piles.",
         "description": "A stooped, weathered man in a patched coat, never far from his rake. He looks like he's tended these flagstones longer than anyone can remember.",
+        "sightings": true,
         "topics": [
             {
                 "keywords": ["moss", "flagstones", "stones"],
