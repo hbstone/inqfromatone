@@ -26,7 +26,7 @@ import { sourceName } from './content/mergeByKey.js';
 // saved state.
 const EPOCH = Date.parse('2026-01-01T00:00:00Z');
 
-const MINUTES_PER_DAY = 24 * 60;
+export const MINUTES_PER_DAY = 24 * 60;
 const MS_PER_MINUTE = 60 * 1000;
 
 // Game minutes pass every 60s / speed of real time, so checking every
@@ -96,12 +96,23 @@ export function getPhaseStartHour(name) {
 }
 
 /**
+ * Game time as one running count of minutes since the epoch, for timing
+ * and comparing things across hours and days (how long ago an NPC saw
+ * someone). getGameTime breaks the same count into day, hour and minute.
+ * @param {number} [now] - Real time in ms (Date.now()).
+ * @returns {number}
+ */
+export function gameMinutes(now = Date.now()) {
+    return Math.floor(((now - EPOCH) * speed) / MS_PER_MINUTE);
+}
+
+/**
  * The in-game time at a real instant.
  * @param {number} [now] - Real time in ms (Date.now()).
  * @returns {{ day: number, hour: number, minute: number, phase: string|null }}
  */
 export function getGameTime(now = Date.now()) {
-    const totalMinutes = Math.floor(((now - EPOCH) * speed) / MS_PER_MINUTE);
+    const totalMinutes = gameMinutes(now);
     const minuteOfDay = ((totalMinutes % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
     const hour = Math.floor(minuteOfDay / 60);
     return {

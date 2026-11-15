@@ -52,6 +52,11 @@ export function charactersDir() {
     return path.join(requireGame(), 'characters');
 }
 
+/** @returns {string} The running game's NPC knowledge directory. */
+export function npcsDir() {
+    return path.join(requireGame(), 'npcs');
+}
+
 /** @returns {string} The running game's rooms directory. */
 export function roomsDir() {
     return path.join(requireGame(), 'rooms');

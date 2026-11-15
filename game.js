@@ -4,6 +4,7 @@ import './modules/commands/index.js'; // registers the built-in verbs, see index
 import './modules/checks/index.js'; // registers the default check resolver, see index.js
 import './modules/npcs/index.js'; // registers the built-in NPC behaviors (before content loads, so it can check behavior names)
 import { startNpcBehaviors } from './modules/npcs/behaviors.js';
+import { loadNpcKnowledge, watchForSightings } from './modules/npcs/knowledge.js';
 import { emit } from './modules/events.js';
 import { loadWorldData } from './modules/content/loadWorldData.js';
 import { loadStatDefinitions } from './modules/content/loadStatDefinitions.js';
@@ -29,6 +30,8 @@ const world = new World(); // Initialize the world
 await setUpPackCode(game, world); // each pack's index.js registers its verbs/behaviors/listeners, before content refers to them
 const { startingRoomKey } = loadWorldData(world, contentDirs, { startingRoom: game.startingRoom }); // Load zone/room/item/NPC content
 loadRoomStates(world); // Overlay any saved room state (dropped/placed items) onto the content defaults
+loadNpcKnowledge(world); // what NPCs remember seeing (see modules/npcs/knowledge.js)
+watchForSightings(); // and keep noticing who comes and goes
 loadStatDefinitions(contentDirs.map((dir) => path.join(dir, 'stats'))); // Load stat definitions (which stats exist, starting values, roles)
 loadTimeSettings(contentDirs); // Load time-of-day settings (speed, named phases)
 const features = loadFeatures(contentDirs); // optional engine features this game switches on (packs' features.json)

@@ -14,11 +14,10 @@
 // NPCs aren't part of this yet: their content `name` already reads like a
 // short description, and remembering them needs its own design.
 import { setNamingPolicy, resetNamingPolicy } from '../naming.js';
+import { ARTICLES } from '../text.js';
 import { stripColors } from '../color.js';
 import { registerCommand } from '../commands/registry.js';
 import { remember, forget, rename, shortdesc } from './commands.js';
-
-const ARTICLES = new Set(['a', 'an', 'the']);
 
 // Shown for a player who somehow has no short description yet (login asks
 // for one, so this is a fallback, not the norm).
@@ -43,6 +42,8 @@ export function identityOf(character) {
 
 /**
  * Words usable as keywords from a phrase: lowercase, articles dropped.
+ * Splits on spaces only, unlike modules/text.js's wordsOf, so a hyphenated
+ * short description ("whiskey-soaked") stays one keyword to target by.
  * @param {string} phrase
  * @returns {string[]}
  */

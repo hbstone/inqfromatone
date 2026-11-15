@@ -25,6 +25,7 @@
 import { loadRoomState, roomStateExists, saveRoomState } from '../worldData.js';
 import { characterExists, loadCharacterState, saveCharacterState } from '../data.js';
 import { guard } from './guard.js';
+import { saveNpcKnowledge } from './npcs/knowledge.js';
 import { every } from './scheduler.js';
 
 const WORLD_SAVE_INTERVAL_MS = 60 * 1000;
@@ -110,14 +111,16 @@ export function saveCharacters(world, dir) {
 
 /**
  * The one world checkpoint - see the top of this file for why rooms and
- * characters always save together.
+ * characters always save together. NPC knowledge (what they've seen, see
+ * modules/npcs/knowledge.js) saves in the same pass.
  * @param {import("./World.js").World} world
- * @param {{ roomsDir?: string, charactersDir?: string }} [dirs] -
+ * @param {{ roomsDir?: string, charactersDir?: string, npcsDir?: string }} [dirs] -
  *   Overridable for tests.
  */
-export function saveWorld(world, { roomsDir, charactersDir } = {}) {
+export function saveWorld(world, { roomsDir, charactersDir, npcsDir } = {}) {
     saveDirtyRooms(world, roomsDir);
     saveCharacters(world, charactersDir);
+    guard('saving NPC knowledge', () => saveNpcKnowledge(world, npcsDir));
 }
 
 /**

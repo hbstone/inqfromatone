@@ -5,6 +5,7 @@
         "keywords": ["mustachioed", "bartender", "barkeep"],
         "presence": "polishes a glass behind the bar.",
         "description": "A broad man in a striped shirt and sleeve garters, with a waxed mustache he's plainly proud of. He keeps one eye on the door and the other on the till.",
+        "sightings": true,
         "topics": [
             {
                 "keywords": ["card game", "cards", "poker", "faro"],

@@ -5,6 +5,7 @@
 // (they respawn from content each boot), and act through behaviors (see
 // modules/npcs/behaviors.js) rather than typed commands.
 import { Character } from './Character.js';
+import { ARTICLES } from './text.js';
 
 export class Npc extends Character {
     /**
@@ -21,13 +22,26 @@ export class Npc extends Character {
      * @param {object[]} [template.topics] - What they'll talk about when
      *   asked, and {object} [template.unknownTopic] - their answer to
      *   anything else (see modules/npcs/dialogue.js).
+     * @param {boolean} [template.sightings] - Whether they notice who comes
+     *   and goes (see modules/npcs/knowledge.js).
      * @param {object[]} [template.routine] - Daily posts (see
      *   modules/npcs/routine.js), with each `at` already resolved to a
      *   room id as `roomId` by the loader.
      * @param {string} homeRoomId - Where this NPC spawned.
      */
     constructor(
-        { id, name, keywords, description = '', behaviors = {}, routine = null, presence = null, topics, unknownTopic },
+        {
+            id,
+            name,
+            keywords,
+            description = '',
+            behaviors = {},
+            routine = null,
+            presence = null,
+            topics,
+            unknownTopic,
+            sightings,
+        },
         homeRoomId,
     ) {
         super(name, description);
@@ -41,11 +55,12 @@ export class Npc extends Character {
         this.behaviors = behaviors;
         this.topics = topics ?? [];
         this.unknownTopic = unknownTopic ?? null;
+        this.sightings = sightings === true;
+        this.knowledge = { sightings: {} }; // loaded from saves at startup, see modules/npcs/knowledge.js
+        this.knowledgeDirty = false;
         this.basePresence = presence;
         this.routine = routine?.length ? routine : null;
         this.unreachablePost = null; // see modules/npcs/behaviors.js's followRoutine
         this.homeRoomId = homeRoomId;
     }
 }
-
-const ARTICLES = new Set(['a', 'an', 'the']);
