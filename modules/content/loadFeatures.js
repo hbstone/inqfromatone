@@ -7,6 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { defaultContentDirs } from '../packs/game.js';
+import { sourceName } from './mergeByKey.js';
 
 const KNOWN = ['recognition'];
 
@@ -18,12 +19,21 @@ const KNOWN = ['recognition'];
 export function loadFeatures(source = defaultContentDirs()) {
     const files = Array.isArray(source) ? source.map((dir) => path.join(dir, 'features.json')) : [source];
     const merged = {};
+    const setBy = {}; // feature -> the pack that set it
     for (const file of files.filter((f) => fs.existsSync(f))) {
         const settings = JSON.parse(fs.readFileSync(file, 'utf8'));
-        for (const key of Object.keys(settings)) {
+        const pack = sourceName(path.dirname(file), path);
+        for (const [key, value] of Object.entries(settings)) {
             if (!KNOWN.includes(key)) {
                 console.warn(`Unknown feature "${key}" in ${file}; ignoring it.`);
+            } else if (key in merged && merged[key] !== value) {
+                // Later packs win, but say so: the earlier pack's author
+                // may be counting on their setting.
+                console.log(
+                    `Feature "${key}": pack "${pack}" sets it to ${value}, replacing "${setBy[key]}"'s ${merged[key]}.`,
+                );
             }
+            setBy[key] = pack;
         }
         Object.assign(merged, settings);
     }

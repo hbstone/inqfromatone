@@ -293,14 +293,31 @@ try {
             'packs/t-none/content/items.json': [],
         });
         const dirs = (...names) => names.map((n) => path.join(packsDir, n, 'content'));
-        loadTimeSettings(dirs('t-base', 't-theme', 't-none'));
+        // Replacing an earlier pack's time.json or feature setting is
+        // allowed, but logged at startup
+        const logged = (fn) => {
+            const original = console.log;
+            const lines = [];
+            console.log = (...args) => lines.push(args.join(' '));
+            try {
+                return { result: fn(), lines };
+            } finally {
+                console.log = original;
+            }
+        };
+        const time = logged(() => loadTimeSettings(dirs('t-base', 't-theme', 't-none')));
+        assert.deepEqual(time.lines, ['Time settings: using pack "t-theme"\'s time.json, replacing "t-base".']);
         assert.equal(getPhaseStartHour('high-noon'), 12);
         assert.equal(getPhaseStartHour('dawn'), null, 'phases are not merged');
-        loadTimeSettings(dirs('t-none'));
+        assert.deepEqual(logged(() => loadTimeSettings(dirs('t-none'))).lines, []);
         assert.equal(getGameTime().phase, null);
 
         assert.deepEqual(loadFeatures(dirs('t-base')), { recognition: true });
-        assert.deepEqual(loadFeatures(dirs('t-base', 't-theme')), { recognition: false });
+        const features = logged(() => loadFeatures(dirs('t-base', 't-theme')));
+        assert.deepEqual(features.result, { recognition: false });
+        assert.deepEqual(features.lines, [
+            'Feature "recognition": pack "t-theme" sets it to false, replacing "t-base"\'s true.',
+        ]);
         assert.deepEqual(
             quiet(() => loadFeatures(dirs('t-none'))),
             { recognition: false },

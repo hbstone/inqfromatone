@@ -19,6 +19,7 @@ import { emit } from './events.js';
 import { every } from './scheduler.js';
 import { writeToSocket } from './utils.js';
 import { defaultContentDirs } from './packs/game.js';
+import { sourceName } from './content/mergeByKey.js';
 
 // Day 1 begins at midnight game time on this instant. Fixed rather than
 // "when the server first started", so game time never depends on any
@@ -43,15 +44,22 @@ const NO_TIME_SETTINGS = { speed: 1, phases: [] };
  * @param {string|string[]} [source] - A time.json path (tests), or content
  *   directories in game order, of which the *last* with a time.json wins
  *   outright - phases aren't merged across packs, since a theme's day is one
- *   design. Defaults to the default game's packs.
+ *   design. When more than one pack has one, says so at startup, so an
+ *   author whose day was replaced can tell. Defaults to the default game's
+ *   packs.
  */
 export function loadTimeSettings(source = defaultContentDirs()) {
-    const filePath = Array.isArray(source)
-        ? source
-              .map((dir) => path.join(dir, 'time.json'))
-              .filter((file) => fs.existsSync(file))
-              .at(-1)
-        : source;
+    let filePath = source;
+    if (Array.isArray(source)) {
+        const dirs = source.filter((dir) => fs.existsSync(path.join(dir, 'time.json')));
+        if (dirs.length > 1) {
+            const replaced = dirs.slice(0, -1).map((dir) => `"${sourceName(dir, path)}"`);
+            console.log(
+                `Time settings: using pack "${sourceName(dirs.at(-1), path)}"'s time.json, replacing ${replaced.join(', ')}.`,
+            );
+        }
+        filePath = dirs.length ? path.join(dirs.at(-1), 'time.json') : undefined;
+    }
     const settings = filePath ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : NO_TIME_SETTINGS;
     if (!(settings.speed > 0)) {
         throw new Error(`Time settings need a positive "speed", got ${settings.speed}.`);

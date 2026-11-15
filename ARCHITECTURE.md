@@ -1077,8 +1077,10 @@ Both are temporary, to delete once no older saves remain.
   a full id.
 - **`time.json`**: the last pack that has one wins outright. Phases aren't
   merged, since a theme's day is one design. No pack with one means real
-  time and no phases.
-- **`features.json`**: merged, later packs winning.
+  time and no phases. When more than one pack has one, startup logs which
+  pack's won and which it replaced.
+- **`features.json`**: merged, later packs winning. A later pack changing
+  a value an earlier pack set is logged at startup.
 - **Starting room:** the game's `startingRoom` wins; otherwise a room
   marked `isStartingRoom`, as before.
 - **Commands and NPC behaviors** (from pack code): a name clash is an
