@@ -68,6 +68,12 @@ function withFixtureDir(zones, itemsData, fn) {
     const [key] = startingRoom.inventory;
     assert.equal(key.name, 'a rusty key');
     assert.deepStrictEqual(key.keywords, ['rusty', 'key']);
+    assert.equal(key.equip, null);
+
+    // An item's "equip" survives loading, so content hats can be worn
+    const storage = world.getRoomById('starter/start/storage-room');
+    const hat = storage.inventory.find((item) => item.name === 'a fancy feathered hat');
+    assert.deepStrictEqual(hat.equip, { slot: 'head' });
 }
 
 // A room exit pointing at an unknown room key, and an item reference
