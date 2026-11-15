@@ -1,0 +1,4 @@
+{
+    "packs": ["western", "combat"],
+    "startingRoom": "western/dry-creek/main-street"
+}

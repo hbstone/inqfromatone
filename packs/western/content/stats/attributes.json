@@ -1,0 +1,7 @@
+[
+    { "key": "strength", "label": "Strength", "startingValue": 10 },
+    { "key": "dexterity", "label": "Quickness", "startingValue": 10 },
+    { "key": "grit", "label": "Grit", "startingValue": 10 },
+    { "key": "wits", "label": "Wits", "startingValue": 10 },
+    { "key": "charm", "label": "Charm", "startingValue": 10 }
+]

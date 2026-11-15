@@ -308,6 +308,7 @@ export function loadWorldData(world, contentDirs = defaultContentDirs(), { start
                         size: itemData.size,
                         weight: itemData.weight,
                         container: itemData.container ?? null,
+                        equip: itemData.equip ?? null,
                         stackable: itemData.stackable ?? false,
                     }),
                 );

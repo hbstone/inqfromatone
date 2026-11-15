@@ -1,0 +1,55 @@
+[
+    {
+        "key": "bartender",
+        "name": "a mustachioed bartender",
+        "keywords": ["mustachioed", "bartender", "barkeep"],
+        "presence": "polishes a glass behind the bar.",
+        "description": "A broad man in a striped shirt and sleeve garters, with a waxed mustache he's plainly proud of. He keeps one eye on the door and the other on the till.",
+        "behaviors": {
+            "ambient": {
+                "chance": 0.12,
+                "says": ["What'll it be, stranger?", "Card game starts when there's enough fools to play it."],
+                "emotes": [
+                    "polishes a glass that was already clean.",
+                    "twists one end of his mustache thoughtfully.",
+                    "glances at the batwing doors as they creak in the wind."
+                ]
+            }
+        },
+        "routine": [
+            { "from": "dawn", "at": "saloon" },
+            {
+                "from": "night",
+                "at": "saloon",
+                "presence": "leans on the bar, counting the day's take.",
+                "behaviors": {
+                    "ambient": {
+                        "chance": 0.1,
+                        "emotes": [
+                            "counts a stack of coins, then counts it again.",
+                            "turns the lamp down a little lower."
+                        ]
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "key": "dog",
+        "name": "a rangy yellow dog",
+        "keywords": ["rangy", "yellow", "dog"],
+        "presence": "sniffs along the edge of the boardwalk.",
+        "description": "A long-legged yellow dog with burrs in its coat and one ear that won't stand up. It belongs to nobody and everybody.",
+        "behaviors": {
+            "wander": { "chance": 0.1 },
+            "ambient": {
+                "chance": 0.1,
+                "emotes": [
+                    "scratches behind its floppy ear.",
+                    "flops down in a patch of shade.",
+                    "perks up at a distant sound, then loses interest."
+                ]
+            }
+        }
+    }
+]

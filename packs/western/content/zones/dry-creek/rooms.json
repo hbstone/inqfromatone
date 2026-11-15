@@ -1,0 +1,44 @@
+[
+    {
+        "key": "main-street",
+        "name": "Main Street",
+        "description": "A wide, rutted street of packed red dirt runs between false-fronted buildings bleached pale by the sun. Batwing doors creak on the saloon to the north. The livery stable sits to the east, and the street peters out westward into open trail.",
+        "isStartingRoom": true,
+        "exits": {
+            "north": "saloon",
+            "east": "livery",
+            "west": "trail"
+        },
+        "items": ["canteen"],
+        "npcs": ["dog"]
+    },
+    {
+        "key": "saloon",
+        "name": "The Silver Spur Saloon",
+        "description": "Sawdust on the floorboards, a long bar of scarred pine, and a cracked mirror behind it that makes the room look twice as busy as it is. A card table waits in the corner. The batwing doors lead back south to the street.",
+        "indoors": true,
+        "exits": {
+            "south": "main-street"
+        },
+        "items": ["deck-of-cards", "whiskey-bottle"],
+        "npcs": ["bartender"]
+    },
+    {
+        "key": "livery",
+        "name": "Livery Stable",
+        "description": "The smell of hay, leather and horse hangs heavy in the shade. Tack hangs from pegs along the wall, and an empty stall stands swept and waiting. The street is back to the west.",
+        "indoors": true,
+        "exits": {
+            "west": "main-street"
+        },
+        "items": ["lasso", "stetson"]
+    },
+    {
+        "key": "trail",
+        "name": "Edge of Town",
+        "description": "The last building falls away behind you and the trail runs on west through scrub and sage toward a line of distant mesas. Tumbleweeds collect against a leaning fence post. Town is back to the east.",
+        "exits": {
+            "east": "main-street"
+        }
+    }
+]
