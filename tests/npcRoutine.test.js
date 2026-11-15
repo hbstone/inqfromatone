@@ -211,7 +211,7 @@ try {
     // The loader resolves `at` like exits (bare = own zone), and drops
     // entries with a missing room or a bad `from`, keeping the rest
     {
-        const dir = path.join(tmp, 'content');
+        const dir = path.join(tmp, 'test', 'content'); // pack "test"
         const zone = (key, rooms, npcs) => {
             fs.mkdirSync(path.join(dir, 'zones', key), { recursive: true });
             fs.writeFileSync(path.join(dir, 'zones', key, 'zone.json'), JSON.stringify({ name: key }));
@@ -243,9 +243,9 @@ try {
         const [baker] = world.npcs;
         assert.deepEqual(
             baker.routine.map((e) => e.roomId),
-            ['town/square', 'home/bed'],
+            ['test/town/square', 'test/home/bed'],
         );
-        assert.ok(warnings.some((w) => w.includes('unknown room "town/nowhere"')));
+        assert.ok(warnings.some((w) => w.includes('unknown room "test/town/nowhere"')));
         assert.ok(warnings.some((w) => w.includes('"from" must be an hour')));
     }
 
@@ -253,10 +253,10 @@ try {
     {
         const world = new World();
         loadWorldData(world);
-        const keeper = world.npcs.find((n) => n.templateId === 'grounds/groundskeeper');
+        const keeper = world.npcs.find((n) => n.templateId === 'starter/grounds/groundskeeper');
         assert.deepEqual(
             keeper.routine.map((e) => e.roomId),
-            ['grounds/courtyard', 'start/storage-room'],
+            ['starter/grounds/courtyard', 'starter/start/storage-room'],
         );
     }
 } finally {

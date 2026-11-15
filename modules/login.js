@@ -146,8 +146,8 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
             }
 
             character.restoreFrom(saved);
-            // findRoomAllowingLegacyId: saves from before zones hold a bare
-            // room key (see World.js).
+            // findRoomAllowingLegacyId: saves from before zones or packs hold
+            // a shorter room id (see World.js).
             character.pendingRoomId = (
                 world.findRoomAllowingLegacyId(saved.roomId) ?? world.getRoomById(startingRoomKey)
             ).id;

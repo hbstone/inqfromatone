@@ -2,14 +2,15 @@
 //
 // A game is an ordered list of packs, in games/<name>.json:
 //
-//   { "packs": ["starter", "combat"], "startingRoom": "start/starting-room" }
+//   { "packs": ["starter", "combat"], "startingRoom": "starter/start/starting-room" }
 //
 // Each pack is a folder under packs/ with a pack.json manifest, and
 // optionally content/ (zones, items, stats, time.json, features.json) and
 // an index.js whose default export sets the pack up through a context
 // object (see context.js). Later packs build on earlier ones: they add
 // content and verbs, and replace existing ones only when they say so
-// explicitly (`"override": true` / `{ override: true }`).
+// explicitly (`"override": true` / `{ override: true }`). A manifest's
+// optional "requires" names packs that must come earlier in the game.
 //
 // Which game runs: the GAME environment variable, else "default".
 import fs from 'fs';
@@ -72,6 +73,26 @@ export function readGame(name = process.env.GAME || 'default', { gamesDir = GAME
             contentDir: fs.existsSync(contentDir) ? contentDir : null,
             codeFile: fs.existsSync(codeFile) ? codeFile : null,
         };
+    });
+
+    // A pack's manifest may list packs it builds on ("requires"); each must
+    // come earlier in the game.
+    packs.forEach(({ name: packName, manifest }, index) => {
+        const requires = manifest.requires ?? [];
+        if (!Array.isArray(requires) || !requires.every((r) => typeof r === 'string')) {
+            throw new Error(`Pack "${packName}"'s "requires" must be a list of pack names.`);
+        }
+        for (const required of requires) {
+            const at = packs.findIndex((p) => p.name === required);
+            if (at === -1) {
+                throw new Error(`Pack "${packName}" requires pack "${required}", which game "${name}" doesn't list.`);
+            }
+            if (at > index) {
+                throw new Error(
+                    `Pack "${packName}" requires pack "${required}" to come before it, but game "${name}" lists it after.`,
+                );
+            }
+        }
     });
 
     return { name, startingRoom: config.startingRoom ?? null, packs };

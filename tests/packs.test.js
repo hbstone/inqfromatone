@@ -11,6 +11,8 @@ import { loadStatDefinitions, getStatDefinitions, getStatKeyForRole } from '../m
 import { loadTimeSettings, getPhaseStartHour, getGameTime } from '../modules/gameClock.js';
 import { loadFeatures } from '../modules/content/loadFeatures.js';
 import { emit } from '../modules/events.js';
+import { resolveCheck } from '../modules/checks/registry.js';
+import { initStat } from '../modules/stats.js';
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'packs-'));
 const gamesDir = path.join(tmp, 'games');
@@ -41,13 +43,13 @@ try {
     // are optional
     {
         write({
-            'games/two.json': { packs: ['base', 'theme'], startingRoom: 'town/gate' },
+            'games/two.json': { packs: ['base', 'theme'], startingRoom: 'base/town/gate' },
             ...pack('base', { 'packs/base/content/items.json': [] }),
             ...pack('theme', { 'packs/theme/index.js': 'export default () => {};' }),
         });
         const game = read('two');
         assert.equal(game.name, 'two');
-        assert.equal(game.startingRoom, 'town/gate');
+        assert.equal(game.startingRoom, 'base/town/gate');
         assert.deepEqual(
             game.packs.map((p) => p.name),
             ['base', 'theme'],
@@ -74,6 +76,31 @@ try {
         assert.throws(() => read('../escape'), /Invalid game name/);
     }
 
+    // "requires": the named packs must be in the game, earlier
+    {
+        write({
+            'packs/needy/pack.json': { name: 'needy', version: '1.0.0', requires: ['base'] },
+            'packs/badneeds/pack.json': { name: 'badneeds', version: '1.0.0', requires: 'base' },
+            'games/needs-ok.json': { packs: ['base', 'needy'] },
+            'games/needs-order.json': { packs: ['needy', 'base'] },
+            'games/needs-missing.json': { packs: ['needy'] },
+            'games/needs-bad.json': { packs: ['base', 'badneeds'] },
+        });
+        assert.deepEqual(
+            read('needs-ok').packs.map((p) => p.name),
+            ['base', 'needy'],
+        );
+        assert.throws(
+            () => read('needs-order'),
+            /"needy" requires pack "base" to come before it, but game "needs-order" lists it after/,
+        );
+        assert.throws(
+            () => read('needs-missing'),
+            /"needy" requires pack "base", which game "needs-missing" doesn't list/,
+        );
+        assert.throws(() => read('needs-bad'), /"badneeds"'s "requires" must be a list of pack names/);
+    }
+
     // The shipped default game: the starter pack, which the loaders use when
     // not told otherwise
     {
@@ -82,7 +109,7 @@ try {
             game.packs.map((p) => p.name),
             ['starter', 'combat'],
         );
-        assert.equal(game.startingRoom, 'start/starting-room');
+        assert.equal(game.startingRoom, 'starter/start/starting-room');
         assert.deepEqual(defaultContentDirs(), contentDirsOf(game));
     }
 
@@ -153,8 +180,35 @@ try {
         await assert.rejects(setUpPackCode(read('nodefault'), world), /must export a default setup function/);
     }
 
-    // World content from several packs: items merge (override to replace),
-    // zones are each pack's own, exits cross packs, the game's startingRoom wins
+    // The check resolver goes through the context too: replacing core's
+    // default takes { override: true }, and a second rules pack that
+    // doesn't say so fails with its name
+    {
+        await import('../modules/checks/index.js'); // core's default
+        write({
+            'games/rules.json': { packs: ['rules-a'] },
+            ...pack('rules-a', {
+                'packs/rules-a/index.js': `export default (pack) => { pack.registerCheckResolver(() => 'a', { override: true }); };`,
+            }),
+            'games/tworules.json': { packs: ['rules-b'] },
+            ...pack('rules-b', {
+                'packs/rules-b/index.js': `export default (pack) => { pack.registerCheckResolver(() => 'b'); };`,
+            }),
+        });
+        await setUpPackCode(read('rules'), new World());
+        const character = { components: {} };
+        initStat(character, 'strength', 10);
+        assert.equal(resolveCheck(character, 'strength'), 'a');
+        await assert.rejects(
+            setUpPackCode(read('tworules'), new World()),
+            /Pack "rules-b": A check resolver is already registered/,
+        );
+        assert.equal(resolveCheck(character, 'strength'), 'a', 'unchanged');
+    }
+
+    // World content from several packs: ids are namespaced by pack, an
+    // override names the other pack's item by its full id, exits and item
+    // lists cross packs with full ids, the game's startingRoom wins
     {
         const room = (key, extra = {}) => ({ key, name: key, ...extra });
         write({
@@ -165,65 +219,64 @@ try {
                 ],
                 'packs/w-base/content/zones/town/zone.json': { name: 'Town' },
                 'packs/w-base/content/zones/town/rooms.json': [
-                    room('gate', { isStartingRoom: true, exits: { east: 'desert/dune' }, items: ['hat'] }),
+                    room('gate', { isStartingRoom: true, exits: { east: 'w-theme/desert/dune' }, items: ['hat'] }),
                 ],
             }),
             ...pack('w-theme', {
                 'packs/w-theme/content/items.json': [
-                    { key: 'hat', name: 'a dusty stetson', keywords: ['stetson', 'hat'], override: true },
+                    { key: 'w-base/hat', name: 'a dusty stetson', keywords: ['stetson', 'hat'], override: true },
                     { key: 'spurs', name: 'a pair of spurs', keywords: ['spurs'] },
                 ],
                 'packs/w-theme/content/zones/desert/zone.json': { name: 'Desert' },
                 'packs/w-theme/content/zones/desert/rooms.json': [
-                    room('dune', { exits: { west: 'town/gate' }, items: ['rope', 'spurs'] }),
+                    room('dune', { exits: { west: 'w-base/town/gate' }, items: ['w-base/rope', 'spurs'] }),
                 ],
             }),
         });
         const dirs = [path.join(packsDir, 'w-base', 'content'), path.join(packsDir, 'w-theme', 'content')];
         const world = new World();
-        const { startingRoomKey } = loadWorldData(world, dirs, { startingRoom: 'desert/dune' });
-        assert.equal(startingRoomKey, 'desert/dune', "the game's choice beats the pack's flag");
-        assert.equal(world.getRoomById('town/gate').exits.east, 'desert/dune');
-        assert.equal(world.getRoomById('desert/dune').exits.west, 'town/gate');
+        const { startingRoomKey } = loadWorldData(world, dirs, { startingRoom: 'w-theme/desert/dune' });
+        assert.equal(startingRoomKey, 'w-theme/desert/dune', "the game's choice beats the pack's flag");
+        assert.equal(world.getRoomById('w-base/town/gate').exits.east, 'w-theme/desert/dune');
+        assert.equal(world.getRoomById('w-theme/desert/dune').exits.west, 'w-base/town/gate');
         assert.deepEqual(
-            world.getRoomById('town/gate').inventory.map((i) => i.name),
+            world.getRoomById('w-base/town/gate').inventory.map((i) => i.name),
             ['a dusty stetson'],
             'the override replaced it everywhere',
         );
         assert.deepEqual(
-            world.getRoomById('desert/dune').inventory.map((i) => i.name),
+            world.getRoomById('w-theme/desert/dune').inventory.map((i) => i.name),
             ['a rope', 'a pair of spurs'],
         );
 
-        assert.equal(loadWorldData(new World(), dirs).startingRoomKey, 'town/gate', 'no game choice: the flag');
+        assert.equal(loadWorldData(new World(), dirs).startingRoomKey, 'w-base/town/gate', 'no game choice: the flag');
         assert.throws(
-            () => loadWorldData(new World(), dirs, { startingRoom: 'nowhere/at-all' }),
-            /startingRoom "nowhere\/at-all" isn't a room/,
+            () => loadWorldData(new World(), dirs, { startingRoom: 'nowhere/at/all' }),
+            /startingRoom "nowhere\/at\/all" isn't a room/,
         );
 
+        // The same zone and item keys in two packs no longer clash
         write({
-            ...pack('w-clash', {
-                'packs/w-clash/content/items.json': [{ key: 'rope', name: 'another rope' }],
-                'packs/w-clash/content/zones/town/zone.json': { name: 'Other Town' },
-                'packs/w-clash/content/zones/town/rooms.json': [room('gate')],
+            ...pack('w-same', {
+                'packs/w-same/content/items.json': [{ key: 'rope', name: 'another rope', keywords: ['rope'] }],
+                'packs/w-same/content/zones/town/zone.json': { name: 'Other Town' },
+                'packs/w-same/content/zones/town/rooms.json': [room('gate', { items: ['rope'] })],
             }),
             ...pack('w-badover', {
-                'packs/w-badover/content/items.json': [{ key: 'lasso', name: 'a lasso', override: true }],
+                'packs/w-badover/content/items.json': [{ key: 'w-base/lasso', name: 'a lasso', override: true }],
             }),
         });
-        const clash = path.join(packsDir, 'w-clash', 'content');
-        assert.throws(
-            () => loadWorldData(new World(), [dirs[0], clash]),
-            /Duplicate item key "rope": defined by both "w-base" and "w-clash"/,
-        );
-        fs.writeFileSync(path.join(clash, 'items.json'), '[]');
-        assert.throws(
-            () => loadWorldData(new World(), [dirs[0], clash]),
-            /Zone "town" is defined by both "w-base" and "w-clash"/,
+        const same = new World();
+        loadWorldData(same, [dirs[0], path.join(packsDir, 'w-same', 'content')]);
+        assert.equal(same.getRoomById('w-base/town/gate').name, 'gate');
+        assert.equal(same.getZone('w-same/town').name, 'Other Town');
+        assert.deepEqual(
+            same.getRoomById('w-same/town/gate').inventory.map((i) => i.name),
+            ['another rope'],
         );
         assert.throws(
             () => loadWorldData(new World(), [dirs[0], path.join(packsDir, 'w-badover', 'content')]),
-            /"lasso" in "w-badover" is marked "override" but nothing defines it earlier/,
+            /"w-base\/lasso" in "w-badover" is marked "override" but nothing defines it earlier/,
         );
     }
 
@@ -265,14 +318,31 @@ try {
             'packs/t-none/content/items.json': [],
         });
         const dirs = (...names) => names.map((n) => path.join(packsDir, n, 'content'));
-        loadTimeSettings(dirs('t-base', 't-theme', 't-none'));
+        // Replacing an earlier pack's time.json or feature setting is
+        // allowed, but logged at startup
+        const logged = (fn) => {
+            const original = console.log;
+            const lines = [];
+            console.log = (...args) => lines.push(args.join(' '));
+            try {
+                return { result: fn(), lines };
+            } finally {
+                console.log = original;
+            }
+        };
+        const time = logged(() => loadTimeSettings(dirs('t-base', 't-theme', 't-none')));
+        assert.deepEqual(time.lines, ['Time settings: using pack "t-theme"\'s time.json, replacing "t-base".']);
         assert.equal(getPhaseStartHour('high-noon'), 12);
         assert.equal(getPhaseStartHour('dawn'), null, 'phases are not merged');
-        loadTimeSettings(dirs('t-none'));
+        assert.deepEqual(logged(() => loadTimeSettings(dirs('t-none'))).lines, []);
         assert.equal(getGameTime().phase, null);
 
         assert.deepEqual(loadFeatures(dirs('t-base')), { recognition: true });
-        assert.deepEqual(loadFeatures(dirs('t-base', 't-theme')), { recognition: false });
+        const features = logged(() => loadFeatures(dirs('t-base', 't-theme')));
+        assert.deepEqual(features.result, { recognition: false });
+        assert.deepEqual(features.lines, [
+            'Feature "recognition": pack "t-theme" sets it to false, replacing "t-base"\'s true.',
+        ]);
         assert.deepEqual(
             quiet(() => loadFeatures(dirs('t-none'))),
             { recognition: false },

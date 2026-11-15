@@ -151,7 +151,7 @@ try {
     {
         const world = new World();
         loadWorldData(world);
-        const keeper = world.npcs.find((n) => n.templateId === 'grounds/groundskeeper');
+        const keeper = world.npcs.find((n) => n.templateId === 'starter/grounds/groundskeeper');
         assert.equal(keeper.basePresence, 'rakes leaves into tidy piles.');
         assert.equal(keeper.routine[1].presence, 'snores softly on a pile of sacks.');
     }

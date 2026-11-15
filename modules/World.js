@@ -28,19 +28,21 @@ export class World {
     }
 
     /**
-     * Find a room from an id that may predate zones. Saves written before
-     * zones existed hold a bare room key ("narrow-hallway") where there's
-     * now a zone-qualified id ("start/narrow-hallway"). A bare key resolves
-     * if exactly one zone has a room with that key; anything else is null.
-     * Pre-zone keys were unique world-wide, so a legacy save always
-     * resolves unless the room has since been removed or duplicated.
-     * Remove once no pre-zone saves remain (see ARCHITECTURE.md's "Zones").
+     * Find a room from an id that may be from an older save. Room ids have
+     * grown a prefix twice: a bare key ("narrow-hallway") from before zones,
+     * then "<zone>/<key>" ("start/narrow-hallway") from before packs, where
+     * there's now "<pack>/<zone>/<key>". An old id is always the tail end of
+     * the current one, so it resolves if exactly one room's id ends in it;
+     * anything else is null. Old ids were unique when written, so a save
+     * resolves unless the room has since been removed or another pack has
+     * one by the same name. Remove once no older saves remain (see
+     * ARCHITECTURE.md's "Packs").
      * @param {string} id
      * @returns {object|null}
      */
     findRoomAllowingLegacyId(id) {
         const room = this.getRoomById(id);
-        if (room || typeof id !== 'string' || id.includes('/')) {
+        if (room || typeof id !== 'string') {
             return room;
         }
         const matches = this.getAllRooms().filter((r) => r.id.endsWith(`/${id}`));

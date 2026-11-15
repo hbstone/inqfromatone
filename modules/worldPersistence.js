@@ -40,7 +40,7 @@ const WORLD_SAVE_INTERVAL_MS = 60 * 1000;
  */
 export function loadRoomStates(world, dir) {
     for (const room of world.getAllRooms()) {
-        migratePreZoneRoomSave(world, room, dir);
+        migrateLegacyRoomSave(world, room, dir);
         if (!roomStateExists(room.id, dir)) {
             continue;
         }
@@ -54,36 +54,39 @@ export function loadRoomStates(world, dir) {
 }
 
 /**
- * Saves from before zones are keyed by the bare room key
- * (rooms/narrow-hallway.json); move one to the room's zone-qualified path
- * (rooms/start/narrow-hallway.json) if that doesn't exist yet. Pre-zone
- * keys were unique world-wide, so a bare key only migrates when exactly
- * one room still ends in it. Remove once no pre-zone saves remain (see
- * ARCHITECTURE.md's "Zones").
+ * Older saves sit at an older room id's path: rooms/narrow-hallway.json
+ * from before zones, rooms/start/narrow-hallway.json from before packs.
+ * Move the newest one found to the room's current path
+ * (rooms/starter/start/narrow-hallway.json) if that doesn't exist yet. An
+ * old id only migrates when exactly one room's id still ends in it (see
+ * World's findRoomAllowingLegacyId). Remove once no older saves remain
+ * (see ARCHITECTURE.md's "Packs").
  * @param {import("./World.js").World} world
  * @param {import("./Room.js").Room} room
  * @param {string} [dir]
  */
-function migratePreZoneRoomSave(world, room, dir) {
-    const slash = room.id.indexOf('/');
-    if (slash === -1) {
+function migrateLegacyRoomSave(world, room, dir) {
+    if (roomStateExists(room.id, dir)) {
         return;
     }
-    const legacyKey = room.id.slice(slash + 1);
-    if (!roomStateExists(legacyKey, dir) || roomStateExists(room.id, dir)) {
+    // "starter/start/narrow-hallway" -> ["start/narrow-hallway", "narrow-hallway"]
+    const parts = room.id.split('/');
+    const legacyIds = parts.slice(1).map((_, i) => parts.slice(i + 1).join('/'));
+    const legacyId = legacyIds.find((id) => roomStateExists(id, dir));
+    if (!legacyId) {
         return;
     }
-    if (world.findRoomAllowingLegacyId(legacyKey) !== room) {
-        console.warn(`Not migrating rooms/${legacyKey}.json: more than one zone has a "${legacyKey}" room.`);
+    if (world.findRoomAllowingLegacyId(legacyId) !== room) {
+        console.warn(`Not migrating rooms/${legacyId}.json: more than one room's id ends in "${legacyId}".`);
         return;
     }
-    const saved = loadRoomState(legacyKey, dir);
+    const saved = loadRoomState(legacyId, dir);
     if (!saved) {
         return; // unreadable; leave it where it is for a human to look at
     }
     saveRoomState(room.id, saved, dir);
-    deleteRoomState(legacyKey, dir);
-    console.log(`Moved room save rooms/${legacyKey}.json to rooms/${room.id}.json.`);
+    deleteRoomState(legacyId, dir);
+    console.log(`Moved room save rooms/${legacyId}.json to rooms/${room.id}.json.`);
 }
 
 /**
