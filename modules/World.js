@@ -84,10 +84,12 @@ export class World {
     /**
      * Find an online character by keyword, across every room - fuzzy
      * (substring) matching against their keywords, see keywordMatch.js.
+     * Not for finding someone by exact name (logins): that's
+     * connection.js's findInWorldCharacter.
      * @param {string} name - Keyword to search for.
      * @returns {object|null} The character object if found, otherwise null.
      */
-    getOnlineCharacterByName(name) {
+    findOnlineCharacterByKeyword(name) {
         return this.getOnlineCharacters().find((char) => keywordMatches(char.keywords, name)) ?? null;
     }
 

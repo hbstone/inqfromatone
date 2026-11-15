@@ -135,7 +135,7 @@ try {
     // Out of character: tell and who keep real names
     {
         const { world, alice, bob } = setup();
-        world.getOnlineCharacterByName = (name) => [alice, bob].find((c) => c.name.toLowerCase() === name);
+        world.findOnlineCharacterByKeyword = (name) => [alice, bob].find((c) => c.name.toLowerCase() === name);
         assert.equal(tell(world, ['bob', 'hi'], alice), 'You tell Bob: "hi"');
         assert.equal(last(bob), 'Alice tells you: "hi"');
         assert.match(who(world), /Alice/);

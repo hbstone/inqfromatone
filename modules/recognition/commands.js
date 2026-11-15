@@ -6,7 +6,7 @@ import { emit } from '../events.js';
 import { keywordMatches } from '../keywordMatch.js';
 import { findInWorldCharacter } from '../connection.js';
 import { loadCharacterState } from '../../data.js';
-import { identityOf, memoryOf, wordsOf, validateShortDesc, recognitionSettings } from './index.js';
+import { identityOf, memoryOf, targetableKeywordsOf, validateShortDesc, recognitionSettings } from './index.js';
 
 const NAME_MAX_LENGTH = 30;
 const NAME_MAX_WORDS = 4;
@@ -41,9 +41,11 @@ function validateName(text) {
  */
 function matchMemories(character, token) {
     const entries = Object.entries(character.memories ?? {});
-    const exact = entries.filter(([, memory]) => wordsOf(memory.name).includes(token.toLowerCase()));
+    const exact = entries.filter(([, memory]) => targetableKeywordsOf(memory.name).includes(token.toLowerCase()));
     const found =
-        exact.length > 0 ? exact : entries.filter(([, memory]) => keywordMatches(wordsOf(memory.name), token));
+        exact.length > 0
+            ? exact
+            : entries.filter(([, memory]) => keywordMatches(targetableKeywordsOf(memory.name), token));
     return found.map(([key, memory]) => ({ key, memory }));
 }
 
@@ -93,7 +95,9 @@ function describeMemory(world, key, memory) {
         lines.push(`  When you named them: ${memory.knewAs}`);
     }
     if (memory.notes.length === 0) {
-        lines.push(`  No notes yet. Add one with: remember ${wordsOf(memory.name)[0] ?? '<keyword>'} <note>`);
+        lines.push(
+            `  No notes yet. Add one with: remember ${targetableKeywordsOf(memory.name)[0] ?? '<keyword>'} <note>`,
+        );
     } else {
         lines.push('  Notes:');
         memory.notes.forEach((note, i) => lines.push(`    ${i + 1}. [${note.at.slice(0, 10)}] ${note.text}`));

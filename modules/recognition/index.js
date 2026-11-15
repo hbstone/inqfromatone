@@ -41,13 +41,14 @@ export function identityOf(character) {
 }
 
 /**
- * Words usable as keywords from a phrase: lowercase, articles dropped.
- * Splits on spaces only, unlike modules/text.js's wordsOf, so a hyphenated
- * short description ("whiskey-soaked") stays one keyword to target by.
+ * The keywords a phrase gives someone to be targeted by (a short
+ * description, a remembered name): lowercase, articles dropped. Splits on
+ * spaces only, keeping punctuation, unlike modules/text.js's wordsOf, which
+ * normalizes text for comparing: "whiskey-soaked" stays one keyword here.
  * @param {string} phrase
  * @returns {string[]}
  */
-export function wordsOf(phrase) {
+export function targetableKeywordsOf(phrase) {
     return phrase
         .toLowerCase()
         .split(/\s+/)
@@ -74,7 +75,7 @@ function keywordsFor(subject, viewer) {
         return subject.keywords;
     }
     const remembered = memoryOf(viewer, subject)?.name;
-    return [...wordsOf(subject.shortDesc ?? ''), ...(remembered ? wordsOf(remembered) : [])];
+    return [...targetableKeywordsOf(subject.shortDesc ?? ''), ...(remembered ? targetableKeywordsOf(remembered) : [])];
 }
 
 /**
@@ -126,8 +127,8 @@ export function validateShortDesc(input, realName) {
     if (!SHORT_DESC_PATTERN.test(text)) {
         return { error: "A short description may only use letters, spaces, and , ' -" };
     }
-    const nameWords = new Set(wordsOf(realName));
-    if (wordsOf(text).some((word) => nameWords.has(word))) {
+    const nameWords = new Set(targetableKeywordsOf(realName));
+    if (targetableKeywordsOf(text).some((word) => nameWords.has(word))) {
         return {
             error: "Your short description can't include your name - it's how people see you before they know it.",
         };

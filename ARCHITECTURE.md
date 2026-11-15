@@ -437,9 +437,10 @@ Applies everywhere a command already matched by keyword: item lookups
 (`modules/itemSearch.js`, so `get`/`put`/`drop`/`give`/`look`/`items`/
 `emote`'s `#` all get it automatically) and character lookups (`give`'s
 recipient, `whisper`, `kill`, `look`, `emote`'s `@`, and `tell` via
-`World.getOnlineCharacterByName` - which used to be an exact, global
-full-name match; it's now a fuzzy keyword search across every online
-character instead, reusing `getOnlineCharacters()`). Every one of those
+`World.findOnlineCharacterByKeyword` - which used to be an exact, global
+full-name match called `getOnlineCharacterByName`; it's now a fuzzy keyword
+search across every online character instead, reusing
+`getOnlineCharacters()`, and was renamed to match). Every one of those
 call sites used to hand-roll its own `char.keywords.includes(...)` (one
 of them, `look`'s character fallback, without even lowercasing first -
 a latent bug fixed for free by centralizing this); now there's one

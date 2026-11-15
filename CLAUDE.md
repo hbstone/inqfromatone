@@ -18,9 +18,10 @@ a message, saving a file), check this list and grep for the obvious name.
 - `modules/text.js`: `normalizeText` (lowercase, punctuation to spaces),
   `wordsOf` (those words minus articles), `endSentence` (a period unless it
   already ends in punctuation), `ARTICLES`.
-- `modules/recognition/index.js`: `wordsOf` splits on spaces only, on
-  purpose: it makes the keywords a character is targeted by, and
-  "whiskey-soaked" stays one. Not interchangeable with text.js's.
+- `modules/recognition/index.js`: `targetableKeywordsOf` makes the
+  keywords a character is targeted by. It splits on spaces only, on
+  purpose, so "whiskey-soaked" stays one. Not interchangeable with
+  text.js's `wordsOf`.
 - `modules/color.js`: `capitalizeFirst` (skips leading color codes),
   `stripColors`.
 - `modules/keywordMatch.js`: `keywordMatches` (does a typed token match
@@ -34,9 +35,9 @@ a message, saving a file), check this list and grep for the obvious name.
   `nameFor(subject, viewer)` for anyone named in it; `findCharacter` and
   `keywordsFor` for what a viewer can type to mean someone.
 - `room.others(character)`: everyone else in the room.
-- Finding someone online: `World.getOnlineCharacterByName` is fuzzy (for
-  `tell`); `modules/connection.js`'s `findInWorldCharacter` is exact (for
-  logins). Different on purpose.
+- Finding someone online: `World.findOnlineCharacterByKeyword` is fuzzy
+  (for `tell`); `modules/connection.js`'s `findInWorldCharacter` is exact
+  (for logins). Different on purpose.
 - `modules/presence.js`: `presenceOf`, `presenceLine`.
 
 **Movement**

@@ -8,7 +8,7 @@ export const tell = (world, args, character) => {
         return 'Usage: tell <character> <message>';
     }
 
-    const recipient = world.getOnlineCharacterByName(recipientName);
+    const recipient = world.findOnlineCharacterByKeyword(recipientName);
 
     if (!recipient) {
         return `You don't see ${recipientName} online.`;
