@@ -823,8 +823,8 @@ are warned about at load and ignored.
 **Display.** NPCs show in `look` and on entering a room the same way
 players do: a line each, with their presence (see "Presence" below).
 
-Not built yet: NPCs reacting to what players say (Tier 2), and NPCs
-carrying or exchanging items. Tier 1 routines are below.
+Not built yet: NPCs carrying or exchanging items. Tier 1 routines and
+Tier 2 dialogue are below.
 
 ## NPC routines (Tier 1)
 
@@ -869,6 +869,42 @@ it's there.
 This covers the roadmap's "authored schedule per job" and the "blocked
 path" fallback. Fallbacks for missing items or NPCs wait until NPCs can
 use items or interact with each other.
+
+## Dialogue (Tier 2): `ask`
+
+The first slice of Phase 5: `ask <someone> about <topic>` ("about" is
+optional), a core verb (`modules/commands/ask.js`). The room sees the
+question. Asking a player is just that: they answer in their own words
+with `say`. An NPC answers from topics written in its content
+(`modules/npcs/dialogue.js`):
+
+```json
+"topics": [
+    { "keywords": ["card game", "cards"], "emote": "jerks his chin at the corner table.",
+      "says": "Game starts when there's enough fools to play it." },
+    { "keywords": ["town", "dry creek"], "says": "Dry Creek. Creek's been dry since before I came." }
+],
+"unknownTopic": { "emote": "keeps polishing the glass." }
+```
+
+- **Matching:** a topic answers when one of its keywords appears as whole
+  words in the question, ignoring case and punctuation ("the card game
+  tonight?" matches `card game`; "townsfolk" doesn't match `town`). The
+  first matching topic wins, so specific topics go before broad ones.
+- **Answers** are an emote, a spoken line, or both (emote first), shown to
+  the asker and the room together with the question, each from their own
+  view (see "Naming"). No match: the NPC's `unknownTopic`, else "doesn't
+  seem to know anything about that."
+- **Routine posts** can give their own `topics`/`unknownTopic`, which
+  replace the NPC's while they're at that post, the same way a post's
+  behaviors do. The groundskeeper asleep in the storeroom only snores.
+- **Checked at startup:** a malformed topic (no keywords, no line) fails
+  the load with the NPC's id, rather than when someone happens to ask.
+
+Deliberately stateless for now: same question, same answer, nothing
+remembered. The knowledge store (what an NPC has seen and been told) is
+the next slice, and is what will let an answer depend on more than the
+words asked.
 
 ## Naming: what each viewer calls someone
 
