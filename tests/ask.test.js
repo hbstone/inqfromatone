@@ -1,21 +1,9 @@
 import assert from 'assert/strict';
 import { World } from '../modules/World.js';
-import { Character } from '../modules/Character.js';
 import { Npc } from '../modules/Npc.js';
 import { ask } from '../modules/commands/ask.js';
 import { answerFor, validateDialogue } from '../modules/npcs/dialogue.js';
-
-function makeCharacter(name) {
-    const character = new Character(name, `${name}, a tester.`);
-    character.socket = { written: [] };
-    character.socket.write = (msg) => character.socket.written.push(msg);
-    return character;
-}
-
-function lastMessage(character) {
-    const written = character.socket.written;
-    return written[written.length - 1].replace(/^\r\n/, '').replace(/\r\n$/, '').replace(/\r\n/g, '\n');
-}
+import { makeCharacter, lastMessage } from './helpers.js';
 
 const BARTENDER = {
     id: 'test/town/bartender',

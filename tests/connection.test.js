@@ -3,15 +3,7 @@ import { World } from '../modules/World.js';
 import { Character } from '../modules/Character.js';
 import { findInWorldCharacter, takeOverConnection } from '../modules/connection.js';
 import { writeToSocket } from '../modules/utils.js';
-
-function fakeSocket() {
-    const socket = { messages: [], ended: false };
-    socket.write = (msg) => socket.messages.push(msg);
-    socket.end = () => {
-        socket.ended = true;
-    };
-    return socket;
-}
+import { fakeSocket } from './helpers.js';
 
 // Exact (case-insensitive) name lookup - never fuzzy
 {

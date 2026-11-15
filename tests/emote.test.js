@@ -1,21 +1,8 @@
 import assert from 'assert/strict';
 import { World } from '../modules/World.js';
-import { Character } from '../modules/Character.js';
 import { Item } from '../modules/Item.js';
 import { emote } from '../modules/commands/emote.js';
-
-function makeCharacter(name) {
-    const character = new Character(name, `${name}, a tester.`);
-    character.socket = { written: [] };
-    character.socket.write = (msg) => character.socket.written.push(msg);
-    return character;
-}
-
-function lastMessage(character) {
-    // writeToSocket wraps the message in a leading + trailing CRLF - strip
-    // both for comparison.
-    return character.socket.written[character.socket.written.length - 1].replace(/^\r\n/, '').replace(/\r\n$/, '');
-}
+import { makeCharacter, lastMessage } from './helpers.js';
 
 function setUpRoom() {
     const world = new World();
@@ -151,12 +138,12 @@ function setUpRoom() {
             container: { maxItemSize: 'small', capacityWeight: 5 },
         }),
     );
-    const before = baeron.socket.written.length;
+    const before = baeron.socket.messages.length;
 
     const result = emote(world, ['tucks', 'a', 'hand', 'into', '#2.pouch'], alice);
 
     assert.equal(result, 'There aren\'t 2 things matching "pouch" here.');
-    assert.equal(baeron.socket.written.length, before, 'nothing should have been broadcast to the room');
+    assert.equal(baeron.socket.messages.length, before, 'nothing should have been broadcast to the room');
 }
 
 // Same failure with zero matches at all, and with a cardinal qualifier
