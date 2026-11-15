@@ -20,41 +20,21 @@
 // forgetful or uncooperative NPCs).
 import path from 'path';
 import { on } from '../events.js';
-import { getGameTime } from '../gameClock.js';
+import { gameMinutes, MINUTES_PER_DAY } from '../gameClock.js';
+import { capitalizeFirst } from '../color.js';
 import { keywordsFor, nameFor } from '../naming.js';
+import { wordsOf } from '../text.js';
 import { readJsonFile, writeJsonAtomic } from '../atomicWrite.js';
 import { npcsDir } from '../saveDirs.js';
 
+// About a game day. A number, not gameClock's MINUTES_PER_DAY: this module is
+// part of an import cycle with gameClock.js (via the content loader), so it
+// can only use gameClock's exports inside functions, not at load time.
 export const SIGHTING_MEMORY_MINUTES = 24 * 60;
-const MINUTES_PER_DAY = 24 * 60;
-const ARTICLES = new Set(['a', 'an', 'the']);
-
-/**
- * Game time as a running count of minutes, for comparing sightings.
- * @param {number} [now] - Real time in ms.
- * @returns {number}
- */
-export function gameMinutes(now = Date.now()) {
-    const { day, hour, minute } = getGameTime(now);
-    return (day - 1) * MINUTES_PER_DAY + hour * 60 + minute;
-}
 
 // Identity, not looks: a player by real name, an NPC by template id.
 function subjectKey(character) {
     return character.isNpc ? `npc:${character.templateId}` : `pc:${character.name.toLowerCase()}`;
-}
-
-/**
- * Lowercase words, punctuation and articles dropped.
- * @param {string} text
- * @returns {string[]}
- */
-export function wordsOf(text) {
-    return text
-        .toLowerCase()
-        .replace(/[^a-z0-9']+/g, ' ')
-        .split(' ')
-        .filter((word) => word && !ARTICLES.has(word));
 }
 
 function watchersIn(room, except) {
@@ -213,7 +193,7 @@ export function sightingAnswer(sighting, room, now = gameMinutes()) {
     const askedAs = sighting.askedAs ?? sighting.seenAs;
     // "A wiry lad?", plus how they look now if that's changed
     const changed = askedAs === sighting.seenAs ? '' : ` Looks more like ${sighting.seenAs} now.`;
-    const who = `${askedAs.charAt(0).toUpperCase()}${askedAs.slice(1)}?${changed}`;
+    const who = `${capitalizeFirst(askedAs)}?${changed}`;
     if (room?.characters.some((c) => subjectKey(c) === sighting.key)) {
         return { emote: 'nods across the room.', says: `${who} Right there.` };
     }

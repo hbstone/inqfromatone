@@ -5,6 +5,7 @@
 // (they respawn from content each boot), and act through behaviors (see
 // modules/npcs/behaviors.js) rather than typed commands.
 import { Character } from './Character.js';
+import { ARTICLES } from './text.js';
 
 export class Npc extends Character {
     /**
@@ -63,5 +64,3 @@ export class Npc extends Character {
         this.homeRoomId = homeRoomId;
     }
 }
-
-const ARTICLES = new Set(['a', 'an', 'the']);

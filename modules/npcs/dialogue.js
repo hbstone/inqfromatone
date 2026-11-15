@@ -32,17 +32,10 @@
 import { getGameTime } from '../gameClock.js';
 import { nameFor } from '../naming.js';
 import { currentRoutineEntry } from './routine.js';
-import { recallSighting, sightingAnswer, wordsOf } from './knowledge.js';
+import { recallSighting, sightingAnswer } from './knowledge.js';
+import { normalizeText, wordsOf } from '../text.js';
 
 const DEFAULT_UNKNOWN = { emote: "doesn't seem to know anything about that." };
-
-// Lowercase words, punctuation dropped: "The Card-Game?" -> "the card game"
-function normalize(text) {
-    return text
-        .toLowerCase()
-        .replace(/[^a-z0-9']+/g, ' ')
-        .trim();
-}
 
 function assertAnswer(answer, where) {
     const isText = (value) => typeof value === 'string' && value.trim() !== '';
@@ -78,7 +71,7 @@ function validateTopics({ topics, unknownTopic }, owner) {
         topics.forEach((topic, index) => {
             const where = `${owner} topic ${index + 1}`;
             const keywords = topic?.keywords;
-            if (!Array.isArray(keywords) || keywords.length === 0 || !keywords.every((k) => normalize(String(k)))) {
+            if (!Array.isArray(keywords) || keywords.length === 0 || !keywords.every((k) => normalizeText(String(k)))) {
                 throw new Error(`${where} needs a non-empty "keywords" list.`);
             }
             assertAnswer(topic, where);
@@ -122,8 +115,8 @@ export function answerFor(npc, asked, { asker, room, hour = getGameTime().hour, 
             return sightingAnswer(sighting, room, now);
         }
     }
-    const padded = ` ${normalize(asked)} `;
-    const topic = topics.find((t) => t.keywords.some((k) => padded.includes(` ${normalize(k)} `)));
+    const padded = ` ${normalizeText(asked)} `;
+    const topic = topics.find((t) => t.keywords.some((k) => padded.includes(` ${normalizeText(k)} `)));
     return topic ?? dialogue.unknownTopic ?? DEFAULT_UNKNOWN;
 }
 
