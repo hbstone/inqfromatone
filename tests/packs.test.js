@@ -76,6 +76,31 @@ try {
         assert.throws(() => read('../escape'), /Invalid game name/);
     }
 
+    // "requires": the named packs must be in the game, earlier
+    {
+        write({
+            'packs/needy/pack.json': { name: 'needy', version: '1.0.0', requires: ['base'] },
+            'packs/badneeds/pack.json': { name: 'badneeds', version: '1.0.0', requires: 'base' },
+            'games/needs-ok.json': { packs: ['base', 'needy'] },
+            'games/needs-order.json': { packs: ['needy', 'base'] },
+            'games/needs-missing.json': { packs: ['needy'] },
+            'games/needs-bad.json': { packs: ['base', 'badneeds'] },
+        });
+        assert.deepEqual(
+            read('needs-ok').packs.map((p) => p.name),
+            ['base', 'needy'],
+        );
+        assert.throws(
+            () => read('needs-order'),
+            /"needy" requires pack "base" to come before it, but game "needs-order" lists it after/,
+        );
+        assert.throws(
+            () => read('needs-missing'),
+            /"needy" requires pack "base", which game "needs-missing" doesn't list/,
+        );
+        assert.throws(() => read('needs-bad'), /"badneeds"'s "requires" must be a list of pack names/);
+    }
+
     // The shipped default game: the starter pack, which the loaders use when
     // not told otherwise
     {

@@ -1013,10 +1013,17 @@ earlier ones.
 ```
 games/default.json        { "packs": ["starter", "combat"], "startingRoom": "starter/start/starting-room" }
 packs/<name>/
-  pack.json               { "name", "version", "description" } - name must match the folder
+  pack.json               { "name", "version", "description", "requires"? } - name must match the folder
   content/                (optional) any of: items.json, zones/, stats/*.json, time.json, features.json
   index.js                (optional) export default function setup(pack) { ... }
 ```
+
+**`requires`** (optional) lists packs this one builds on. Each must be in
+the game and come before it, or the game fails to load with a message
+saying which. It's for a dependency on a _specific_ pack. Combat doesn't
+use it: it needs some earlier pack to define strength and dexterity, not
+the starter pack in particular, and the stat override already fails
+clearly when none does.
 
 **Which game runs:** `GAME=<name> pnpm start` reads `games/<name>.json`;
 without `GAME` it's `default`. Saves (`characters/`, `rooms/`) are shared, not
