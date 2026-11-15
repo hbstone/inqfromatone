@@ -214,7 +214,7 @@ try {
         write({
             ...pack('w-base', {
                 'packs/w-base/content/items.json': [
-                    { key: 'hat', name: 'a plain hat', keywords: ['hat'] },
+                    { key: 'hat', name: 'a plain hat', keywords: ['hat'], size: 'medium', weight: 2 },
                     { key: 'rope', name: 'a rope', keywords: ['rope'] },
                 ],
                 'packs/w-base/content/zones/town/zone.json': { name: 'Town' },
@@ -244,6 +244,9 @@ try {
             ['a dusty stetson'],
             'the override replaced it everywhere',
         );
+        const [stetson] = world.getRoomById('w-base/town/gate').inventory;
+        assert.equal(stetson.size, 'medium', 'fields the override leaves out are kept');
+        assert.equal(stetson.weight, 2);
         assert.deepEqual(
             world.getRoomById('w-theme/desert/dune').inventory.map((i) => i.name),
             ['a rope', 'a pair of spurs'],
@@ -290,6 +293,7 @@ try {
             'packs/s-theme/content/stats/western.json': [
                 { key: 'aim', label: 'Aim', startingValue: 3, role: 'offense' },
                 { key: 'hp', label: 'Hit Points', startingValue: 12, role: 'vitality', override: true },
+                { key: 'grit', role: 'defense', override: true },
             ],
             'packs/s-clash/content/stats/more.json': [
                 { key: 'luck', label: 'Luck', startingValue: 1, role: 'offense' },
@@ -302,6 +306,11 @@ try {
             ['grit:5', 'hp:12', 'aim:3'],
         );
         assert.equal(getStatKeyForRole('offense'), 'aim');
+        // An override merges: grit gains a role and keeps its label and value
+        assert.deepEqual(
+            getStatDefinitions().find((d) => d.key === 'grit'),
+            { key: 'grit', label: 'Grit', startingValue: 5, role: 'defense' },
+        );
         assert.throws(() => loadStatDefinitions(stats('s-base', 's-theme', 's-clash')), /Duplicate role "offense"/);
         loadStatDefinitions(); // back to the shipped default
         assert.equal(getStatKeyForRole('vitality'), 'hp');

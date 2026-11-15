@@ -89,6 +89,8 @@ try {
         assert.ok(!keys.includes('wisdom'), 'no starter stats');
         assert.equal(getStatKeyForRole('offense'), 'strength');
         assert.equal(getStatKeyForRole('defense'), 'dexterity');
+        const dexterity = getStatDefinitions().find((s) => s.key === 'dexterity');
+        assert.equal(dexterity.label, 'Quickness', "combat adds a role without replacing the pack's label");
         loadStatDefinitions(); // back to the default game
 
         loadTimeSettings(dirs);

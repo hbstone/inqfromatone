@@ -1,9 +1,15 @@
 // Merging keyed content (items, stats) from several packs, in game order
 // (see ARCHITECTURE.md's "Packs"). Within one pack a repeated key is an
 // error, as before (assertUniqueKeys). Across packs, a later pack may
-// replace an earlier entry only by marking it `"override": true`; an
+// change an earlier entry only by marking it `"override": true`; an
 // unmarked clash is an error, so two packs can't silently fight over a key,
-// and an override with nothing to replace is an error too (likely a typo).
+// and an override with nothing to change is an error too (likely a typo).
+//
+// An override merges field by field: only the fields it gives change, and
+// the rest stay as the earlier pack wrote them. Combat gives dexterity a
+// role with { "key": "dexterity", "role": "defense", "override": true }
+// and leaves the theme's label alone. Giving every field still replaces
+// the whole thing; `null` clears one.
 import { assertUniqueKeys } from './assertUniqueKeys.js';
 
 /**
@@ -25,7 +31,7 @@ export function mergeByKey(sources, label) {
             const existing = merged.get(entry.key);
             if (existing && !override) {
                 throw new Error(
-                    `Duplicate ${label} key "${entry.key}": defined by both "${existing.source}" and "${source}" (mark the later one "override": true to replace it).`,
+                    `Duplicate ${label} key "${entry.key}": defined by both "${existing.source}" and "${source}" (mark the later one "override": true to change it).`,
                 );
             }
             if (!existing && override) {
@@ -33,7 +39,7 @@ export function mergeByKey(sources, label) {
                     `${label} "${entry.key}" in "${source}" is marked "override" but nothing defines it earlier.`,
                 );
             }
-            merged.set(entry.key, { entry: data, source });
+            merged.set(entry.key, { entry: existing ? { ...existing.entry, ...data } : data, source });
         }
     }
     return Array.from(merged.values(), ({ entry }) => entry);
