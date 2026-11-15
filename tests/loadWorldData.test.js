@@ -240,14 +240,6 @@ function withFixtureDir(zones, itemsData, fn) {
         description: '',
         indoors: true,
     });
-
-    // Legacy lookup: an older id (pre-zone "square", pre-pack "town/square")
-    // resolves only when unambiguous
-    assert.equal(world.findRoomAllowingLegacyId('square').id, 'test/town/square');
-    assert.equal(world.findRoomAllowingLegacyId('town/square').id, 'test/town/square');
-    assert.equal(world.findRoomAllowingLegacyId('gate'), null, 'two zones have a gate');
-    assert.equal(world.findRoomAllowingLegacyId('test/town/inn').id, 'test/town/inn');
-    assert.equal(world.findRoomAllowingLegacyId('nowhere'), null);
 }
 
 // Packs: two packs can both have a "town" zone and a "rope" item. Bare
@@ -301,7 +293,6 @@ withTempRoot((root) => {
         westernGate.inventory.map((item) => item.name),
         ['a lariat', 'a hemp rope'],
     );
-    assert.equal(world.findRoomAllowingLegacyId('town/gate'), null, 'both packs have a town/gate');
 });
 
 // Item overrides name the other pack's item by its full id; a "pack/key"

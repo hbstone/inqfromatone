@@ -1,4 +1,5 @@
-// Character persistence — one JSON file per character under characters/,
+// Character persistence — one JSON file per character under the running
+// game's saves/<game>/characters/ (see modules/saveDirs.js),
 // instead of a single shared characters.json (see ARCHITECTURE.md). Each
 // save only touches the one character that changed, rather than
 // rewriting every saved character. This module is deliberately a small
@@ -7,10 +8,8 @@
 // shouldn't need to touch call sites.
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { readJsonFile, writeJsonAtomic } from './modules/atomicWrite.js';
-
-const DEFAULT_CHARACTERS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'characters');
+import { charactersDir } from './modules/saveDirs.js';
 
 // Filenames are the lowercased character name directly. This is only safe
 // because every name reaching this module has already passed modules/login.js's
@@ -30,12 +29,12 @@ function filePathFor(name, dir) {
 /**
  * Case-insensitive check for whether a character with this name exists.
  * @param {string} name
- * @param {string} [dir] - Characters directory. Defaults to the repo's
- *   top-level characters/ directory; overridable so tests can point at a
+ * @param {string} [dir] - Characters directory. Defaults to the running
+ *   game's (modules/saveDirs.js); overridable so tests can point at a
  *   fixture directory instead of touching real save data.
  * @returns {boolean}
  */
-export function characterExists(name, dir = DEFAULT_CHARACTERS_DIR) {
+export function characterExists(name, dir = charactersDir()) {
     return fs.existsSync(filePathFor(name, dir));
 }
 
@@ -46,7 +45,7 @@ export function characterExists(name, dir = DEFAULT_CHARACTERS_DIR) {
  * @returns {object|null} The saved record, or null if none exists (or
  *   it exists but is unreadable - see modules/atomicWrite.js).
  */
-export function loadCharacterState(name, dir = DEFAULT_CHARACTERS_DIR) {
+export function loadCharacterState(name, dir = charactersDir()) {
     return readJsonFile(filePathFor(name, dir));
 }
 
@@ -58,6 +57,6 @@ export function loadCharacterState(name, dir = DEFAULT_CHARACTERS_DIR) {
  *   whatever game state the caller wants persisted).
  * @param {string} [dir]
  */
-export function saveCharacterState(name, state, dir = DEFAULT_CHARACTERS_DIR) {
+export function saveCharacterState(name, state, dir = charactersDir()) {
     writeJsonAtomic(filePathFor(name, dir), state);
 }

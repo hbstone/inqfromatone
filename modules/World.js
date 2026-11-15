@@ -28,28 +28,6 @@ export class World {
     }
 
     /**
-     * Find a room from an id that may be from an older save. Room ids have
-     * grown a prefix twice: a bare key ("narrow-hallway") from before zones,
-     * then "<zone>/<key>" ("start/narrow-hallway") from before packs, where
-     * there's now "<pack>/<zone>/<key>". An old id is always the tail end of
-     * the current one, so it resolves if exactly one room's id ends in it;
-     * anything else is null. Old ids were unique when written, so a save
-     * resolves unless the room has since been removed or another pack has
-     * one by the same name. Remove once no older saves remain (see
-     * ARCHITECTURE.md's "Packs").
-     * @param {string} id
-     * @returns {object|null}
-     */
-    findRoomAllowingLegacyId(id) {
-        const room = this.getRoomById(id);
-        if (room || typeof id !== 'string') {
-            return room;
-        }
-        const matches = this.getAllRooms().filter((r) => r.id.endsWith(`/${id}`));
-        return matches.length === 1 ? matches[0] : null;
-    }
-
-    /**
      * Add a new room to the world.
      * @param {string} name - The name of the room.
      * @param {string} description - The description of the room.
