@@ -16,6 +16,7 @@ import { registerBehavior } from '../npcs/behaviors.js';
 import { on } from '../events.js';
 import { registerQuitBlocker } from '../commands/quit.js';
 import { every, after } from '../scheduler.js';
+import { registerCheckResolver } from '../checks/registry.js';
 
 /**
  * @param {{ name: string, dir: string, manifest: object }} pack
@@ -42,6 +43,11 @@ export function createPackContext(pack, world) {
         registerCommand: attributed(registerCommand),
         /** See modules/npcs/behaviors.js; pass { override: true } to replace an existing behavior. */
         registerBehavior: attributed(registerBehavior),
+        /**
+         * Replace how checks resolve (see modules/checks/registry.js). Core
+         * registers a default, so pass { override: true }.
+         */
+        registerCheckResolver: attributed(registerCheckResolver),
         /** Listen for an engine event (see modules/events.js). */
         on: attributed(on),
         /** Refuse a deliberate `quit` while something's going on (see modules/commands/quit.js). */

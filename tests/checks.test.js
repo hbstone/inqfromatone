@@ -8,6 +8,7 @@ import { initStat } from '../modules/stats.js';
     const character = { components: {} };
     initStat(character, 'strength', 10);
     assert.throws(() => resolveCheck(character, 'strength', { difficulty: 5 }), /No check resolver registered/);
+    assert.throws(() => registerCheckResolver(() => 1, { override: true }), /nothing registered one yet/);
 }
 
 // A registered resolver receives the character, statKey, the *effective*
@@ -31,10 +32,10 @@ import { initStat } from '../modules/stats.js';
     assert.deepStrictEqual(received.context, { difficulty: 15 });
 }
 
-// Registering again replaces the previous resolver (only one at a time)
+// Only one at a time: registering again is an error unless it overrides
 {
-    registerCheckResolver(() => 'first');
-    registerCheckResolver(() => 'second');
+    assert.throws(() => registerCheckResolver(() => 'second'), /already registered \(pass \{ override: true \}/);
+    registerCheckResolver(() => 'second', { override: true });
 
     const character = { components: {} };
     initStat(character, 'strength', 10);
@@ -43,7 +44,7 @@ import { initStat } from '../modules/stats.js';
 
 // context defaults to {} when omitted
 {
-    registerCheckResolver(({ context }) => context);
+    registerCheckResolver(({ context }) => context, { override: true });
     const character = { components: {} };
     initStat(character, 'strength', 10);
     assert.deepStrictEqual(resolveCheck(character, 'strength'), {});

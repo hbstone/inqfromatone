@@ -6,19 +6,28 @@
 // plus whatever opaque context the caller passed, to a single registered
 // resolver function.
 //
-// Unlike the command registry (many verbs, one handler each), there's
-// only ever one "how do checks resolve" answer for a running server -
-// registering again replaces the previous resolver rather than erroring.
+// There's only ever one "how do checks resolve" answer for a running
+// server. Replacing it follows the command registry's rule: say
+// `{ override: true }`, so two rules packs can't silently fight over it.
+// Core registers a default (see index.js), so a pack bringing its own
+// rules always overrides.
 import { getStatValue } from '../stats.js';
 
 let resolver = null;
 
 /**
- * Register the function that resolves checks. Replaces any previously
- * registered resolver.
+ * Register the function that resolves checks.
  * @param {(payload: { character: object, statKey: string, value: number, context: object }) => any} fn
+ * @param {{ override?: boolean }} [options] - Required to replace an
+ *   already registered resolver; an error when there's none to replace.
  */
-export function registerCheckResolver(fn) {
+export function registerCheckResolver(fn, { override = false } = {}) {
+    if (resolver && !override) {
+        throw new Error('A check resolver is already registered (pass { override: true } to replace it).');
+    }
+    if (!resolver && override) {
+        throw new Error('Check resolver registered with { override: true }, but nothing registered one yet.');
+    }
     resolver = fn;
 }
 

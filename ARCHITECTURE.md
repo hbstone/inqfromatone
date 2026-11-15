@@ -1085,11 +1085,15 @@ Both are temporary, to delete once no older saves remain.
   error unless registered with `{ override: true }`. An overridden verb
   keeps the original's place in abbreviation priority (and its `abbreviate`
   setting unless one is given). Overriding nothing is an error.
+- **The check resolver** (from pack code): there's only one, and core
+  registers a default, so a rules pack replaces it with
+  `pack.registerCheckResolver(fn, { override: true })`. Without `override`
+  it's an error, so a second rules pack can't silently replace the first.
 
 **Pack code** runs before content loads, in game order, so content can use
 the behaviors it registers. It receives a context object
-(`modules/packs/context.js`) with `registerCommand`, `registerBehavior`, `on`,
-`every`, `after`, plus `name`, `dir`, `manifest` and `world`. Errors raised
+(`modules/packs/context.js`) with `registerCommand`, `registerBehavior`,
+`registerCheckResolver`, `on`, `every`, `after`, plus `name`, `dir`, `manifest` and `world`. Errors raised
 through it are labeled with the pack's name. It is **not a sandbox**: pack
 code is ordinary Node code and fully trusted. Only data-only packs are
 safe to take from strangers (the roadmap's "semi-trusted content" note).

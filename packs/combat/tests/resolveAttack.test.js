@@ -51,7 +51,7 @@ on('damage', (payload) => events.push(['damage', payload]));
 // "damage" event at all.
 {
     events.length = 0;
-    registerCheckResolver(() => false);
+    registerCheckResolver(() => false, { override: true });
 
     const attacker = makeCombatant();
     const defender = makeCombatant();

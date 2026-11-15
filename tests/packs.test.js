@@ -11,6 +11,8 @@ import { loadStatDefinitions, getStatDefinitions, getStatKeyForRole } from '../m
 import { loadTimeSettings, getPhaseStartHour, getGameTime } from '../modules/gameClock.js';
 import { loadFeatures } from '../modules/content/loadFeatures.js';
 import { emit } from '../modules/events.js';
+import { resolveCheck } from '../modules/checks/registry.js';
+import { initStat } from '../modules/stats.js';
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'packs-'));
 const gamesDir = path.join(tmp, 'games');
@@ -151,6 +153,32 @@ try {
             /Pack "clashing" failed to set up: Pack "clashing": Command "zzhowdy" is already registered/,
         );
         await assert.rejects(setUpPackCode(read('nodefault'), world), /must export a default setup function/);
+    }
+
+    // The check resolver goes through the context too: replacing core's
+    // default takes { override: true }, and a second rules pack that
+    // doesn't say so fails with its name
+    {
+        await import('../modules/checks/index.js'); // core's default
+        write({
+            'games/rules.json': { packs: ['rules-a'] },
+            ...pack('rules-a', {
+                'packs/rules-a/index.js': `export default (pack) => { pack.registerCheckResolver(() => 'a', { override: true }); };`,
+            }),
+            'games/tworules.json': { packs: ['rules-b'] },
+            ...pack('rules-b', {
+                'packs/rules-b/index.js': `export default (pack) => { pack.registerCheckResolver(() => 'b'); };`,
+            }),
+        });
+        await setUpPackCode(read('rules'), new World());
+        const character = { components: {} };
+        initStat(character, 'strength', 10);
+        assert.equal(resolveCheck(character, 'strength'), 'a');
+        await assert.rejects(
+            setUpPackCode(read('tworules'), new World()),
+            /Pack "rules-b": A check resolver is already registered/,
+        );
+        assert.equal(resolveCheck(character, 'strength'), 'a', 'unchanged');
     }
 
     // World content from several packs: ids are namespaced by pack, an
