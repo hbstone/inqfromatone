@@ -1,4 +1,4 @@
-import { writeToSocket } from '../utils.js';
+import { sendTo } from '../utils.js';
 
 export const tell = (world, args, character) => {
     const recipientName = args[0];
@@ -15,9 +15,7 @@ export const tell = (world, args, character) => {
     }
 
     // Notify the recipient
-    if (recipient.socket) {
-        writeToSocket(recipient.socket, `${character.name} tells you: "${message}"`);
-    }
+    sendTo(recipient, `${character.name} tells you: "${message}"`);
 
     return `You tell ${recipient.name}: "${message}"`;
 };

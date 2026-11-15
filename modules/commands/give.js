@@ -1,4 +1,4 @@
-import { writeToSocket } from '../utils.js';
+import { sendTo } from '../utils.js';
 import { findCharacter, nameFor, tellRoom } from '../naming.js';
 import { resolveItemToken, formatItemList, previewMatch } from '../itemSearch.js';
 import { moveMatches } from '../stacking.js';
@@ -37,9 +37,7 @@ export const give = (world, args, character) => {
     moveMatches(matches, recipient.inventory);
 
     // Notify the recipient
-    if (recipient.socket) {
-        writeToSocket(recipient.socket, `${nameFor(character, recipient)} gives you ${message}.`);
-    }
+    sendTo(recipient, `${nameFor(character, recipient)} gives you ${message}.`);
 
     // Broadcast the action to the room
     tellRoom(room, (viewer) => `${nameFor(character, viewer)} gives ${message} to ${nameFor(recipient, viewer)}.`, [

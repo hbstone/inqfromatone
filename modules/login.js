@@ -4,7 +4,7 @@
 // characters who predate it). Pulled out of game.js so it can be
 // tested against a throwaway World and save directory - game.js loads the
 // real world and starts timers on import.
-import { stripColors } from './color.js';
+import { capitalizeFirst, stripColors } from './color.js';
 import { look } from './commands/look.js';
 import { initializeCharacterStats } from './content/loadStatDefinitions.js';
 import { findInWorldCharacter, takeOverConnection } from './connection.js';
@@ -60,7 +60,7 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
             // Only the first letter - "rhaehan" becomes "Rhaehan", but a
             // deliberately-lowercase second word (e.g. a last name) is left
             // exactly as typed, not title-cased.
-            const name = stripped.charAt(0).toUpperCase() + stripped.slice(1);
+            const name = capitalizeFirst(stripped);
 
             if (!NAME_PATTERN.test(name)) {
                 return "Names may only contain letters and spaces (2-32 characters). Please enter your character's name:";

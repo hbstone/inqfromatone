@@ -66,7 +66,7 @@ function findMemory(world, character, token) {
         room &&
         findCharacter(
             character,
-            room.characters.filter((c) => c !== character && !c.isNpc),
+            room.others(character).filter((c) => !c.isNpc),
             token,
         );
     const memory = present && memoryOf(character, present);
@@ -148,11 +148,7 @@ export const remember = (world, args, character) => {
     }
 
     const room = world.getRoomById(character.roomId);
-    const target = findCharacter(
-        character,
-        room.characters.filter((c) => c !== character),
-        token,
-    );
+    const target = findCharacter(character, room.others(character), token);
     if (!target) {
         return `You don't remember anyone matching "${token}", and don't see anyone like that here.`;
     }

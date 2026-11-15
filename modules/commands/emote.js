@@ -1,5 +1,6 @@
 import { resolveItemToken, formatItemList, previewMatch } from '../itemSearch.js';
 import { findCharacter, nameFor, tellRoom } from '../naming.js';
+import { endSentence } from '../text.js';
 
 // `emote <text>` - freeform third-person action text: "Character <text>."
 // to the room, "You <text>." back to the actor. Same trailing-period rule
@@ -71,10 +72,6 @@ function resolveToken(token, character, room) {
     return { text: formatItemList(matches.map(previewMatch)) + trailing };
 }
 
-function addTrailingPeriod(text) {
-    return /[a-z0-9]$/i.test(text) ? `${text}.` : text;
-}
-
 export const emote = (world, args, character) => {
     if (args.length === 0) {
         return 'Emote what?';
@@ -91,7 +88,7 @@ export const emote = (world, args, character) => {
     }
 
     const textFor = (viewer) =>
-        addTrailingPeriod(
+        endSentence(
             resolvedTokens.map((t) => (t.character ? nameFor(t.character, viewer) + t.trailing : t.text)).join(' '),
         );
 

@@ -1,4 +1,4 @@
-import { writeToSocket } from '../utils.js';
+import { sendTo } from '../utils.js';
 import { saveWorld } from '../worldPersistence.js';
 import { emit } from '../events.js';
 
@@ -43,8 +43,8 @@ export const disconnectCharacter = (world, character, departureMessage, saveDirs
 
     // Broadcast to the room about the disconnection
     room.characters.forEach((char) => {
-        if (char !== character && char.socket) {
-            writeToSocket(char.socket, departureMessage);
+        if (char !== character) {
+            sendTo(char, departureMessage);
         }
     });
 

@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { defaultContentDirs } from '../packs/game.js';
 import { sourceName } from './mergeByKey.js';
+import { readJson } from './readJson.js';
 
 const KNOWN = ['recognition'];
 
@@ -21,7 +22,7 @@ export function loadFeatures(source = defaultContentDirs()) {
     const merged = {};
     const setBy = {}; // feature -> the pack that set it
     for (const file of files.filter((f) => fs.existsSync(f))) {
-        const settings = JSON.parse(fs.readFileSync(file, 'utf8'));
+        const settings = readJson(file);
         const pack = sourceName(path.dirname(file), path);
         for (const [key, value] of Object.entries(settings)) {
             if (!KNOWN.includes(key)) {

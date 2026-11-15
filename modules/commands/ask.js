@@ -17,7 +17,7 @@ export const ask = (world, args, character) => {
     }
 
     const room = world.getRoomById(character.roomId);
-    const others = room.characters.filter((c) => c !== character);
+    const others = room.others(character);
     const target = findCharacter(character, others, targetName);
     if (!target) {
         return `You don't see ${targetName} here.`;

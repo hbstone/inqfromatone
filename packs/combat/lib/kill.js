@@ -1,4 +1,4 @@
-import { writeToSocket } from '../../../modules/utils.js';
+import { sendTo } from '../../../modules/utils.js';
 import { findCharacter, nameFor } from '../../../modules/naming.js';
 import { engageCombat } from './session.js';
 
@@ -9,11 +9,7 @@ export const kill = (world, args, character) => {
     }
 
     const room = world.getRoomById(character.roomId);
-    const target = findCharacter(
-        character,
-        room.characters.filter((c) => c !== character),
-        targetName,
-    );
+    const target = findCharacter(character, room.others(character), targetName);
 
     if (!target) {
         return "You don't see them here.";
@@ -28,9 +24,7 @@ export const kill = (world, args, character) => {
         return `${nameFor(target, character)} is already defeated.`;
     }
 
-    if (target.socket) {
-        writeToSocket(target.socket, `${nameFor(character, target)} attacks you!`);
-    }
+    sendTo(target, `${nameFor(character, target)} attacks you!`);
 
     return `You attack ${nameFor(target, character)}!`;
 };

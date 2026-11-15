@@ -96,6 +96,15 @@ export class Room {
     }
 
     /**
+     * Everyone in the room but `character`.
+     * @param {object} character
+     * @returns {object[]}
+     */
+    others(character) {
+        return this.characters.filter((c) => c !== character);
+    }
+
+    /**
      * Who's here, one line each - PCs and NPCs alike, everyone but the
      * viewer - shared by look and movePlayer: "A bearded man sweeps the
      * floor." or "Insolent Jerk is here." Names are as the viewer knows
@@ -104,7 +113,7 @@ export class Room {
      * @returns {string[]} Empty when nobody else is here.
      */
     describeCharacters(viewer) {
-        return this.characters.filter((c) => c !== viewer).map((c) => presenceLine(c, viewer));
+        return this.others(viewer).map((c) => presenceLine(c, viewer));
     }
 
     addCharacter(character) {

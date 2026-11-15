@@ -21,7 +21,7 @@ export const tip = (world, args, character) => {
         return `You ${gesture.you}.`;
     }
 
-    const others = room.characters.filter((c) => c !== character);
+    const others = room.others(character);
     const target = findCharacter(character, others, targetName);
     if (!target) {
         return `You don't see ${targetName} here.`;

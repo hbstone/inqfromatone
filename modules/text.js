@@ -23,6 +23,16 @@ export function normalizeText(text) {
 }
 
 /**
+ * Finish a sentence someone typed: a period if it ends in a letter or
+ * digit, else left as typed ("Really?", "Wait -", a closing quote).
+ * @param {string} text
+ * @returns {string}
+ */
+export function endSentence(text) {
+    return /[a-z0-9]$/i.test(text) ? `${text}.` : text;
+}
+
+/**
  * normalizeText's words, minus articles: "The Card-Game?" -> ["card", "game"].
  * @param {string} text
  * @returns {string[]}
