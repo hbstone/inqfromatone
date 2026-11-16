@@ -109,6 +109,9 @@ what)`, which names the file in errors.
 
 - `modules/guard.js`: `guard` (one failure doesn't take down the rest).
 - `modules/npcs/behaviors.js`: `pick` (random choice, testable).
+- `modules/npcs/relationships.js`: `subjectKey` (who someone is to an
+  NPC), `adjustSentiment`, `seesAndRemembers` (would this NPC notice what
+  was done in front of it), `acquaintanceOf`.
 - `modules/senses.js`: `canSense(character, sense)` before anyone
   perceives anything; `registerSenseLayer` for states that change senses.
 
@@ -127,7 +130,9 @@ shuffle inside `modules/npcs/behaviors.js`.
   content loader → NPC dialogue/knowledge → gameClock. Modules in that
   loop can use gameClock's exports inside functions, but not at load time
   (top-level constants); that throws "Cannot access ... before
-  initialization".
+  initialization". A registry that loop's modules register into while
+  loading (conditions.js) keeps its map behind a hoisted function, not a
+  top-level `const`.
 - **Windows:** Python's `open()` defaults to cp1252 here, so pass
   `encoding='utf-8'`. Put long edit scripts in a file rather than an inline
   shell heredoc. Run `pnpm format` before committing.

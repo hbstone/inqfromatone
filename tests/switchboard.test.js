@@ -46,7 +46,7 @@ const PROSPECTOR = {
 
 // Content is checked at startup
 {
-    assert.throws(() => validateWhen({ moon: 'full' }, 'T'), /T: unknown condition "moon" \(known: phase/);
+    assert.throws(() => validateWhen({ moon: 'full' }, 'T'), /T: unknown condition "moon" \(known: .*phase/);
     assert.throws(() => validateWhen('night', 'T'), /"when" must be an object/);
     assert.throws(() => validateWhen({ phase: [] }, 'T'), /must be a phase name or a list/);
     const npc = (topic) => () => validateDialogue({ topics: [{ keywords: ['x'], says: 'Hi.', ...topic }] }, 'test/n');

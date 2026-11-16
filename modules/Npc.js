@@ -29,6 +29,8 @@ export class Npc extends Character {
      *   something (see modules/npcs/dialogue.js).
      * @param {object} [template.senses] - Senses switched off, like
      *   { "sight": false } (see modules/senses.js).
+     * @param {object} [template.discretion] - Who they'll pass on what
+     *   they know to (see modules/npcs/dialogue.js).
      * @param {object} [template.components] - Data for packs, keyed by
      *   pack (the stealth pack's { "stealth": { "sneakChance": 0.3 } }).
      * @param {object[]} [template.routine] - Daily posts (see
@@ -52,6 +54,7 @@ export class Npc extends Character {
             toldReply,
             senses,
             components,
+            discretion,
         },
         homeRoomId,
     ) {
@@ -70,8 +73,9 @@ export class Npc extends Character {
         this.hearsay = hearsay === true;
         this.toldReply = toldReply ?? null;
         this.senses = senses ?? {};
+        this.discretion = discretion ?? null;
         this.components = structuredClone(components ?? {});
-        this.knowledge = { sightings: {}, heard: [] }; // loaded from saves at startup, see modules/npcs/knowledge.js
+        this.knowledge = { sightings: {}, heard: [], acquaintances: {} }; // loaded from saves at startup, see modules/npcs/knowledge.js
         this.knowledgeDirty = false;
         this.basePresence = presence;
         this.routine = routine?.length ? routine : null;

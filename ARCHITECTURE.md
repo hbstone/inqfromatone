@@ -958,10 +958,11 @@ A mustachioed bartender says, "A bearded man? Came in from the south a little wh
   checkpoint, only when something changed, and loaded at startup minus
   anything already too old.
 
-**Shared freely, for now.** Anyone can ask any NPC about anyone. That's
-deliberate for a first slice, but there will need to be ways around it:
-sneaking past unnoticed, bribes, how well the NPC knows the person asking,
-and NPCs who are forgetful or uncooperative by nature.
+**Shared freely, unless the NPC is discreet.** Anyone can ask most NPCs
+about anyone. Ways around it so far: sneaking past unnoticed (see
+"Noticing"), and NPCs with `discretion` (see "Relationships and
+discretion"), who share only with people they know and like, or about
+people they don't. Still to come: bribes, and NPCs forgetful by nature.
 
 Not built yet: answers use one generic voice (an NPC's own phrasing would
 be content). NPCs being told things is below.
@@ -1008,7 +1009,8 @@ weeks, so two NPCs who heard the same thing remember it differently
 depending on what else happened to them. Being told something directly
 is the most notable thing an NPC keeps today.
 
-Shared freely, as with sightings, by the NPCs that have it: the
+Shared freely, as with sightings, by the NPCs that have it (unless
+they're discreet, which applies to hearsay by who said it): the
 groundskeeper, and the red-nosed prospector propping up the Silver Spur's
 bar, who's too far gone to care whose secret it was. The bartender keeps
 his word ("I don't repeat what I hear"): he notices who comes and goes,
@@ -1103,6 +1105,53 @@ and senses for players (a sleeping player still sees everything).
 statuses with `pack.registerPromptStatus(character => ...)`, shown as
 `[a, b] > ` for logged-in players. A first step toward a prompt players
 can customize (hp, room name, time of day).
+
+## Relationships and discretion
+
+How well an NPC knows someone and how it feels about them
+(`modules/npcs/relationships.js`), kept in the knowledge store for good
+rather than forgotten after a day, and saved with it.
+
+- **Familiarity:** the number of different game days the NPC has seen
+  someone or been told something by them, with first and last seen.
+  Filed by identity like sightings, so for now it sees through a new look.
+- **Sentiment:** a number from -10 to 10, 0 to start, changed with a
+  reason by `adjustSentiment(npc, who, delta, reason, { oncePerDay })`.
+  The latest 20 changes and their reasons are kept, for the day the store
+  is summarized. Sources so far, both in packs: starting a fight in front
+  of an NPC (combat, -2), tipping your hat to one (western, +1, once a
+  day). `seesAndRemembers(npc)` says whether an NPC would notice.
+- **Conditions:** `familiar` (a number of days, or `{ min, max, of }`) and
+  `sentiment` (`{ min, max, of }`), about the asker unless `"of":
+"subject"`, the person being asked about.
+
+**Discretion** is an NPC's rule for passing on what it knows (sightings,
+and hearsay by who said it):
+
+```json
+"discretion": {
+    "sharesWhen": [
+        { "familiar": 3, "sentiment": { "min": 1 } },
+        { "sentiment": { "of": "subject", "max": -2 } }
+    ],
+    "refusal": { "emote": "keeps polishing the same glass.", "says": "Couldn't say, friend." }
+}
+```
+
+- `sharesWhen` is a `when` or a list where any one will do; none means
+  never. The Silver Spur's bartender shares with regulars he likes, and
+  about anyone who's made trouble in his bar.
+- **The refusal is a clue:** "won't say" looks different from "doesn't know"
+  (the topic fallback), so players learn he knows something and can work
+  for it in character.
+- **Your own business is always yours:** asking about yourself, or about
+  something you said, is answered.
+- Topics can use the same conditions: the bartender knows a regular's
+  "usual".
+
+Not built: bribery and purchases as sentiment sources (waiting on
+currency), intimidation (a check through `resolveCheck`, in a pack), and
+roles like an investigator (a pack condition, once players have tags).
 
 ## Conditions
 

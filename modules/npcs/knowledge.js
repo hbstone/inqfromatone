@@ -38,6 +38,7 @@ import { wordsOf } from '../text.js';
 import { readJsonFile, writeJsonAtomic } from '../atomicWrite.js';
 import { npcsDir } from '../saveDirs.js';
 import { canSense } from '../senses.js';
+import { meet, subjectKey } from './relationships.js';
 
 // About a game day. A number, not gameClock's MINUTES_PER_DAY: this module is
 // part of an import cycle with gameClock.js (via the content loader), so it
@@ -60,11 +61,6 @@ export const HEARD_MAX_LENGTH = 300;
 /** Whether an NPC keeps a knowledge store at all. */
 export function keepsKnowledge(npc) {
     return npc.sightings || npc.hearsay;
-}
-
-// Identity, not looks: a player by real name, an NPC by template id.
-function subjectKey(character) {
-    return character.isNpc ? `npc:${character.templateId}` : `pc:${character.name.toLowerCase()}`;
 }
 
 // NPCs here that notice people and can see right now (see modules/senses.js).
@@ -96,6 +92,7 @@ function note(npc, subject, fields, now) {
         ...fields,
         at: now,
     };
+    meet(npc, subject, now); // see relationships.js
     npc.knowledgeDirty = true;
 }
 
@@ -294,6 +291,7 @@ export function rememberTold(npc, speaker, message, now = gameMinutes()) {
         notability: NOTABILITY.told,
         at: now,
     });
+    meet(npc, speaker, now);
     while (npc.knowledge.heard.length > HEARD_MAX) {
         const least = Math.min(...npc.knowledge.heard.map((entry) => entry.notability));
         npc.knowledge.heard.splice(
@@ -341,7 +339,11 @@ export function heardAnswer(entry, asker, now = gameMinutes()) {
 export function loadNpcKnowledge(world, dir = npcsDir(), now = gameMinutes()) {
     for (const npc of world.npcs.filter(keepsKnowledge)) {
         const saved = readJsonFile(path.join(dir, `${npc.templateId}.json`));
-        npc.knowledge = { sightings: saved?.sightings ?? {}, heard: saved?.heard ?? [] };
+        npc.knowledge = {
+            sightings: saved?.sightings ?? {},
+            heard: saved?.heard ?? [],
+            acquaintances: saved?.acquaintances ?? {}, // kept for good, see relationships.js
+        };
         npc.knowledgeDirty = false;
         forget(npc, now);
     }
