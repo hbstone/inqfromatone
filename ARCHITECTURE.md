@@ -904,8 +904,16 @@ with `say`. An NPC answers from topics written in its content
 - **Checked at startup:** a malformed topic (no keywords, no line) fails
   the load with the NPC's id, rather than when someone happens to ask.
 
-Topics themselves are stateless: same question, same answer. What an NPC
-has seen is the knowledge store's job, below.
+- **Conditions:** a topic can have a `when` (see "Conditions"), and only
+  answers while it holds; the first matching topic that holds wins. The
+  prospector's whiskey is "medicinal" before the afternoon and "just the
+  one" after.
+- **Escalation:** a topic or `unknownTopic` marked `"escalate": true`
+  should go to a higher brain tier when there is one (see "Switchboard").
+
+Topics don't remember anything themselves: same question, same answer
+under the same conditions. What an NPC has seen is the knowledge store's
+job, below.
 
 ## Knowledge: sightings
 
@@ -1028,6 +1036,52 @@ NPC's per sense while the NPC is at it.
 Booleans for now. Partial senses (dim hearing that only a shout gets
 through, poor sight at night) could replace a boolean with a number later
 without changing content that says `false`.
+
+## Conditions
+
+Named checks that content puts in a `when` (`modules/conditions.js`). A
+`when` is an object of condition name to value and holds when all of them
+do:
+
+```json
+{ "keywords": ["whiskey"], "when": { "phase": ["dawn", "day", "high-noon"] }, "says": "This early? It's medicinal." }
+```
+
+- **Core registers `phase`** (a phase name or a list). Packs add their own
+  with `pack.registerCondition(name, { test, validate })`: `test(value,
+context)` decides, with `context` holding the NPC, the asker, the room
+  and the game time; `validate(value)` says what's wrong with a value as
+  written.
+- **Checked at startup:** an unknown condition name or a bad value fails
+  the load with where it was. Packs register before content loads, so
+  their conditions count.
+- **Used by** topics so far. Routine posts, senses and anything else that
+  wants "only while ..." can take a `when` the same way.
+
+## Switchboard
+
+The roadmap's dispatcher between brain tiers (`modules/npcs/switchboard.js`),
+with only scripted tiers for now. The trigger is content: a topic (or
+`unknownTopic`) marked `"escalate": true` deserves more nuance than a canned
+line, and its own lines are the fallback.
+
+```json
+{ "keywords": ["key", "keys"], "escalate": true, "says": "Lost a key once. Never did find what it opened." }
+```
+
+- **No higher tier yet**, so the fallback always answers and players see
+  no difference. The groundskeeper's lost key is marked as a first
+  example.
+- **Phase 6 plugs in** with `setHigherTier(handler)`. The handler gets
+  `{ npc, asked, fallback, context }` (the NPC carries its knowledge
+  store; the context has the asker, room and time) and returns an answer,
+  or null to fall back: over budget, unavailable, nothing to add. So an
+  escalated question always gets an answer.
+- **The roadmap's other triggers** are conditions on the same topic: who's
+  asking (a pack's `askerTagged`, say) or quest state go in its `when`.
+- **What's routed:** scripted topics. Sightings and hearsay answer from
+  the knowledge store directly; they're already the "cheap tier can answer
+  this" case.
 
 ## Naming: what each viewer calls someone
 

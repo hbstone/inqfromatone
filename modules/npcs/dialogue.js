@@ -29,6 +29,12 @@
 // running late", it answers "ask about the stage" with who said so and
 // when. Being told something gets its "toldReply" (default: a nod).
 //
+// A topic can have a "when" (see modules/conditions.js): it only answers
+// while that holds, so a later topic with the same keywords, or none, can
+// answer the rest of the time. And a topic or unknownTopic marked
+// "escalate": true is one a higher brain tier should answer when there is
+// one; its own lines are the fallback (see switchboard.js).
+//
 // A routine post (see routine.js) can give its own topics and/or
 // unknownTopic, which replace the NPC's while they're at that post: a
 // groundskeeper asleep in the storeroom just snores. Like a post's
@@ -40,6 +46,8 @@ import { nameFor } from '../naming.js';
 import { currentRoutineEntry } from './routine.js';
 import { heardAnswer, recallHeard, recallSighting, rememberTold, sightingAnswer } from './knowledge.js';
 import { canSense } from './senses.js';
+import { route } from './switchboard.js';
+import { validateWhen, whenHolds } from '../conditions.js';
 import { normalizeText, wordsOf } from '../text.js';
 
 const DEFAULT_UNKNOWN = { emote: "doesn't seem to know anything about that." };
@@ -55,6 +63,9 @@ function assertAnswer(answer, where) {
         (answer.emote === undefined || isText(answer.emote));
     if (!ok) {
         throw new Error(`${where} needs a "says" and/or "emote" line.`);
+    }
+    if (answer.escalate !== undefined && typeof answer.escalate !== 'boolean') {
+        throw new Error(`${where}: "escalate" must be true or false.`);
     }
 }
 
@@ -86,6 +97,7 @@ function validateTopics({ topics, unknownTopic }, owner) {
                 throw new Error(`${where} needs a non-empty "keywords" list.`);
             }
             assertAnswer(topic, where);
+            validateWhen(topic.when, where);
         });
     }
     if (unknownTopic !== undefined) {
@@ -107,18 +119,20 @@ function currentDialogue(npc, hour) {
  * Which answer an NPC gives to a question.
  * @param {import("../Npc.js").Npc} npc
  * @param {string} asked - What the player asked about, as typed.
- * @param {{ asker?: object, room?: object, hour?: number, now?: number }} [context] -
- *   Who's asking and where (for sightings); hour and now (game minutes)
- *   are overridable for tests.
+ * @param {{ asker?: object, room?: object, time?: object, hour?: number, now?: number }} [context] -
+ *   Who's asking and where (for sightings and conditions); time (the game
+ *   clock's), hour and now (game minutes) are overridable for tests.
  * @returns {{ says?: string, emote?: string }}
  */
-export function answerFor(npc, asked, { asker, room, hour = getGameTime().hour, now } = {}) {
+export function answerFor(npc, asked, { asker, room, time = getGameTime(), hour = time.hour, now } = {}) {
     const dialogue = currentDialogue(npc, hour);
-    const topics = dialogue.topics ?? [];
+    const context = { npc, asker, room, time };
+    const scripted = (answer) => route(npc, asked, answer, context);
+    const topics = (dialogue.topics ?? []).filter((t) => whenHolds(t.when, context));
     const question = wordsOf(asked).join(' ');
     const exact = topics.find((t) => t.keywords.some((k) => wordsOf(k).join(' ') === question));
     if (exact) {
-        return exact;
+        return scripted(exact);
     }
     if (dialogue === npc && npc.sightings) {
         const sighting = recallSighting(npc, asked, asker, now);
@@ -134,7 +148,7 @@ export function answerFor(npc, asked, { asker, room, hour = getGameTime().hour, 
     }
     const padded = ` ${normalizeText(asked)} `;
     const topic = topics.find((t) => t.keywords.some((k) => padded.includes(` ${normalizeText(k)} `)));
-    return topic ?? dialogue.unknownTopic ?? DEFAULT_UNKNOWN;
+    return scripted(topic ?? dialogue.unknownTopic ?? DEFAULT_UNKNOWN);
 }
 
 /**
