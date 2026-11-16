@@ -1,0 +1,11 @@
+keywords: shortdesc, short description, appearance
+commands: shortdesc
+see also: remember, look
+
+shortdesc
+shortdesc <description>
+How strangers see you, like "a bearded man" or "a wiry young woman". It's
+what people who don't know you see in place of your name. Set it to
+describe your character's look in general; change it only when something
+about them really changes. People who already know you still recognize
+you.

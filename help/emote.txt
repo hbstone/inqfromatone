@@ -1,0 +1,14 @@
+keywords: emote, actions, pose
+commands: emote
+see also: say, presence
+
+emote <action>
+Describe what your character does, in the third person. The room sees
+your name followed by your text:
+
+  emote leans back and grins.
+  Wade leans back and grins.
+
+@word names someone in your current room and #word names an item, and
+each viewer sees them by the name they know them by:
+emote tosses #coin to @bartender.

@@ -1,0 +1,8 @@
+keywords: movement, directions, exits
+commands: north, south, east, west
+see also: look, sneak, flee
+
+north, south, east, west (or n, s, e, w)
+Walk through an exit. Each room lists its exits at the bottom of its
+description. Everyone in the room you leave sees you go, and everyone in
+the room you reach sees you arrive, and from which way.

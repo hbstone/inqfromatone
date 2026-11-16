@@ -1,0 +1,8 @@
+keywords: who, online
+commands: who
+see also: tell
+
+who
+Lists the players online right now, showing each one's character name
+(not how their character looks in the current room). This command
+provides out-of-character information.

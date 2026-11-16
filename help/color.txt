@@ -1,0 +1,5 @@
+keywords: color, colour
+commands: color
+
+color [on|off]
+Turn color in messages on or off. On its own, switches it.

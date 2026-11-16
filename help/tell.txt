@@ -1,0 +1,8 @@
+keywords: tell, ooc
+commands: tell
+see also: who, say
+
+tell <name> <message>
+Send a message to anyone online, wherever they are. This command is out
+of character. Address them by character name, not by how they look in
+the room. For anything your character says, use say, sayto or whisper.

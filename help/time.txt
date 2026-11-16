@@ -1,0 +1,6 @@
+keywords: time, clock, day, night
+commands: time
+
+time
+The time of day. Light, and the people you meet, change with it: folks
+keep their own hours, and some are only about at night.

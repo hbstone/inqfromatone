@@ -1,0 +1,10 @@
+keywords: ask, questions
+commands: ask
+see also: say, sayto
+
+ask <someone> [about] <topic>
+Ask someone about something, in front of the room. A player answers in
+their own words. An NPC answers from what it knows: about itself, the
+place, what it has seen (ask about the bearded man) or what it has been
+told. Some keep what they know to themselves, unless they know and like
+you.

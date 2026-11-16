@@ -1,0 +1,8 @@
+keywords: whisper
+commands: whisper
+see also: say, sayto, ask, tell
+
+whisper <someone> <message>
+Say something to one person in the room that only they hear. This
+command is in character. NPCs don't hear whispers and won't answer
+them; talk to them with sayto, or ask them about something with ask.

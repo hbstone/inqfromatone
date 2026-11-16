@@ -23,6 +23,7 @@ import { presence } from '../presence.js';
 import { quit } from './quit.js';
 import { remove } from './remove.js';
 import { ask } from './ask.js';
+import { help } from './help.js';
 import { say } from './say.js';
 import { sayto } from './sayto.js';
 import { score } from './score.js';
@@ -66,6 +67,7 @@ registerCommand('presence', presence); // p/pu stay put; pr is presence
 registerCommand('score', score);
 registerCommand('color', color);
 registerCommand('commands', commands); // after color, so c/co stay color; com is commands
+registerCommand('help', help);
 registerCommand('who', who); // wh stays whisper (registered earlier); who is exact
 registerCommand('time', time); // t stays tell; ti is time
 registerCommand('quit', quit, { abbreviate: false }); // a stray `q` shouldn't log you out

@@ -1,0 +1,8 @@
+keywords: put, store
+commands: put
+see also: get, look
+
+put <item> [in] <container>
+Put something into a container, either one you carry or one in the room.
+A container only holds things up to a certain size, and up to a certain
+weight. Look at a container to see what's in it.

@@ -165,29 +165,29 @@ keeping them visible in the meantime:
 
 ## Phased roadmap
 
-**Phase 1 — Engine hardening (no new features, same game)**
+**Phase 1 — Engine hardening (no new features, same game) (done)**
 Refactor entities to component bags, commands to a registry, add the event
 bus, move room/item data to data files. Goal: current game behaves
 identically but is now pluggable.
 
-**Phase 2 — Core mechanics completeness**
+**Phase 2 — Core mechanics completeness (done, except currency)**
 Combat, stats, equipment/inventory slots, currency/economy,
 multi-room/zone support, upgrade persistence past a single flat JSON file
 (per-entity storage or a real embedded DB). This is the "complete vanilla
 MUD base" other people build on.
 
-**Phase 3 — Game clock + Tier 0/1 brains**
+**Phase 3 — Game clock + Tier 0/1 brains (done)**
 Scheduler, day/night or simple tick system, behavior-tag reflex NPCs, then
 scripted job-loop NPCs with pathfinding fallbacks. Validates the engine can
 drive NPC behavior without any AI yet.
 
-**Phase 4 — Prove the separation**
+**Phase 4 — Prove the separation (done)**
 Build the first real theme pack (fantasy) as the reference, then a _thin_
 second pack (even minimal) purely to stress-test that verbs/components/data
 loading actually stay separable. Fix leaks here, not after three themes
 exist.
 
-**Phase 5 — Knowledge store + Tier 2 dialogue + switchboard**
+**Phase 5 — Knowledge store + Tier 2 dialogue + switchboard (done)**
 Build the plumbing (knowledge log, trigger rules, escalation dispatcher)
 using only scripted tiers first — no LLM yet. This de-risks the hard part
 (event routing, state consistency) before adding AI cost/latency into the
@@ -199,10 +199,24 @@ knowledge store, and the "generate routine → demote to Tier 1" cost-saving
 loop. Apply the guardrails above as this ships, not after.
 
 **Phase 7 — Polish / open it up**
-Admin/world-building tooling, docs for theme-pack authors, an in-game
-helpfile system (the `commands` listing is a stand-in until then), a second
+Admin/world-building tooling, docs for theme-pack authors, a second
 real theme built by someone else as the actual validation of the whole
-premise.
+premise. (The in-game `help` system is in; it'll need access levels once
+staff-only verbs exist.)
+
+**Not yet scheduled** (ideas agreed on, waiting for their moment):
+
+- NPC memory summarized over time: a day's memories condensed into what
+  mattered to that NPC, days into weeks, months, years. Two NPCs remember
+  the same event differently, and a busy one may forget it.
+- Player senses and sleep, with the next combat pass (sleep regenerates
+  vitality): messages say which sense they reach, so a sleeper misses
+  what they should; "dim" hearing catches scraps of talk.
+- `hide` (staying hidden in a room), and disguises as a temporary layer
+  over a short description.
+- Currency, then bribes and purchases as NPC sentiment; intimidation as a
+  check; investigator-type roles as conditions.
+- A prompt players can customize (hp, room, time of day, statuses).
 
 Realistically, for solo/part-time work, Phases 1-4 are the bulk of the
 calendar time and determine whether Phases 5-6 are pleasant or painful. Avoid

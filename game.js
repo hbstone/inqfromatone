@@ -16,6 +16,7 @@ import { loadTimeSettings, startGameClock } from './modules/gameClock.js';
 import { writeToSocket } from './modules/utils.js';
 import { createLoginHandler } from './modules/login.js';
 import { loadFeatures } from './modules/content/loadFeatures.js';
+import { loadHelp } from './modules/content/loadHelp.js';
 import { enableRecognition } from './modules/recognition/index.js';
 import { readGame, contentDirsOf, setUpPackCode } from './modules/packs/game.js';
 import { useSavesForGame } from './modules/saveDirs.js';
@@ -38,6 +39,7 @@ const features = loadFeatures(contentDirs); // optional engine features this gam
 if (features.recognition) {
     enableRecognition(); // strangers by short description; remember/forget/rename/shortdesc (see modules/recognition/)
 }
+loadHelp(contentDirs); // help topics: core's help/, then each pack's content/help/ (see modules/content/loadHelp.js)
 startWorldSaveTicker(world); // periodic checkpoint: dirty rooms + every in-world character (see worldPersistence.js)
 startGameClock(world); // hour/phase-change events and phase messages (see gameClock.js)
 startNpcBehaviors(world); // NPCs wander and chatter (see modules/npcs/behaviors.js)

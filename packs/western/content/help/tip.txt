@@ -1,0 +1,8 @@
+keywords: tip, hat, manners
+commands: tip
+see also: emote
+
+tip
+tip <someone>
+Tip your hat to the room, or to someone. With no hat on, a touch of two
+fingers to the brow does it. Folks around here notice good manners.

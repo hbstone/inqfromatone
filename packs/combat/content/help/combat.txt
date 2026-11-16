@@ -1,0 +1,14 @@
+keywords: combat, fighting, kill, flee, disengage
+commands: kill, flee, disengage
+see also: score
+
+kill <someone>
+flee <direction>
+disengage
+Kill starts a fight with someone in your current room. Once started,
+the two of you trade blows on your own until one falls or someone
+leaves the fight.
+Disengage steps back from the fight. Flee steps back and runs, if
+there's an exit that way.
+
+NPCs who see you start a fight remember it, and think less of you.

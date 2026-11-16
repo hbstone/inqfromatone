@@ -1,0 +1,7 @@
+keywords: drop
+commands: drop
+see also: get, give
+
+drop <item>
+Put something you're carrying down on the floor, where anyone can pick
+it up. Numbers work as with get: drop 2*coin.
