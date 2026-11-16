@@ -6,7 +6,28 @@
         "presence": "polishes a glass behind the bar.",
         "description": "A broad man in a striped shirt and sleeve garters, with a waxed mustache he's plainly proud of. He keeps one eye on the door and the other on the till.",
         "sightings": true,
+        "discretion": {
+            "sharesWhen": [
+                { "familiar": 3, "sentiment": { "min": 1 } },
+                { "sentiment": { "of": "subject", "max": -2 } }
+            ],
+            "refusal": {
+                "emote": "keeps polishing the same glass.",
+                "says": "Couldn't say, friend. Lot of folks come through here."
+            }
+        },
         "topics": [
+            {
+                "keywords": ["usual", "the usual"],
+                "when": { "familiar": 3 },
+                "emote": "reaches for a bottle without being asked.",
+                "says": "The usual. Coming right up."
+            },
+            {
+                "keywords": ["usual", "the usual"],
+                "emote": "raises an eyebrow.",
+                "says": "Your usual? I'd need to see you a few more times before I'd know that, stranger."
+            },
             {
                 "keywords": ["card game", "cards", "poker", "faro"],
                 "emote": "jerks his chin at the corner table.",

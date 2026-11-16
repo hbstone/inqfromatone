@@ -2,6 +2,11 @@
 // whatever's in the head slot ("You tip your dusty stetson to ..."); with
 // nothing there, a touch of two fingers to the brow stands in.
 import { findCharacter, nameFor, tellRoom } from '../../../modules/naming.js';
+import { adjustSentiment, seesAndRemembers } from '../../../modules/npcs/relationships.js';
+
+// Good manners are noticed: an NPC that keeps knowledge thinks a little
+// better of someone who tips their hat to it, once a day.
+export const TIPPED_HAT = 1;
 
 // "a dusty stetson" -> "dusty stetson", to read as "your dusty stetson"
 function bareName(item) {
@@ -33,5 +38,8 @@ export const tip = (world, args, character) => {
             `${nameFor(character, viewer)} ${gesture.they} to ${viewer === target ? 'you' : nameFor(target, viewer)}.`,
         [character],
     );
+    if (seesAndRemembers(target)) {
+        adjustSentiment(target, character, TIPPED_HAT, 'tipped their hat to me', { oncePerDay: true });
+    }
     return `You ${gesture.you} to ${nameFor(target, character)}.`;
 };

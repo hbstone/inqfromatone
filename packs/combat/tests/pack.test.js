@@ -26,7 +26,8 @@ import { loadCharacterState } from '../../../data.js';
 import { stripColors } from '../../../modules/color.js';
 import setup from '../index.js';
 import { engageCombat, getSession } from '../lib/session.js';
-import { kill } from '../lib/kill.js';
+import { kill, STARTED_A_FIGHT } from '../lib/kill.js';
+import { acquaintanceOf } from '../../../modules/npcs/relationships.js';
 
 const packDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const packsDir = path.join(packDir, '..');
@@ -114,6 +115,27 @@ try {
         assert.ok(!getStatDefinitions().some((d) => d.key === 'hp'));
         assert.equal(getStatKeyForRole('offense'), undefined);
         loadStatDefinitions();
+    }
+
+    // Starting a fight sours the NPCs who see it (those that keep knowledge,
+    // and can see), once per fight
+    {
+        const room = world.getRoomById(world.addRoom('Bar', 'A bar.', 'bar'));
+        const alice = fighter('Alice', room);
+        fighter('Bob', room);
+        const bartender = new Npc({ id: 'z/bartender', name: 'a bartender', sightings: true }, 'bar');
+        const dozing = new Npc({ id: 'z/dozer', name: 'a dozer', sightings: true, senses: { sight: false } }, 'bar');
+        const dog = new Npc({ id: 'z/dog', name: 'a dog' }, 'bar');
+        for (const npc of [bartender, dozing, dog]) {
+            room.addCharacter(npc);
+        }
+        kill(world, ['bob'], alice);
+        assert.equal(acquaintanceOf(bartender, 'pc:alice').sentiment, STARTED_A_FIGHT);
+        assert.equal(acquaintanceOf(bartender, 'pc:alice').sentimentLog[0].reason, 'started a fight here');
+        assert.equal(acquaintanceOf(dozing, 'pc:alice'), null, "didn't see it");
+        assert.equal(acquaintanceOf(dog, 'pc:alice'), null, 'keeps no knowledge');
+        kill(world, ['bob'], alice);
+        assert.equal(acquaintanceOf(bartender, 'pc:alice').sentiment, STARTED_A_FIGHT, 'the same fight');
     }
 } finally {
     reset();
