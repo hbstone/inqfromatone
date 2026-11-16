@@ -54,7 +54,7 @@ export function validateWhen(when, where) {
 }
 
 /**
- * Whether a "when" holds. No "when" always does.
+ * Whether a "when" holds. A missing "when" always holds.
  * @param {object} [when]
  * @param {object} [context] - Whatever the caller knows: { npc, asker,
  *   room, time }. `time` defaults to the game clock's.
