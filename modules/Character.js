@@ -9,6 +9,7 @@ export class Character {
         this.equipment = {}; // slot -> Item, only ever holding equippable items (see modules/equipment.js)
         this.colorEnabled = true; // see modules/commands/color.js and modules/color.js
         this.isNpc = false; // see modules/Npc.js
+        this.senses = {}; // senses switched off, like { sight: false } (see modules/senses.js)
 
         // Recognition (see modules/recognition/): how strangers see this
         // character, and what this character remembers about others,

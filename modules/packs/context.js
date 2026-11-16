@@ -17,6 +17,7 @@ import { on } from '../events.js';
 import { registerQuitBlocker } from '../commands/quit.js';
 import { every, after } from '../scheduler.js';
 import { registerCheckResolver } from '../checks/registry.js';
+import { registerCondition } from '../conditions.js';
 
 /**
  * @param {{ name: string, dir: string, manifest: object }} pack
@@ -48,6 +49,8 @@ export function createPackContext(pack, world) {
          * registers a default, so pass { override: true }.
          */
         registerCheckResolver: attributed(registerCheckResolver),
+        /** A condition content can use in a "when" (see modules/conditions.js). */
+        registerCondition: attributed(registerCondition),
         /** Listen for an engine event (see modules/events.js). */
         on: attributed(on),
         /** Refuse a deliberate `quit` while something's going on (see modules/commands/quit.js). */

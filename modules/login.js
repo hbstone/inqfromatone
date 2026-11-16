@@ -6,6 +6,7 @@
 // real world and starts timers on import.
 import { capitalizeFirst, stripColors } from './color.js';
 import { look } from './commands/look.js';
+import { emit } from './events.js';
 import { initializeCharacterStats } from './content/loadStatDefinitions.js';
 import { findInWorldCharacter, takeOverConnection } from './connection.js';
 import { writeToSocket, setInputHidden } from './utils.js';
@@ -181,8 +182,10 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
     function enterExistingCharacter(character, greeting) {
         character.isLoggedIn = true;
         character.stage = null;
-        world.getRoomById(character.pendingRoomId).addCharacter(character);
+        const room = world.getRoomById(character.pendingRoomId);
+        room.addCharacter(character);
         character.pendingRoomId = null;
+        emit('characterEntering', { character, room, world });
         return `${greeting}\n\n${look(world, [], character)}`;
     }
 
@@ -212,7 +215,9 @@ export function createLoginHandler({ world, startingRoomKey, charactersDir }) {
         character.pendingPasswordHash = null;
         character.new = false;
 
-        world.getRoomById(startingRoomKey).addCharacter(character);
+        const room = world.getRoomById(startingRoomKey);
+        room.addCharacter(character);
+        emit('characterEntering', { character, room, world });
 
         return `Welcome, ${character.name}! Your description: "${character.description}"\n\n${look(world, [], character)}`;
     }

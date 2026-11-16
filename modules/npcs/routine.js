@@ -17,7 +17,8 @@
 // lists none). With no way to get there - a missing room, a severed exit -
 // it stays put, falls back to its usual behaviors, and a warning is logged
 // once per post.
-import { getPhaseStartHour } from '../gameClock.js';
+import { getGameTime, getPhaseStartHour } from '../gameClock.js';
+import { registerSenseLayer } from '../senses.js';
 import { OPPOSITES } from '../commands/move.js';
 
 /**
@@ -128,3 +129,14 @@ export function warnAboutUnknownPhases(world) {
         }
     }
 }
+
+// While an NPC is at a post, the post's "senses" override its own (see
+// modules/senses.js): asleep in the storeroom, the groundskeeper can't see
+// or hear.
+registerSenseLayer((character, hour) => {
+    if (!character.routine) {
+        return null;
+    }
+    const entry = currentRoutineEntry(character.routine, hour ?? getGameTime().hour);
+    return entry && character.roomId === entry.roomId ? entry.senses : null;
+});

@@ -92,13 +92,19 @@ what)`, which names the file in errors.
 
 - `modules/events.js`: `on`, `emit`.
 - Registries: `registerCommand`, `registerBehavior` (NPCs),
-  `registerCheckResolver`, `registerQuitBlocker` (`modules/commands/quit.js`).
+  `registerCheckResolver`, `registerQuitBlocker` (`modules/commands/quit.js`),
+  `registerCondition` (`modules/conditions.js`, with `whenHolds` and
+  `validateWhen` for anything content can make conditional).
+- `modules/npcs/switchboard.js`: `setHigherTier`, `route` (escalated
+  topics).
 - `modules/packs/context.js`: what a pack's `index.js` is handed.
 
 **Odds and ends**
 
 - `modules/guard.js`: `guard` (one failure doesn't take down the rest).
 - `modules/npcs/behaviors.js`: `pick` (random choice, testable).
+- `modules/senses.js`: `canSense(character, sense)` before anyone
+  perceives anything; `registerSenseLayer` for states that change senses.
 
 **Tests**
 

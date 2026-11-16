@@ -256,5 +256,33 @@ const reply = (result) => result.split('\n').slice(1).join('\n');
     assert.equal(recallSighting(bartender, 'lanky', null, 101 + MEMORY_MINUTES).askedAs, 'a lanky adolescent');
 }
 
+// Only an NPC that can see right now notices people: not a blind one, nor
+// one asleep at a post with its sight off. One walking in blind doesn't
+// notice who's there either.
+{
+    const { world, saloon, street, bartender, alice } = setUp();
+    bartender.senses = { sight: false };
+    movePlayer(world, alice, street, 'north', 'south');
+    assert.deepEqual(bartender.knowledge.sightings, {}, 'blind');
+
+    bartender.senses = {};
+    bartender.routine = [{ from: 0, roomId: saloon.id, senses: { sight: false } }];
+    movePlayer(world, alice, saloon, 'south', 'north');
+    movePlayer(world, alice, street, 'north', 'south');
+    assert.deepEqual(bartender.knowledge.sightings, {}, 'asleep at its post');
+
+    bartender.routine = [{ from: 0, roomId: street.id, senses: { sight: false } }];
+    movePlayer(world, alice, saloon, 'south', 'north');
+    assert.ok(bartender.knowledge.sightings['pc:alice'], 'away from that post, its own senses count');
+}
+
+// Logging in is noticed, from nowhere in particular
+{
+    const { saloon, bartender, baeron } = setUp();
+    emit('characterEntering', { character: baeron, room: saloon });
+    assert.equal(bartender.knowledge.sightings['pc:baeron'].seenAs, 'a tall woman');
+    assert.equal(bartender.knowledge.sightings['pc:baeron'].arrivedFrom, null);
+}
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log('All tests passed');

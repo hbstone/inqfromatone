@@ -130,15 +130,37 @@ const reply = (result) => result.split('\n').slice(1).join('\n');
     assert.ok(recallHeard(bartender, `rumor ${HEARD_MAX + 4}`, 500));
 }
 
-// At a routine post with its own dialogue, the NPC takes nothing in
+// Asleep (hearing off at a post), the NPC takes nothing in and reacts as
+// the post says
 {
     const sleeper = {
         ...BARTENDER,
-        routine: [{ from: 0, roomId: 'test/town/saloon', unknownTopic: { emote: 'snores.' } }],
+        routine: [
+            {
+                from: 0,
+                roomId: 'test/town/saloon',
+                senses: { sight: false, hearing: false },
+                unknownTopic: { emote: 'snores.' },
+            },
+        ],
     };
     const { bartender, alice } = setUp(sleeper);
     assert.deepEqual(hearTold(bartender, alice, 'Wake up.', { hour: 3, now: 10 }), { emote: 'snores.' });
     assert.deepEqual(bartender.knowledge.heard, []);
+}
+
+// Awake at a post with its own dialogue: hearing decides, not the dialogue,
+// so it remembers, and reacts with the post's unknownTopic
+{
+    const counting = {
+        ...BARTENDER,
+        routine: [{ from: 0, roomId: 'test/town/saloon', unknownTopic: { emote: 'keeps counting coins.' } }],
+    };
+    const { bartender, alice } = setUp(counting);
+    assert.deepEqual(hearTold(bartender, alice, 'The stage is late.', { hour: 3, now: 10 }), {
+        emote: 'keeps counting coins.',
+    });
+    assert.equal(bartender.knowledge.heard.length, 1);
 }
 
 // Saved and loaded with the rest of the store, minus anything too old

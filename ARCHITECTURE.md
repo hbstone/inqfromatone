@@ -904,8 +904,16 @@ with `say`. An NPC answers from topics written in its content
 - **Checked at startup:** a malformed topic (no keywords, no line) fails
   the load with the NPC's id, rather than when someone happens to ask.
 
-Topics themselves are stateless: same question, same answer. What an NPC
-has seen is the knowledge store's job, below.
+- **Conditions:** a topic can have a `when` (see "Conditions"), and only
+  answers while it holds; the first matching topic that holds wins. The
+  prospector's whiskey is "medicinal" before the afternoon and "just the
+  one" after.
+- **Escalation:** a topic or `unknownTopic` marked `"escalate": true`
+  should go to a higher brain tier when there is one (see "Switchboard").
+
+Topics don't remember anything themselves: same question, same answer
+under the same conditions. What an NPC has seen is the knowledge store's
+job, below.
 
 ## Knowledge: sightings
 
@@ -920,8 +928,9 @@ A mustachioed bartender says, "A bearded man? Came in from the south a little wh
 ```
 
 - **What's noticed:** someone arriving (and from where), leaving (and
-  which way), or leaving the game; and, when the NPC itself walks into a
-  room, who's already there. Opt-in, so the dog doesn't report on
+  which way), or logging in or out; and, when the NPC itself walks into a
+  room, who's already there. Only while the NPC can see (see "Senses"):
+  the groundskeeper asleep in the storeroom notices no one. Opt-in, so the dog doesn't report on
   passers-by; the bartender and groundskeeper have it.
 - **Who's who:** sightings are filed by identity (a player's real name, an
   NPC's template id) but remembered as the NPC saw them: by short
@@ -954,10 +963,8 @@ deliberate for a first slice, but there will need to be ways around it:
 sneaking past unnoticed, bribes, how well the NPC knows the person asking,
 and NPCs who are forgetful or uncooperative by nature.
 
-Not built yet: an NPC noticing people while asleep is still noticing (a
-post or `when` condition could switch it off); someone logging in isn't
-noticed until they move; answers use one generic voice (an NPC's own
-phrasing would be content). NPCs being told things is below.
+Not built yet: answers use one generic voice (an NPC's own phrasing would
+be content). NPCs being told things is below.
 
 ## Knowledge: hearsay
 
@@ -977,10 +984,13 @@ A mustachioed bartender says, "A bearded man told me a little while ago: 'The st
 - **Only what's said to them.** Not talk they happen to be near, and not
   whispers: something said in confidence shouldn't go to anyone who asks.
   Overhearing could be a separate opt-in trait later.
+- **Only if it can hear** right now (see "Senses"): asleep, the
+  groundskeeper takes nothing in.
 - **Reaction:** the NPC's `toldReply` (an emote and/or line, checked at
   startup like topics), else a nod. At a routine post with its own
-  dialogue the NPC takes nothing in and gives that post's `unknownTopic`,
-  if any: the sleeping groundskeeper snores on.
+  dialogue, that post's `unknownTopic` instead, if any: the sleeping
+  groundskeeper snores on. How it reacts and whether it heard are
+  separate: an NPC awake at such a post still remembers.
 - **Recall:** every word of the question has to be in what was said; the
   latest such thing wins. It's quoted with who said it, as the NPC saw
   them, and when ("You told me" for the asker's own words). In `ask` it
@@ -1003,6 +1013,84 @@ groundskeeper, and the red-nosed prospector propping up the Silver Spur's
 bar, who's too far gone to care whose secret it was. The bartender keeps
 his word ("I don't repeat what I hear"): he notices who comes and goes,
 but hearsay is off for him.
+
+## Senses
+
+What a character can perceive right now (`modules/senses.js`, core, for
+players and NPCs alike). Each sense is named and on unless something
+switches it off: the character's own `senses` (an NPC's content, like a
+blind beggar's), under _layers_ for what's going on with them now, each
+overriding per sense. An NPC's routine post is a layer (registered by
+`modules/npcs/routine.js`): while it's at the post, the post's `senses`
+count.
+
+```json
+{ "from": "night", "at": "start/storage-room", "senses": { "sight": false, "hearing": false } }
+```
+
+- **Known senses:** `sight`, `hearing`, `smell`. Anything else, or a
+  non-boolean, fails at startup with the NPC's id.
+- **Who needs what:** sightings need sight, hearsay needs hearing.
+  `canSense(character, sense)` is the one check.
+- **Players** have senses too (`character.senses`, all on), but nothing
+  checks them yet: room messages reach everyone. Sleeping is the obvious
+  first use: a `registerSenseLayer` for "asleep", plus messages saying
+  which sense they reach (speech hearing, movement sight), so a sleeper
+  misses what they should.
+- **Smell** has nothing using it yet. It's there so content can already
+  say a sleeper still smells smoke, and so scents and perfumes later only
+  need to check it.
+
+Booleans for now. Partial senses could replace a boolean with a number
+later without changing content that says `false`: dim hearing that only
+a shout gets through, or a sleeper catching scraps of talk with words
+missing; poor sight at night.
+
+## Conditions
+
+Named checks that content puts in a `when` (`modules/conditions.js`). A
+`when` is an object of condition name to value and holds when all of them
+do:
+
+```json
+{ "keywords": ["whiskey"], "when": { "phase": ["dawn", "day", "high-noon"] }, "says": "This early? It's medicinal." }
+```
+
+- **Core registers `phase`** (a phase name or a list). Packs add their own
+  with `pack.registerCondition(name, { test, validate })`: `test(value,
+context)` decides, with `context` holding the NPC, the asker, the room
+  and the game time; `validate(value)` says what's wrong with a value as
+  written.
+- **Checked at startup:** an unknown condition name or a bad value fails
+  the load with where it was. Packs register before content loads, so
+  their conditions count.
+- **Used by** topics so far. Routine posts, senses and anything else that
+  wants "only while ..." can take a `when` the same way.
+
+## Switchboard
+
+The roadmap's dispatcher between brain tiers (`modules/npcs/switchboard.js`),
+with only scripted tiers for now. The trigger is content: a topic (or
+`unknownTopic`) marked `"escalate": true` deserves more nuance than a canned
+line, and its own lines are the fallback.
+
+```json
+{ "keywords": ["key", "keys"], "escalate": true, "says": "Lost a key once. Never did find what it opened." }
+```
+
+- **No higher tier yet**, so the fallback always answers and players see
+  no difference. The groundskeeper's lost key is marked as a first
+  example.
+- **Phase 6 plugs in** with `setHigherTier(handler)`. The handler gets
+  `{ npc, asked, fallback, context }` (the NPC carries its knowledge
+  store; the context has the asker, room and time) and returns an answer,
+  or null to fall back: over budget, unavailable, nothing to add. So an
+  escalated question always gets an answer.
+- **The roadmap's other triggers** are conditions on the same topic: who's
+  asking (a pack's `askerTagged`, say) or quest state go in its `when`.
+- **What's routed:** scripted topics. Sightings and hearsay answer from
+  the knowledge store directly; they're already the "cheap tier can answer
+  this" case.
 
 ## Naming: what each viewer calls someone
 
@@ -1292,7 +1380,9 @@ calls in `quit.js`:
 - **`characterLeaving`** `{ character, room, world }`: emitted when anyone
   leaves the world (quit or dropped connection), before the save, so packs
   can end whatever they keep running for that character. Combat ends the
-  fight and tells a lone opponent.
+  fight and tells a lone opponent. Its counterpart, **`characterEntering`**
+  `{ character, room, world }`, is emitted when someone logs in, once
+  they're in their room (NPCs that notice people see them arrive).
 - **Quit blockers** (`pack.registerQuitBlocker(check)`): `check(character)`
   returns a reason to refuse a deliberate `quit`, or null. Combat refuses
   mid-fight. A dropped connection can't be refused, so cleanup belongs on

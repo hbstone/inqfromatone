@@ -102,6 +102,12 @@
             },
             {
                 "keywords": ["whiskey", "drink", "glass"],
+                "when": { "phase": ["dawn", "day", "high-noon"] },
+                "emote": "draws himself up with great dignity.",
+                "says": "This early? It's medicinal. Doc said so. Well, a doc. Somewhere."
+            },
+            {
+                "keywords": ["whiskey", "drink", "glass"],
                 "emote": "peers into his glass, surprised to find it empty again.",
                 "says": "Just the one. Same one as before. Mostly."
             },

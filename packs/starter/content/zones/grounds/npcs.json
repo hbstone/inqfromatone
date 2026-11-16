@@ -15,8 +15,14 @@
             },
             {
                 "keywords": ["weather", "wind", "rain", "sky"],
+                "when": { "phase": ["dawn", "day"] },
                 "emote": "squints up at the sky.",
                 "says": "Wind's turning. My knee says rain by nightfall, and my knee's never been wrong."
+            },
+            {
+                "keywords": ["weather", "wind", "rain", "sky"],
+                "emote": "rubs his knee and scowls at the sky.",
+                "says": "Knee's still promising rain. Sky's taking its time about it."
             },
             {
                 "keywords": ["rake"],
@@ -26,6 +32,7 @@
             { "keywords": ["cat"], "says": "That grey menace? It was here before me. Likely be here after." },
             {
                 "keywords": ["key", "keys"],
+                "escalate": true,
                 "emote": "pats his coat pockets, then shakes his head.",
                 "says": "Lost a key once. Never did find what it opened."
             },
@@ -66,6 +73,7 @@
                 "from": "night",
                 "at": "start/storage-room",
                 "presence": "snores softly on a pile of sacks.",
+                "senses": { "sight": false, "hearing": false },
                 "unknownTopic": { "emote": "snores on, undisturbed." },
                 "behaviors": {
                     "ambient": {
