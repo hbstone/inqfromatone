@@ -20,6 +20,8 @@ import { loadTimeSettings, getPhaseStartHour } from '../../../modules/gameClock.
 import { loadFeatures } from '../../../modules/content/loadFeatures.js';
 import { resolveCommand } from '../../../modules/commands/registry.js';
 import { stripColors } from '../../../modules/color.js';
+import { acquaintanceOf } from '../../../modules/npcs/relationships.js';
+import { TIPPED_HAT } from '../lib/tip.js';
 
 const game = readGame('western');
 const dirs = contentDirsOf(game);
@@ -120,6 +122,12 @@ try {
 
         assert.equal(tip(world, ['nobody'], wade), "You don't see nobody here.");
         assert.equal(tip(world, ['wade'], wade), "You don't see wade here.", 'not to yourself');
+
+        // Tipping your hat to the bartender is good manners he remembers, once a day
+        const bartender = world.npcs.find((npc) => npc.templateId === 'western/dry-creek/bartender');
+        tip(world, ['bartender'], wade);
+        tip(world, ['bartender'], wade);
+        assert.equal(acquaintanceOf(bartender, 'pc:wade').sentiment, TIPPED_HAT);
     }
 } finally {
     loadStatDefinitions();

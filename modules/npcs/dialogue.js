@@ -29,6 +29,22 @@
 // running late", it answers "ask about the stage" with who said so and
 // when. Being told something gets its "toldReply" (default: a nod).
 //
+// A discreet NPC keeps what it knows (sightings, hearsay) to itself unless
+// its "discretion" says otherwise, and says so with its refusal rather than
+// pretending not to know, which is a clue in itself:
+//
+//   "discretion": {
+//     "sharesWhen": [
+//       { "familiar": 3, "sentiment": { "min": 1 } },       // regulars he likes
+//       { "sentiment": { "of": "subject", "max": -2 } }     // anyone he can't stand
+//     ],
+//     "refusal": { "emote": "keeps polishing.", "says": "Couldn't say, friend." }
+//   }
+//
+// sharesWhen is a "when", or a list of them where any one will do; none
+// means never. "subject" is who's being asked about (or who said what was
+// heard). Asking about yourself, or what you said, is always answered.
+//
 // A topic can have a "when" (see modules/conditions.js): it only answers
 // while that holds, so a later topic with the same keywords, or none, can
 // answer the rest of the time. And a topic or unknownTopic marked
@@ -49,10 +65,12 @@ import { heardAnswer, recallHeard, recallSighting, rememberTold, sightingAnswer 
 import { canSense } from '../senses.js';
 import { route } from './switchboard.js';
 import { validateWhen, whenHolds } from '../conditions.js';
+import { subjectKey } from './relationships.js';
 import { normalizeText, wordsOf } from '../text.js';
 
 const DEFAULT_UNKNOWN = { emote: "doesn't seem to know anything about that." };
 const DEFAULT_TOLD = { emote: 'nods.' };
+const DEFAULT_REFUSAL = { emote: 'gives you a long look.', says: "Couldn't say." };
 
 function assertAnswer(answer, where) {
     const isText = (value) => typeof value === 'string' && value.trim() !== '';
@@ -78,12 +96,41 @@ function assertAnswer(answer, where) {
  */
 export function validateDialogue(npcData, npcId) {
     validateTopics(npcData, `NPC "${npcId}"`);
+    validateDiscretion(npcData.discretion, `NPC "${npcId}"'s "discretion"`);
     if (npcData.toldReply !== undefined) {
         assertAnswer(npcData.toldReply, `NPC "${npcId}"'s "toldReply"`);
     }
     (npcData.routine ?? []).forEach((entry, index) =>
         validateTopics(entry, `NPC "${npcId}" routine post ${index + 1}`),
     );
+}
+
+function validateDiscretion(discretion, where) {
+    if (discretion === undefined) {
+        return;
+    }
+    if (!discretion || typeof discretion !== 'object' || Array.isArray(discretion)) {
+        throw new Error(`${where} must be an object with "sharesWhen" and/or "refusal".`);
+    }
+    const unknown = Object.keys(discretion).filter((k) => k !== 'sharesWhen' && k !== 'refusal');
+    if (unknown.length > 0) {
+        throw new Error(`${where} has unknown settings: ${unknown.join(', ')}.`);
+    }
+    const whens = [discretion.sharesWhen ?? []].flat();
+    whens.forEach((when, index) => validateWhen(when, `${where} sharesWhen ${index + 1}`));
+    if (discretion.refusal !== undefined) {
+        assertAnswer(discretion.refusal, `${where} refusal`);
+    }
+}
+
+// Whether a discreet NPC will tell the asker what it knows about `key`
+// (whoever it saw, or whoever told it something).
+function willShare(npc, key, context) {
+    if (!npc.discretion || (context.asker && subjectKey(context.asker) === key)) {
+        return true;
+    }
+    const whens = [npc.discretion.sharesWhen ?? []].flat();
+    return whens.some((when) => whenHolds(when, { ...context, subject: key }));
 }
 
 function validateTopics({ topics, unknownTopic }, owner) {
@@ -138,13 +185,17 @@ export function answerFor(npc, asked, { asker, room, time = getGameTime(), hour 
     if (dialogue === npc && npc.sightings) {
         const sighting = recallSighting(npc, asked, asker, now);
         if (sighting) {
-            return sightingAnswer(sighting, room, now);
+            return willShare(npc, sighting.key, context)
+                ? sightingAnswer(sighting, room, now)
+                : (npc.discretion.refusal ?? DEFAULT_REFUSAL);
         }
     }
     if (dialogue === npc && npc.hearsay) {
         const heard = recallHeard(npc, asked, now);
         if (heard) {
-            return heardAnswer(heard, asker, now);
+            return willShare(npc, heard.by.key, context)
+                ? heardAnswer(heard, asker, now)
+                : (npc.discretion.refusal ?? DEFAULT_REFUSAL);
         }
     }
     const padded = ` ${normalizeText(asked)} `;

@@ -10,7 +10,15 @@
 // so an unknown name or a bad value fails at startup with where it was.
 import { getGameTime } from './gameClock.js';
 
-const conditions = new Map();
+// A function, not a top-level const: this module is in the import cycle
+// through gameClock.js (see CLAUDE.md's "Known traps"), and modules in that
+// loop (modules/npcs/relationships.js) register their conditions while it
+// loads, before a const here would exist. Function declarations are ready
+// from the start.
+function registry() {
+    registry.map ??= new Map();
+    return registry.map;
+}
 
 /**
  * @param {string} name - What content writes in a "when".
@@ -23,10 +31,10 @@ export function registerCondition(name, { test, validate }, { override = false }
     if (typeof test !== 'function') {
         throw new Error(`Condition "${name}" needs a test function.`);
     }
-    if (conditions.has(name) && !override) {
+    if (registry().has(name) && !override) {
         throw new Error(`Condition "${name}" is already registered (pass { override: true } to replace it).`);
     }
-    conditions.set(name, { test, validate });
+    registry().set(name, { test, validate });
 }
 
 /**
@@ -42,9 +50,9 @@ export function validateWhen(when, where) {
         throw new Error(`${where}: "when" must be an object like { "phase": "night" }.`);
     }
     for (const [name, value] of Object.entries(when)) {
-        const condition = conditions.get(name);
+        const condition = registry().get(name);
         if (!condition) {
-            throw new Error(`${where}: unknown condition "${name}" (known: ${[...conditions.keys()].join(', ')}).`);
+            throw new Error(`${where}: unknown condition "${name}" (known: ${[...registry().keys()].join(', ')}).`);
         }
         const problem = condition.validate?.(value);
         if (problem) {
@@ -64,7 +72,7 @@ export function whenHolds(when, context = {}) {
         return true;
     }
     const full = { ...context, time: context.time ?? getGameTime() };
-    return Object.entries(when).every(([name, value]) => conditions.get(name)?.test(value, full) ?? false);
+    return Object.entries(when).every(([name, value]) => registry().get(name)?.test(value, full) ?? false);
 }
 
 // { "phase": "night" } or { "phase": ["dusk", "night"] }
