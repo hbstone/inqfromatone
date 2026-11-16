@@ -6,7 +6,7 @@ Strangers are known by how they look ("a bearded man"). Once you learn
 someone's name in play, you can remember them by it.
 
 remember                     who you remember
-remember <someone> <name>    remember someone here by a name
+remember <someone> <name>    remember someone in your current room by a name
 remember <someone>           what you remember about them
 remember <someone> <note>    add a private note about someone you know
 rename <someone> <new name>  change the name you know them by

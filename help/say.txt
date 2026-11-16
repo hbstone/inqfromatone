@@ -4,8 +4,9 @@ see also: whisper, emote, ask, tell
 
 say <message>
 sayto <someone> <message>
-Speak aloud, in character. Everyone in the room hears it. Say speaks to
-the room; sayto speaks to one person in front of everyone:
+Speak aloud. This command is in character. Everyone in the room hears
+it. Say speaks to the room; sayto speaks to one person in front of
+everyone:
 
   You say to a mustachioed bartender, "The stage is running late."
 

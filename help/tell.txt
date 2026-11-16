@@ -3,6 +3,6 @@ commands: tell
 see also: who, say
 
 tell <name> <message>
-An out-of-character message to anyone online, wherever they are. Uses
-players' real names, not how their characters look. For anything your
-character says, use say, sayto or whisper.
+Send a message to anyone online, wherever they are. This command is out
+of character. Address them by character name, not by how they look in
+the room. For anything your character says, use say, sayto or whisper.

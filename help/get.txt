@@ -5,7 +5,7 @@ see also: drop, put, items
 get <item>
 get <item> [from] <container>
 Pick something up from the floor, or take it out of a container you're
-carrying or one in the room. People here see you do it.
+carrying or one in the room. People in the current room see you do it.
 
 Items can be picked out by number: get 2.key takes the second key, and
 get 3*arrow takes three arrows from a stack. Part of a word will do:

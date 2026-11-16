@@ -3,6 +3,6 @@ commands: give
 see also: get, drop, sneak
 
 give <item> [to] <someone>
-Hand something you're carrying to someone here. The room sees it, and so
-do they, unless you're being sneaky about it and they miss it. NPCs won't
-take things yet.
+Hand something you're carrying to someone in your current room. The
+room sees it, and so do they, unless you're being sneaky about it and
+they miss it. NPCs won't take things yet.
