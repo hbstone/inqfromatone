@@ -1,0 +1,6 @@
+keywords: who, online
+commands: who
+see also: tell
+
+who
+Everyone online right now, by their real names. Out of character.

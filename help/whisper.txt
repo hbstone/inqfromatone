@@ -1,0 +1,7 @@
+keywords: whisper
+commands: whisper
+see also: say, tell
+
+whisper <someone> <message>
+Say something in character to one person in the room that only they
+hear. NPCs don't take whispers in.

@@ -1231,6 +1231,38 @@ Log messages use real names too.
 each viewer and checks each of the above, so a new message that bypasses
 the seam has a pattern to follow and test against.
 
+## Help
+
+`help` lists topics and `help <word>` reads one (`modules/commands/help.js`).
+Topics are plain-text files: core's in the repo's `help/`, a pack's in
+its `content/help/` (`modules/content/loadHelp.js`).
+
+```
+keywords: sneak, sneaking, stealth
+commands: sneak
+see also: movement, get, give
+
+sneak
+sneak on|off
+Try to go unnoticed...
+```
+
+- **Found by** a keyword, a command the topic covers, or the start of
+  either (`help abbrev`). Several matches are listed instead.
+- **Packs replace topics by file name**, later packs winning, so a theme
+  can reword core's help in its own voice.
+- **Only this game's topics show:** one whose commands aren't all
+  registered (recognition's, in a game without it) is left out.
+- **Every verb needs one.** `tests/help.test.js` sets up the western
+  game (every code pack is in it) with recognition on, and fails if a
+  registered command has no topic listing it under `commands:`, or if a
+  `see also` names nothing.
+- `commands` stays as the quick list of every verb.
+
+Plain text rather than JSON because help is prose. Not built: access
+levels, for when staff-only verbs exist and their help shouldn't show to
+everyone.
+
 ## Recognition
 
 Strangers see each other by **short description** ("a bearded man").

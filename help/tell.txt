@@ -1,0 +1,8 @@
+keywords: tell, ooc
+commands: tell
+see also: who, say
+
+tell <name> <message>
+An out-of-character message to anyone online, wherever they are. Uses
+players' real names, not how their characters look. For anything your
+character says, use say, sayto or whisper.

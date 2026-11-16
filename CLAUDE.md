@@ -124,6 +124,12 @@ what)`, which names the file in errors.
 `packs/western/lib/tip.js` (an item name minus a/an/the/some), and the
 shuffle inside `modules/npcs/behaviors.js`.
 
+## Adding a verb
+
+Give it a help topic: a `.txt` in `help/` (core) or the pack's
+`content/help/`, listing the verb under `commands:` (see ARCHITECTURE.md's
+"Help"). `tests/help.test.js` fails until you do.
+
 ## Known traps
 
 - **Import cycle through gameClock.js.** gameClock → packs/game.js → the

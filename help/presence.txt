@@ -1,0 +1,13 @@
+keywords: presence, doing
+commands: presence
+see also: look, emote
+
+presence
+presence <what you're doing>
+presence clear
+What others see you doing when they look or walk in, in place of
+"is here":
+
+  presence leans against the bar, nursing a drink.
+
+It clears when you leave the room. On its own, shows yours.

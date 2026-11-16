@@ -1,0 +1,10 @@
+keywords: items, keywords
+commands: items
+see also: look, get
+
+items
+items <container>
+Lists the items around you (on the floor, then what you carry), with the
+words each one answers to, so you can see what to type. With a
+container, lists what's inside it. More of a helper than an action:
+nobody else sees you do it.

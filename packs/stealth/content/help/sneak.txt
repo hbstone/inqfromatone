@@ -1,0 +1,13 @@
+keywords: sneak, sneaking, stealth
+commands: sneak
+see also: movement, get, give
+
+sneak
+sneak on|off
+Try to go unnoticed. While you're sneaking, each person who could see
+you might miss you arriving or leaving, picking something up, handing
+something over or drawing a weapon. They might see it as usual, or catch
+you trying to avoid notice. You won't know who saw what.
+
+Sneak stays on until you turn it off, even if you log out, and your
+prompt shows [sneaking] while it's on.

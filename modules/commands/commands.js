@@ -1,8 +1,7 @@
 import { listCommands } from './registry.js';
 
 // `commands` - every registered verb, core and pack alike, alphabetical.
-// A stand-in for discoverability until there's a real helpfile system
-// (see ROADMAP.md). Laid out in columns so the list stays a few lines
+// The quick list; `help` has the details. Laid out in columns so the list stays a few lines
 // tall as packs add verbs, with full-word-only commands (see registry.js)
 // marked, since abbreviating those does nothing.
 const COLUMNS = 4;

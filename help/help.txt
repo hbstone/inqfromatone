@@ -1,0 +1,9 @@
+keywords: help, commands
+commands: help, commands
+see also: abbreviations
+
+help
+help <topic>
+commands
+Help lists its topics, and help <topic> reads one; part of a word will
+do. Commands lists every command there is.

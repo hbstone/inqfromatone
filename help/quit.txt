@@ -1,0 +1,7 @@
+keywords: quit, logout, leave
+commands: quit
+
+quit
+Leave the game. Your character, what you carry, and where you are are
+saved. Type it in full. Some things, like being in a fight, keep you
+from quitting until they're over.

@@ -1,0 +1,6 @@
+keywords: score, stats, character
+commands: score
+see also: equipment
+
+score
+Your stats and what you're wearing.

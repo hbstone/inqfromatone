@@ -1,0 +1,7 @@
+keywords: abbreviations, shortcuts
+
+Most commands can be shortened to their first letters: n for north, l
+for look, sa for say. When two commands start the same way, the more
+common one wins. To check what a shortening would do without doing it,
+add a question mark: n? or sa?. A few commands, like quit, have to be
+typed in full.
