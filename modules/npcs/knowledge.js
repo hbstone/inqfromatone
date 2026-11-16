@@ -37,6 +37,7 @@ import { keywordsFor, nameFor } from '../naming.js';
 import { wordsOf } from '../text.js';
 import { readJsonFile, writeJsonAtomic } from '../atomicWrite.js';
 import { npcsDir } from '../saveDirs.js';
+import { canSense } from './senses.js';
 
 // About a game day. A number, not gameClock's MINUTES_PER_DAY: this module is
 // part of an import cycle with gameClock.js (via the content loader), so it
@@ -66,8 +67,13 @@ function subjectKey(character) {
     return character.isNpc ? `npc:${character.templateId}` : `pc:${character.name.toLowerCase()}`;
 }
 
+// NPCs here that notice people and can see right now (see senses.js).
 function watchersIn(room, except) {
-    return room.characters.filter((c) => c.isNpc && c.sightings && c !== except);
+    return room.characters.filter((c) => c !== except && isWatching(c));
+}
+
+function isWatching(character) {
+    return character.isNpc && character.sightings && canSense(character, 'sight');
 }
 
 function note(npc, subject, fields, now) {
@@ -116,7 +122,7 @@ export function noticeArrival({ character, room, from }, now = gameMinutes()) {
         note(npc, character, { arrivedFrom: from ?? null }, now);
     }
     // An NPC walking in notices who's already there.
-    if (character.isNpc && character.sightings) {
+    if (isWatching(character)) {
         for (const other of room.others(character)) {
             note(character, other, {}, now);
         }
@@ -129,7 +135,7 @@ export function noticeDeparture({ character, room, direction }, now = gameMinute
         note(npc, character, { arrivedFrom: before?.arrivedFrom ?? null, leftTo: direction ?? null, gone: true }, now);
     }
     // An NPC walking out last saw everyone else here, just now.
-    if (character.isNpc && character.sightings) {
+    if (isWatching(character)) {
         for (const other of room.others(character)) {
             const before = character.knowledge.sightings[subjectKey(other)];
             note(character, other, { arrivedFrom: before?.arrivedFrom ?? null }, now);
@@ -162,6 +168,8 @@ export function watchForSightings() {
     on('enterRoom', (payload) => noticeArrival(payload));
     on('leaveRoom', (payload) => noticeDeparture(payload));
     // Leaving the game: gone, with no direction.
+    // Logging in and out: from and to nowhere in particular.
+    on('characterEntering', ({ character, room }) => noticeArrival({ character, room, from: null }));
     on('characterLeaving', ({ character, room }) => noticeDeparture({ character, room, direction: null }));
     on('shortDescChange', (payload) => noticeNewLook(payload));
 }

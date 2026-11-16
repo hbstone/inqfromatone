@@ -920,8 +920,9 @@ A mustachioed bartender says, "A bearded man? Came in from the south a little wh
 ```
 
 - **What's noticed:** someone arriving (and from where), leaving (and
-  which way), or leaving the game; and, when the NPC itself walks into a
-  room, who's already there. Opt-in, so the dog doesn't report on
+  which way), or logging in or out; and, when the NPC itself walks into a
+  room, who's already there. Only while the NPC can see (see "Senses"):
+  the groundskeeper asleep in the storeroom notices no one. Opt-in, so the dog doesn't report on
   passers-by; the bartender and groundskeeper have it.
 - **Who's who:** sightings are filed by identity (a player's real name, an
   NPC's template id) but remembered as the NPC saw them: by short
@@ -954,10 +955,8 @@ deliberate for a first slice, but there will need to be ways around it:
 sneaking past unnoticed, bribes, how well the NPC knows the person asking,
 and NPCs who are forgetful or uncooperative by nature.
 
-Not built yet: an NPC noticing people while asleep is still noticing (a
-post or `when` condition could switch it off); someone logging in isn't
-noticed until they move; answers use one generic voice (an NPC's own
-phrasing would be content). NPCs being told things is below.
+Not built yet: answers use one generic voice (an NPC's own phrasing would
+be content). NPCs being told things is below.
 
 ## Knowledge: hearsay
 
@@ -977,10 +976,13 @@ A mustachioed bartender says, "A bearded man told me a little while ago: 'The st
 - **Only what's said to them.** Not talk they happen to be near, and not
   whispers: something said in confidence shouldn't go to anyone who asks.
   Overhearing could be a separate opt-in trait later.
+- **Only if it can hear** right now (see "Senses"): asleep, the
+  groundskeeper takes nothing in.
 - **Reaction:** the NPC's `toldReply` (an emote and/or line, checked at
   startup like topics), else a nod. At a routine post with its own
-  dialogue the NPC takes nothing in and gives that post's `unknownTopic`,
-  if any: the sleeping groundskeeper snores on.
+  dialogue, that post's `unknownTopic` instead, if any: the sleeping
+  groundskeeper snores on. How it reacts and whether it heard are
+  separate: an NPC awake at such a post still remembers.
 - **Recall:** every word of the question has to be in what was said; the
   latest such thing wins. It's quoted with who said it, as the NPC saw
   them, and when ("You told me" for the asker's own words). In `ask` it
@@ -1003,6 +1005,29 @@ groundskeeper, and the red-nosed prospector propping up the Silver Spur's
 bar, who's too far gone to care whose secret it was. The bartender keeps
 his word ("I don't repeat what I hear"): he notices who comes and goes,
 but hearsay is off for him.
+
+## Senses
+
+What an NPC can perceive right now (`modules/npcs/senses.js`). Each sense
+is named and on unless content switches it off: on the NPC (a blind
+beggar) or on a routine post, one sense at a time, a post overriding the
+NPC's per sense while the NPC is at it.
+
+```json
+{ "from": "night", "at": "start/storage-room", "senses": { "sight": false, "hearing": false } }
+```
+
+- **Known senses:** `sight`, `hearing`, `smell`. Anything else, or a
+  non-boolean, fails at startup with the NPC's id.
+- **Who needs what:** sightings need sight, hearsay needs hearing.
+  `canSense(character, sense)` is the one check; players can always.
+- **Smell** has nothing using it yet. It's there so content can already
+  say a sleeper still smells smoke, and so scents and perfumes later only
+  need to check it.
+
+Booleans for now. Partial senses (dim hearing that only a shout gets
+through, poor sight at night) could replace a boolean with a number later
+without changing content that says `false`.
 
 ## Naming: what each viewer calls someone
 
@@ -1292,7 +1317,9 @@ calls in `quit.js`:
 - **`characterLeaving`** `{ character, room, world }`: emitted when anyone
   leaves the world (quit or dropped connection), before the save, so packs
   can end whatever they keep running for that character. Combat ends the
-  fight and tells a lone opponent.
+  fight and tells a lone opponent. Its counterpart, **`characterEntering`**
+  `{ character, room, world }`, is emitted when someone logs in, once
+  they're in their room (NPCs that notice people see them arrive).
 - **Quit blockers** (`pack.registerQuitBlocker(check)`): `check(character)`
   returns a reason to refuse a deliberate `quit`, or null. Combat refuses
   mid-fight. A dropped connection can't be refused, so cleanup belongs on

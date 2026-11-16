@@ -66,6 +66,7 @@
                 "from": "night",
                 "at": "start/storage-room",
                 "presence": "snores softly on a pile of sacks.",
+                "senses": { "sight": false, "hearing": false },
                 "unknownTopic": { "emote": "snores on, undisturbed." },
                 "behaviors": {
                     "ambient": {

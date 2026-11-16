@@ -27,6 +27,8 @@ export class Npc extends Character {
      *   what's said to them (see modules/npcs/knowledge.js).
      * @param {object} [template.toldReply] - How they react to being told
      *   something (see modules/npcs/dialogue.js).
+     * @param {object} [template.senses] - Senses switched off, like
+     *   { "sight": false } (see modules/npcs/senses.js).
      * @param {object[]} [template.routine] - Daily posts (see
      *   modules/npcs/routine.js), with each `at` already resolved to a
      *   room id as `roomId` by the loader.
@@ -46,6 +48,7 @@ export class Npc extends Character {
             sightings,
             hearsay,
             toldReply,
+            senses,
         },
         homeRoomId,
     ) {
@@ -63,6 +66,7 @@ export class Npc extends Character {
         this.sightings = sightings === true;
         this.hearsay = hearsay === true;
         this.toldReply = toldReply ?? null;
+        this.senses = senses ?? {};
         this.knowledge = { sightings: {}, heard: [] }; // loaded from saves at startup, see modules/npcs/knowledge.js
         this.knowledgeDirty = false;
         this.basePresence = presence;

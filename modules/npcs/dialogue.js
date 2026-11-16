@@ -33,12 +33,13 @@
 // unknownTopic, which replace the NPC's while they're at that post: a
 // groundskeeper asleep in the storeroom just snores. Like a post's
 // behaviors, they replace rather than add to the usual ones, sightings
-// and hearsay included: the sleeping groundskeeper doesn't take in what's
-// said to him either.
+// and hearsay included. Whether the NPC takes in what's said to it is up
+// to its senses instead (senses.js): the sleeping groundskeeper can't hear.
 import { getGameTime } from '../gameClock.js';
 import { nameFor } from '../naming.js';
 import { currentRoutineEntry } from './routine.js';
 import { heardAnswer, recallHeard, recallSighting, rememberTold, sightingAnswer } from './knowledge.js';
+import { canSense } from './senses.js';
 import { normalizeText, wordsOf } from '../text.js';
 
 const DEFAULT_UNKNOWN = { emote: "doesn't seem to know anything about that." };
@@ -138,9 +139,9 @@ export function answerFor(npc, asked, { asker, room, hour = getGameTime().hour, 
 
 /**
  * Someone says something straight to an NPC (`sayto`). One that keeps
- * hearsay remembers it and gives its toldReply. At a routine post with its
- * own dialogue it takes nothing in, and gives that post's unknownTopic if
- * any (the sleeping groundskeeper snores on).
+ * hearsay remembers it if it can hear right now. How it reacts: at a
+ * routine post with its own dialogue, that post's unknownTopic if any (the
+ * sleeping groundskeeper snores on); else its toldReply, if it heard.
  * @param {import("../Npc.js").Npc} npc
  * @param {object} speaker
  * @param {string} message
@@ -149,15 +150,15 @@ export function answerFor(npc, asked, { asker, room, hour = getGameTime().hour, 
  *   at all.
  */
 export function hearTold(npc, speaker, message, { hour = getGameTime().hour, now } = {}) {
+    const heard = npc.hearsay && canSense(npc, 'hearing', hour);
+    if (heard) {
+        rememberTold(npc, speaker, message, now);
+    }
     const dialogue = currentDialogue(npc, hour);
     if (dialogue !== npc) {
         return dialogue.unknownTopic;
     }
-    if (!npc.hearsay) {
-        return null;
-    }
-    rememberTold(npc, speaker, message, now);
-    return npc.toldReply ?? DEFAULT_TOLD;
+    return heard ? (npc.toldReply ?? DEFAULT_TOLD) : null;
 }
 
 /**

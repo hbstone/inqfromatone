@@ -28,6 +28,7 @@ import { Item } from '../Item.js';
 import { Npc } from '../Npc.js';
 import { hasBehavior } from '../npcs/behaviors.js';
 import { validateDialogue } from '../npcs/dialogue.js';
+import { validateSenses } from '../npcs/senses.js';
 import { assertUniqueKeys } from './assertUniqueKeys.js';
 import { mergeByKey, sourceName } from './mergeByKey.js';
 import { defaultContentDirs } from '../packs/game.js';
@@ -169,6 +170,10 @@ export function loadWorldData(world, contentDirs = defaultContentDirs(), { start
             assertValidKey(npcData.key, 'NPC');
             const npcId = `${zoneId}/${npcData.key}`;
             validateDialogue(npcData, npcId);
+            validateSenses(npcData.senses, `NPC "${npcId}"`);
+            (npcData.routine ?? []).forEach((entry, index) =>
+                validateSenses(entry.senses, `NPC "${npcId}" routine post ${index + 1}`),
+            );
             for (const behavior of Object.keys(npcData.behaviors ?? {})) {
                 if (!hasBehavior(behavior)) {
                     console.warn(`NPC "${npcId}" has unknown behavior "${behavior}"; it will be ignored.`);
