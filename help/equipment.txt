@@ -5,8 +5,9 @@ see also: score
 wear <item>
 wield <item>
 remove <item>
-Put on clothing or armor, take up a weapon, or take something off again.
-Wear and wield work the same way; use whichever reads right. Each piece
-goes in its own slot (a hat on your head, a weapon in hand), one item
-per slot. Some equipment changes your stats while you have it on. Score
-shows what you're wearing.
+Put on clothing or armor, brandish a weapon, or take something off.
+Wear and wield are identical, use whichever you prefer. Each piece goes
+in its own slot (a hat on your head, a weapon in hand), one item per slot.
+Score shows what you're wearing.
+
+Some equipment may change your stats while worn.

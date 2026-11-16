@@ -7,4 +7,4 @@ look <someone or something>
 On its own, describes the room you're in, who's here and what they're
 doing, and what's lying around. With a word, looks at a person, or at
 an item you carry or one in the room. Looking at a container shows
-what's inside it.
+what's inside it. People can notice when you look at them.

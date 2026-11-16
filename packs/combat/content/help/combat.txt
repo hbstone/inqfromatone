@@ -9,6 +9,6 @@ Kill starts a fight with someone in your current room. Once started,
 the two of you trade blows on your own until one falls or someone
 leaves the fight.
 Disengage steps back from the fight. Flee steps back and runs, if
-there's an exit that way. Type kill in full.
+there's an exit that way.
 
 NPCs who see you start a fight remember it, and think less of you.
