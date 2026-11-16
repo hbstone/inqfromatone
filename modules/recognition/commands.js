@@ -85,6 +85,41 @@ function currentShortDescOf(world, key) {
     return loadCharacterState(key, recognitionSettings.charactersDir)?.shortDesc ?? null;
 }
 
+// Every memory has to keep a word no other memory shares, or there's no
+// keyword that finds it by name: with "Tom" and "Tom", or "Grand Poobah"
+// and "Grand Poobah Claude", every word of one is ambiguous, and it can only
+// be reached while they're in the room. So refuse a name (for a new memory,
+// or a rename) that would leave this or any other memory without one.
+// Returns why, or null if the name is fine.
+function nameClash(character, key, name) {
+    const others = Object.entries(character.memories ?? {})
+        .filter(([otherKey]) => otherKey !== key)
+        .map(([, memory]) => ({ name: memory.name, words: new Set(targetableKeywordsOf(memory.name)) }));
+    const words = new Set(targetableKeywordsOf(name));
+    // Does a word set have a word in none of the given sets?
+    const hasOwnWord = (set, sets) => [...set].some((word) => sets.every((s) => !s.has(word)));
+
+    if (
+        !hasOwnWord(
+            words,
+            others.map((o) => o.words),
+        )
+    ) {
+        const other = others.find((o) => [...words].some((word) => o.words.has(word)));
+        return `You already remember someone as ${other.name}, so "${name}" wouldn't have a word of its own to find them by. Try a name with a word that's only theirs.`;
+    }
+    // Only a loss this name causes: an old clash already in someone's
+    // memories doesn't block every new name.
+    const squeezed = others.find((o) => {
+        const rest = others.filter((x) => x !== o).map((x) => x.words);
+        return hasOwnWord(o.words, rest) && !hasOwnWord(o.words, [words, ...rest]);
+    });
+    if (squeezed) {
+        return `Every word of ${squeezed.name} would be in "${name}" too, so you couldn't find ${squeezed.name} by name any more. Try a different name.`;
+    }
+    return null;
+}
+
 // A keyword that picks out just this memory, for the "add a note" hint:
 // the first word of their name that no other memory shares ("poobah" for
 // Grand Poobah Claude when you also remember Grand Inquisitor Loreth).
@@ -178,6 +213,10 @@ export const remember = (world, args, character) => {
             ? `${name.error} If you meant to add a note: you don't remember anyone matching "${token}" yet.`
             : name.error;
     }
+    const clash = nameClash(character, identityOf(target), name.value);
+    if (clash) {
+        return clash;
+    }
     const knewAs = target.shortDesc ?? null;
     character.memories[identityOf(target)] = { name: name.value, knewAs, notes: [] };
     return `You'll remember ${knewAs ?? 'them'} as ${name.value}.`;
@@ -235,6 +274,10 @@ export const rename = (world, args, character) => {
     const name = validateName(text);
     if (name.error) {
         return name.error;
+    }
+    const clash = nameClash(character, found.key, name.value);
+    if (clash) {
+        return clash;
     }
     const oldName = found.memory.name;
     found.memory.name = name.value;

@@ -1049,6 +1049,13 @@ keyed by the subject's lowercased real name, so identity, not looks:
   a note can't silently become someone's name: the refusal says nobody
   matched. This is the guard against a stranger whose look matches one of
   your names.
+- **Every memory keeps a word of its own.** `remember` and `rename` refuse
+  a name that would leave this memory or another without a word no other
+  name has: a second "Tom", or "Little Tom" when you already remember a
+  "Tom" (every word of Tom would then be ambiguous). Such a memory could
+  only be found while they're in the room, by how they look. An old clash
+  already in a save doesn't block other names; the "add a note" hint falls
+  back to `<keyword>` for it.
 - `rename <kw> <name>`: changes the name and updates `knewAs` to their
   current look.
 - `forget <kw>` deletes a memory only when it has no notes; otherwise it
