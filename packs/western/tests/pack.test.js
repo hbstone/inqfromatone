@@ -40,11 +40,11 @@ function person(name, room) {
 const last = (character) => character.socket.messages.at(-1);
 
 try {
-    // The game: western, then combat building on it
+    // The game: western, then combat building on it, and stealth
     {
         assert.deepEqual(
             game.packs.map((p) => p.name),
-            ['western', 'combat'],
+            ['western', 'combat', 'stealth'],
         );
         await setUpPackCode(game, world);
         assert.ok(resolveCommand('tip'), "western's verb");

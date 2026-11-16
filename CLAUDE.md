@@ -39,6 +39,10 @@ a message, saving a file), check this list and grep for the obvious name.
   (for `tell`); `modules/connection.js`'s `findInWorldCharacter` is exact
   (for logins). Different on purpose.
 - `modules/presence.js`: `presenceOf`, `presenceLine`.
+- `modules/notice.js`: `tellRoomNoticing(room, actor, action, render)`
+  instead of `tellRoom` for anything someone could do quietly (moving,
+  handling items); `noticesIn` + `tellNoticed` when the answers are needed
+  for something else too (NPC sightings).
 - `modules/commands/say.js`: `formatSpeech` (capitalized, ends a sentence),
   for anything said out loud.
 
@@ -97,6 +101,8 @@ what)`, which names the file in errors.
   `validateWhen` for anything content can make conditional).
 - `modules/npcs/switchboard.js`: `setHigherTier`, `route` (escalated
   topics).
+- `registerNoticeRule` (`modules/notice.js`, one per game) and
+  `registerPromptStatus` (`modules/promptStatus.js`).
 - `modules/packs/context.js`: what a pack's `index.js` is handed.
 
 **Odds and ends**
