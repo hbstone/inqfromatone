@@ -23,7 +23,10 @@ export class Npc extends Character {
      *   asked, and {object} [template.unknownTopic] - their answer to
      *   anything else (see modules/npcs/dialogue.js).
      * @param {boolean} [template.sightings] - Whether they notice who comes
-     *   and goes (see modules/npcs/knowledge.js).
+     *   and goes, and {boolean} [template.hearsay] - whether they remember
+     *   what's said to them (see modules/npcs/knowledge.js).
+     * @param {object} [template.toldReply] - How they react to being told
+     *   something (see modules/npcs/dialogue.js).
      * @param {object[]} [template.routine] - Daily posts (see
      *   modules/npcs/routine.js), with each `at` already resolved to a
      *   room id as `roomId` by the loader.
@@ -41,6 +44,8 @@ export class Npc extends Character {
             topics,
             unknownTopic,
             sightings,
+            hearsay,
+            toldReply,
         },
         homeRoomId,
     ) {
@@ -56,7 +61,9 @@ export class Npc extends Character {
         this.topics = topics ?? [];
         this.unknownTopic = unknownTopic ?? null;
         this.sightings = sightings === true;
-        this.knowledge = { sightings: {} }; // loaded from saves at startup, see modules/npcs/knowledge.js
+        this.hearsay = hearsay === true;
+        this.toldReply = toldReply ?? null;
+        this.knowledge = { sightings: {}, heard: [] }; // loaded from saves at startup, see modules/npcs/knowledge.js
         this.knowledgeDirty = false;
         this.basePresence = presence;
         this.routine = routine?.length ? routine : null;

@@ -24,6 +24,7 @@ import { quit } from './quit.js';
 import { remove } from './remove.js';
 import { ask } from './ask.js';
 import { say } from './say.js';
+import { sayto } from './sayto.js';
 import { score } from './score.js';
 import { south } from './south.js';
 import { tell } from './tell.js';
@@ -52,6 +53,7 @@ registerCommand('remove', remove);
 
 // Communication
 registerCommand('say', say);
+registerCommand('sayto', sayto);
 registerCommand('tell', tell);
 registerCommand('whisper', whisper);
 registerCommand('emote', emote);

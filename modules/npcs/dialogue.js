@@ -24,18 +24,25 @@
 // a stranger described as "a whiskey-soaked drifter" is asked about as a
 // person, not as whiskey.
 //
+// An NPC that keeps hearsay ("hearsay": true) also answers from what it's
+// been told, after people and before loose topics: told "The stage is
+// running late", it answers "ask about the stage" with who said so and
+// when. Being told something gets its "toldReply" (default: a nod).
+//
 // A routine post (see routine.js) can give its own topics and/or
 // unknownTopic, which replace the NPC's while they're at that post: a
 // groundskeeper asleep in the storeroom just snores. Like a post's
 // behaviors, they replace rather than add to the usual ones, sightings
-// included.
+// and hearsay included: the sleeping groundskeeper doesn't take in what's
+// said to him either.
 import { getGameTime } from '../gameClock.js';
 import { nameFor } from '../naming.js';
 import { currentRoutineEntry } from './routine.js';
-import { recallSighting, sightingAnswer } from './knowledge.js';
+import { heardAnswer, recallHeard, recallSighting, rememberTold, sightingAnswer } from './knowledge.js';
 import { normalizeText, wordsOf } from '../text.js';
 
 const DEFAULT_UNKNOWN = { emote: "doesn't seem to know anything about that." };
+const DEFAULT_TOLD = { emote: 'nods.' };
 
 function assertAnswer(answer, where) {
     const isText = (value) => typeof value === 'string' && value.trim() !== '';
@@ -58,6 +65,9 @@ function assertAnswer(answer, where) {
  */
 export function validateDialogue(npcData, npcId) {
     validateTopics(npcData, `NPC "${npcId}"`);
+    if (npcData.toldReply !== undefined) {
+        assertAnswer(npcData.toldReply, `NPC "${npcId}"'s "toldReply"`);
+    }
     (npcData.routine ?? []).forEach((entry, index) =>
         validateTopics(entry, `NPC "${npcId}" routine post ${index + 1}`),
     );
@@ -115,9 +125,39 @@ export function answerFor(npc, asked, { asker, room, hour = getGameTime().hour, 
             return sightingAnswer(sighting, room, now);
         }
     }
+    if (dialogue === npc && npc.hearsay) {
+        const heard = recallHeard(npc, asked, now);
+        if (heard) {
+            return heardAnswer(heard, asker, now);
+        }
+    }
     const padded = ` ${normalizeText(asked)} `;
     const topic = topics.find((t) => t.keywords.some((k) => padded.includes(` ${normalizeText(k)} `)));
     return topic ?? dialogue.unknownTopic ?? DEFAULT_UNKNOWN;
+}
+
+/**
+ * Someone says something straight to an NPC (`sayto`). One that keeps
+ * hearsay remembers it and gives its toldReply. At a routine post with its
+ * own dialogue it takes nothing in, and gives that post's unknownTopic if
+ * any (the sleeping groundskeeper snores on).
+ * @param {import("../Npc.js").Npc} npc
+ * @param {object} speaker
+ * @param {string} message
+ * @param {{ hour?: number, now?: number }} [context] - For tests.
+ * @returns {{ says?: string, emote?: string }|null} How the NPC reacts, if
+ *   at all.
+ */
+export function hearTold(npc, speaker, message, { hour = getGameTime().hour, now } = {}) {
+    const dialogue = currentDialogue(npc, hour);
+    if (dialogue !== npc) {
+        return dialogue.unknownTopic;
+    }
+    if (!npc.hearsay) {
+        return null;
+    }
+    rememberTold(npc, speaker, message, now);
+    return npc.toldReply ?? DEFAULT_TOLD;
 }
 
 /**

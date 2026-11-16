@@ -6,6 +6,8 @@
         "presence": "polishes a glass behind the bar.",
         "description": "A broad man in a striped shirt and sleeve garters, with a waxed mustache he's plainly proud of. He keeps one eye on the door and the other on the till.",
         "sightings": true,
+        "hearsay": true,
+        "toldReply": { "emote": "nods without looking up from the glass." },
         "topics": [
             {
                 "keywords": ["card game", "cards", "poker", "faro"],

@@ -18,7 +18,7 @@ import {
     saveNpcKnowledge,
     sightingAnswer,
     watchForSightings,
-    SIGHTING_MEMORY_MINUTES,
+    MEMORY_MINUTES,
 } from '../modules/npcs/knowledge.js';
 import { makeCharacter, lastMessage } from './helpers.js';
 
@@ -133,7 +133,7 @@ const reply = (result) => result.split('\n').slice(1).join('\n');
     assert.match(at(120), /a little while ago/);
     assert.match(at(10 * 60), /earlier today/);
     assert.match(at(20 * 60), /yesterday/);
-    assert.equal(at(SIGHTING_MEMORY_MINUTES + 1), null, 'forgotten after a game day');
+    assert.equal(at(MEMORY_MINUTES + 1), null, 'forgotten after a game day');
     assert.deepEqual(bartender.knowledge.sightings, {});
 }
 
@@ -177,7 +177,7 @@ const reply = (result) => result.split('\n').slice(1).join('\n');
     loadNpcKnowledge({ npcs: [fresh] }, dir, 1100);
     assert.equal(fresh.knowledge.sightings['pc:alice'].arrivedFrom, 'north');
     const later = new Npc(BARTENDER, saloon.id);
-    loadNpcKnowledge({ npcs: [later] }, dir, 1002 + SIGHTING_MEMORY_MINUTES + 1);
+    loadNpcKnowledge({ npcs: [later] }, dir, 1002 + MEMORY_MINUTES + 1);
     assert.deepEqual(later.knowledge.sightings, {}, 'too old by the time it loads');
 }
 
@@ -251,9 +251,9 @@ const reply = (result) => result.split('\n').slice(1).join('\n');
     baeron.shortDesc = 'a lanky adolescent';
     noticeNewLook({ character: baeron, room: saloon, from: 'a wiry lad' }, 100);
     assert.equal(recallSighting(bartender, 'wiry lad', null, 100).askedAs, 'a wiry lad');
-    noticeArrival({ character: baeron, room: saloon, from: 'east' }, 100 + SIGHTING_MEMORY_MINUTES);
-    assert.equal(recallSighting(bartender, 'wiry lad', null, 101 + SIGHTING_MEMORY_MINUTES), null);
-    assert.equal(recallSighting(bartender, 'lanky', null, 101 + SIGHTING_MEMORY_MINUTES).askedAs, 'a lanky adolescent');
+    noticeArrival({ character: baeron, room: saloon, from: 'east' }, 100 + MEMORY_MINUTES);
+    assert.equal(recallSighting(bartender, 'wiry lad', null, 101 + MEMORY_MINUTES), null);
+    assert.equal(recallSighting(bartender, 'lanky', null, 101 + MEMORY_MINUTES).askedAs, 'a lanky adolescent');
 }
 
 fs.rmSync(tmp, { recursive: true, force: true });

@@ -6,6 +6,8 @@
         "presence": "rakes leaves into tidy piles.",
         "description": "A stooped, weathered man in a patched coat, never far from his rake. He looks like he's tended these flagstones longer than anyone can remember.",
         "sightings": true,
+        "hearsay": true,
+        "toldReply": { "emote": "leans on his rake and hears you out.", "says": "Is that so." },
         "topics": [
             {
                 "keywords": ["moss", "flagstones", "stones"],
