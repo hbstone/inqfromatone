@@ -1046,6 +1046,64 @@ later without changing content that says `false`: dim hearing that only
 a shout gets through, or a sleeper catching scraps of talk with words
 missing; poor sight at night.
 
+## Noticing
+
+Whether the people around someone notice what they're doing
+(`modules/notice.js`). Core asks; a pack decides. For each action others
+would see, core asks the game's notice rule how each observer took it:
+
+- **noticed:** the usual message.
+- **suspicious:** the message plus a note ("They appear to be trying to
+  avoid notice.").
+- **unnoticed:** nothing, and an NPC remembers nothing.
+
+The actions: arriving and leaving (`movePlayer`), and the item verbs
+`get`, `give`, `drop`, `put`, `wear`/`wield` and `remove`, which now all
+tell the room what was done (only `give` and `drop` used to). The recipient
+of `give` is an observer like anyone else, so something can be planted on
+them unnoticed.
+
+- **One rule per game,** like the check resolver: `registerNoticeRule(fn,
+{ note })`, and `{ override: true }` to replace another pack's. It's
+  called once per action with every observer who can see, so one roll
+  about the actor ("sneaking this time?") applies to all of them.
+- **No rule, no change:** everyone who can see notices everything.
+- **Can't see, can't notice** (see "Senses"), whatever the rule says.
+- **NPC sightings** use the same answers as the messages: an NPC that
+  didn't notice someone leaves no sighting, and one that caught them at
+  it says so ("Seemed to be trying not to be noticed, too.").
+- **The actor is never told** who noticed. You always think you're being
+  sneaky, and others decide in character whether to let on.
+- **Messages use `tellRoomNoticing(room, actor, action, render)`** in
+  place of `tellRoom` for anything someone might do quietly.
+
+## Stealth (pack)
+
+`packs/stealth`, in both games. Supplies the notice rule, a `sneak`
+toggle, and a prompt status.
+
+- **`sneak`** (or `sneak on` / `sneak off`) stays on until turned off,
+  through moves, talk and logins. It's kept in `components.stealth`, so a
+  dropped connection mid-scene doesn't quietly end it, and the prompt
+  shows `[sneaking] > ` as a reminder.
+- **The odds,** per observer who can see: half the time they miss it, a
+  quarter they see it as usual, a quarter they catch the sneaker trying.
+  Constants in `lib/sneaking.js`.
+- **NPCs sneak from content:** `"components": { "stealth": { "sneaking":
+true } }` for a thief, or `{ "sneakChance": 0.3 }` for some of the time
+  (the starter cat). NPC content's `components` is new: data for packs,
+  keyed by pack.
+- **Other formulas:** a game wanting dexterity, gear or skill registers its
+  own rule with `{ override: true }`, reusing `isSneaking`.
+
+Not built: `hide` (staying hidden in a room, not just moving quietly),
+and senses for players (a sleeping player still sees everything).
+
+**Prompt statuses** (`modules/promptStatus.js`): packs register short
+statuses with `pack.registerPromptStatus(character => ...)`, shown as
+`[a, b] > ` for logged-in players. A first step toward a prompt players
+can customize (hp, room name, time of day).
+
 ## Conditions
 
 Named checks that content puts in a `when` (`modules/conditions.js`). A

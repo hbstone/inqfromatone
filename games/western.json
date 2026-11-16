@@ -1,4 +1,4 @@
 {
-    "packs": ["western", "combat"],
+    "packs": ["western", "combat", "stealth"],
     "startingRoom": "western/dry-creek/main-street"
 }

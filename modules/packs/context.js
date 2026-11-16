@@ -18,6 +18,8 @@ import { registerQuitBlocker } from '../commands/quit.js';
 import { every, after } from '../scheduler.js';
 import { registerCheckResolver } from '../checks/registry.js';
 import { registerCondition } from '../conditions.js';
+import { registerNoticeRule } from '../notice.js';
+import { registerPromptStatus } from '../promptStatus.js';
 
 /**
  * @param {{ name: string, dir: string, manifest: object }} pack
@@ -51,6 +53,13 @@ export function createPackContext(pack, world) {
         registerCheckResolver: attributed(registerCheckResolver),
         /** A condition content can use in a "when" (see modules/conditions.js). */
         registerCondition: attributed(registerCondition),
+        /**
+         * Decide who notices what someone does (see modules/notice.js). One per
+         * game; pass { override: true } to replace another pack's.
+         */
+        registerNoticeRule: attributed(registerNoticeRule),
+        /** A short status for players' prompts, like "sneaking" (see modules/promptStatus.js). */
+        registerPromptStatus: attributed(registerPromptStatus),
         /** Listen for an engine event (see modules/events.js). */
         on: attributed(on),
         /** Refuse a deliberate `quit` while something's going on (see modules/commands/quit.js). */

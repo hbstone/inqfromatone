@@ -107,7 +107,7 @@ try {
         const game = readGame('default');
         assert.deepEqual(
             game.packs.map((p) => p.name),
-            ['starter', 'combat'],
+            ['starter', 'combat', 'stealth'],
         );
         assert.equal(game.startingRoom, 'starter/start/starting-room');
         assert.deepEqual(defaultContentDirs(), contentDirsOf(game));

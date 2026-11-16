@@ -1,4 +1,5 @@
-import { nameFor, tellRoom } from '../naming.js';
+import { nameFor } from '../naming.js';
+import { noticesIn, tellNoticed } from '../notice.js';
 import { emit } from '../events.js';
 
 export const OPPOSITES = { north: 'south', south: 'north', east: 'west', west: 'east' };
@@ -23,7 +24,10 @@ export const movePlayer = (world, character, room, direction, opposite) => {
         return 'That path leads nowhere.';
     }
 
-    emit('leaveRoom', { character, room, world, direction });
+    // Who notices them go, and later arrive (see modules/notice.js): the
+    // same answers drive the messages and what NPCs remember.
+    const leaving = noticesIn(room, character, 'leave');
+    emit('leaveRoom', { character, room, world, direction, noticedBy: leaving });
 
     const changingZone = room.zone !== nextRoom.zone;
     const fromZone = world.getZone(room.zone);
@@ -33,7 +37,7 @@ export const movePlayer = (world, character, room, direction, opposite) => {
     }
 
     // Broadcast the departure
-    tellRoom(room, (viewer) => `${nameFor(character, viewer)} leaves to the ${direction}.`, [character]);
+    tellNoticed(leaving, (viewer) => `${nameFor(character, viewer)} leaves to the ${direction}.`);
 
     // Whatever they were doing here doesn't come with them (see
     // modules/presence.js). NPC presences come from content, not this.
@@ -45,13 +49,14 @@ export const movePlayer = (world, character, room, direction, opposite) => {
     nextRoom.addCharacter(character);
 
     // Broadcast the arrival
-    tellRoom(nextRoom, (viewer) => `${nameFor(character, viewer)} arrives from the ${opposite}.`, [character]);
+    const arriving = noticesIn(nextRoom, character, 'arrive');
+    tellNoticed(arriving, (viewer) => `${nameFor(character, viewer)} arrives from the ${opposite}.`);
 
     if (changingZone) {
         emit('zoneEnter', { character, zone: toZone, from: fromZone, world });
     }
 
-    emit('enterRoom', { character, room: nextRoom, world, from: opposite });
+    emit('enterRoom', { character, room: nextRoom, world, from: opposite, noticedBy: arriving });
 
     // Who's here, but not items: those wait for an explicit `look`.
     return [

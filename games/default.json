@@ -1,4 +1,4 @@
 {
-    "packs": ["starter", "combat"],
+    "packs": ["starter", "combat", "stealth"],
     "startingRoom": "starter/start/starting-room"
 }

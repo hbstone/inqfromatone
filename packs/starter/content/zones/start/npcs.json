@@ -6,6 +6,7 @@
         "presence": "watches the room with half-closed eyes.",
         "description": "A lean grey cat with a torn ear and an air of owning the place.",
         "unknownTopic": { "emote": "flicks an ear and otherwise ignores the question." },
+        "components": { "stealth": { "sneakChance": 0.3 } },
         "behaviors": {
             "wander": { "chance": 0.1 },
             "ambient": {

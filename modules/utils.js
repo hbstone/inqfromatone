@@ -1,3 +1,4 @@
+import { promptStatusesFor } from './promptStatus.js';
 import { renderColors, stripColors, capitalizeFirst } from './color.js';
 
 // A character can turn color off (see modules/commands/color.js); a
@@ -167,7 +168,9 @@ export function writePrompt(socket) {
     if (isClosed(socket)) {
         return;
     }
-    const prompt = '> ';
+    // Statuses packs ask for, like "[sneaking] > " (see modules/promptStatus.js)
+    const statuses = socket.character?.isLoggedIn ? promptStatusesFor(socket.character) : [];
+    const prompt = statuses.length > 0 ? `[${statuses.join(', ')}] > ` : '> ';
     const colored = isColorEnabled(socket) ? renderColors(prompt) : stripColors(prompt);
     socket.write('\r\n' + colored);
 }

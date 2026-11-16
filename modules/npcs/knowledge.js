@@ -92,6 +92,7 @@ function note(npc, subject, fields, now) {
         arrivedFrom: null,
         leftTo: null,
         gone: false,
+        furtive: false,
         ...fields,
         at: now,
     };
@@ -117,9 +118,19 @@ function forget(npc, now) {
 }
 
 // Event handlers, exported for tests. `now` is game minutes.
-export function noticeArrival({ character, room, from }, now = gameMinutes()) {
+// `noticedBy` (see modules/notice.js): how each observer took it. Someone
+// sneaking past an NPC that didn't notice leaves no sighting; one that
+// caught them at it remembers that too.
+function noticed(noticedBy, npc) {
+    return noticedBy?.get(npc) ?? 'noticed';
+}
+
+export function noticeArrival({ character, room, from, noticedBy }, now = gameMinutes()) {
     for (const npc of watchersIn(room, character)) {
-        note(npc, character, { arrivedFrom: from ?? null }, now);
+        const how = noticed(noticedBy, npc);
+        if (how !== 'unnoticed') {
+            note(npc, character, { arrivedFrom: from ?? null, furtive: how === 'suspicious' }, now);
+        }
     }
     // An NPC walking in notices who's already there.
     if (isWatching(character)) {
@@ -129,10 +140,24 @@ export function noticeArrival({ character, room, from }, now = gameMinutes()) {
     }
 }
 
-export function noticeDeparture({ character, room, direction }, now = gameMinutes()) {
+export function noticeDeparture({ character, room, direction, noticedBy }, now = gameMinutes()) {
     for (const npc of watchersIn(room, character)) {
+        const how = noticed(noticedBy, npc);
+        if (how === 'unnoticed') {
+            continue;
+        }
         const before = npc.knowledge.sightings[subjectKey(character)];
-        note(npc, character, { arrivedFrom: before?.arrivedFrom ?? null, leftTo: direction ?? null, gone: true }, now);
+        note(
+            npc,
+            character,
+            {
+                arrivedFrom: before?.arrivedFrom ?? null,
+                leftTo: direction ?? null,
+                gone: true,
+                furtive: how === 'suspicious' || Boolean(before?.furtive),
+            },
+            now,
+        );
     }
     // An NPC walking out last saw everyone else here, just now.
     if (isWatching(character)) {
@@ -240,14 +265,16 @@ export function sightingAnswer(sighting, room, now = gameMinutes()) {
         return { emote: 'nods across the room.', says: `${who} Right there.` };
     }
     const when = howLongAgo(sighting.at, now);
+    // Caught trying not to be seen
+    const sly = sighting.furtive ? ' Seemed to be trying not to be noticed, too.' : '';
     if (sighting.leftTo) {
         const came = sighting.arrivedFrom ? `Came in from the ${sighting.arrivedFrom}` : 'Saw them';
-        return { says: `${who} ${came} ${when}, headed ${sighting.leftTo}.` };
+        return { says: `${who} ${came} ${when}, headed ${sighting.leftTo}.${sly}` };
     }
     if (sighting.gone) {
-        return { says: `${who} Saw them ${when}. Haven't seen them since.` };
+        return { says: `${who} Saw them ${when}. Haven't seen them since.${sly}` };
     }
-    return { says: `${who} Saw them ${when}.` };
+    return { says: `${who} Saw them ${when}.${sly}` };
 }
 
 /**

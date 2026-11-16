@@ -1,5 +1,5 @@
-import { sendTo } from '../utils.js';
-import { findCharacter, nameFor, tellRoom } from '../naming.js';
+import { tellRoomNoticing } from '../notice.js';
+import { findCharacter, nameFor } from '../naming.js';
 import { resolveItemToken, formatItemList, previewMatch } from '../itemSearch.js';
 import { moveMatches } from '../stacking.js';
 
@@ -36,14 +36,14 @@ export const give = (world, args, character) => {
     const message = formatItemList(matches.map(previewMatch));
     moveMatches(matches, recipient.inventory);
 
-    // Notify the recipient
-    sendTo(recipient, `${nameFor(character, recipient)} gives you ${message}.`);
-
-    // Broadcast the action to the room
-    tellRoom(room, (viewer) => `${nameFor(character, viewer)} gives ${message} to ${nameFor(recipient, viewer)}.`, [
-        character,
-        recipient,
-    ]);
+    // The recipient and the room, each if they notice (see
+    // modules/notice.js): someone sneaking can slip a thing into a pocket
+    // unnoticed.
+    tellRoomNoticing(room, character, 'give', (viewer) =>
+        viewer === recipient
+            ? `${nameFor(character, recipient)} gives you ${message}.`
+            : `${nameFor(character, viewer)} gives ${message} to ${nameFor(recipient, viewer)}.`,
+    );
 
     return `You give ${message} to ${nameFor(recipient, character)}.`;
 };

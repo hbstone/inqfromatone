@@ -1,6 +1,8 @@
 import { canContainAll } from '../containers.js';
 import { resolveItemToken, formatItemList, previewMatch } from '../itemSearch.js';
 import { moveMatches } from '../stacking.js';
+import { nameFor } from '../naming.js';
+import { tellRoomNoticing } from '../notice.js';
 
 // `put <item> [in] <container>` - drop/give need no changes at all, since
 // a container's contents move with it as part of the same Item object
@@ -62,5 +64,12 @@ export const put = (world, args, character) => {
         room.markDirty();
     }
 
-    return `You put ${formatItemList(previews)} in ${container.name}.`;
+    const message = formatItemList(previews);
+    tellRoomNoticing(
+        room,
+        character,
+        'put',
+        (viewer) => `${nameFor(character, viewer)} puts ${message} in ${container.name}.`,
+    );
+    return `You put ${message} in ${container.name}.`;
 };
