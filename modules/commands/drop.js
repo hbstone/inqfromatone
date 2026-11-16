@@ -1,4 +1,5 @@
-import { nameFor, tellRoom } from '../naming.js';
+import { nameFor } from '../naming.js';
+import { tellRoomNoticing } from '../notice.js';
 import { resolveItemToken, formatItemList, previewMatch } from '../itemSearch.js';
 import { moveMatches } from '../stacking.js';
 
@@ -23,7 +24,7 @@ export const drop = (world, args, character) => {
     room.markDirty(); // matches.length > 0 is guaranteed above, so this always touches the room
 
     // Broadcast the action to the room
-    tellRoom(room, (viewer) => `${nameFor(character, viewer)} drops ${message}.`, [character]);
+    tellRoomNoticing(room, character, 'drop', (viewer) => `${nameFor(character, viewer)} drops ${message}.`);
 
     return `You drop ${message}.`;
 };

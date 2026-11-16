@@ -1,5 +1,7 @@
 import { keywordMatches } from '../keywordMatch.js';
 import { removeModifier } from '../stats.js';
+import { nameFor } from '../naming.js';
+import { tellRoomNoticing } from '../notice.js';
 
 // `remove <item>` - the inverse of wear/wield. Equipment is a slot ->
 // item map, not an array, so this doesn't go through itemSearch.js's
@@ -31,5 +33,9 @@ export const remove = (world, args, character) => {
         removeModifier(character, key, `equip:${slot}`);
     }
 
+    const room = world?.getRoomById(character.roomId);
+    if (room) {
+        tellRoomNoticing(room, character, 'remove', (viewer) => `${nameFor(character, viewer)} removes ${item.name}.`);
+    }
     return `You remove ${item.name}.`;
 };

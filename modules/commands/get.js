@@ -1,6 +1,8 @@
 import { isContainer } from '../containers.js';
 import { resolveItemToken, formatItemList, previewMatch } from '../itemSearch.js';
 import { moveMatches } from '../stacking.js';
+import { nameFor } from '../naming.js';
+import { tellRoomNoticing } from '../notice.js';
 
 export const get = (world, args, character) => {
     const room = world.getRoomById(character.roomId);
@@ -32,6 +34,7 @@ function getFromRoom(room, character, itemToken) {
     moveMatches(matches, character.inventory);
     room.markDirty(); // matches.length > 0 is guaranteed above, so this always touches the room
 
+    tellRoomNoticing(room, character, 'get', (viewer) => `${nameFor(character, viewer)} picks up ${message}.`);
     return `You pick up ${message}.`;
 }
 
@@ -70,5 +73,11 @@ function getFromContainer(room, character, itemToken, containerToken) {
         room.markDirty();
     }
 
+    tellRoomNoticing(
+        room,
+        character,
+        'get',
+        (viewer) => `${nameFor(character, viewer)} gets ${message} from ${container.name}.`,
+    );
     return `You get ${message} from ${container.name}.`;
 }

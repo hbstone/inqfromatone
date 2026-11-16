@@ -1,6 +1,8 @@
 import { resolveItemToken } from '../itemSearch.js';
 import { canEquip } from '../equipment.js';
 import { setModifier } from '../stats.js';
+import { nameFor } from '../naming.js';
+import { tellRoomNoticing } from '../notice.js';
 
 // `wear <item>` / `wield <item>` - same generic mechanism underneath (see
 // ARCHITECTURE.md's Equipment section); registered as two verbs purely
@@ -50,6 +52,10 @@ function makeEquipCommand(verb) {
             setModifier(character, key, `equip:${item.equip.slot}`, operation, amount);
         }
 
+        const room = world?.getRoomById(character.roomId);
+        if (room) {
+            tellRoomNoticing(room, character, verb, (viewer) => `${nameFor(character, viewer)} ${verb}s ${item.name}.`);
+        }
         return `You ${verb} ${item.name}.`;
     };
 }
