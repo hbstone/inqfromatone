@@ -103,8 +103,8 @@ what)`, which names the file in errors.
 
 - `modules/guard.js`: `guard` (one failure doesn't take down the rest).
 - `modules/npcs/behaviors.js`: `pick` (random choice, testable).
-- `modules/npcs/senses.js`: `canSense(character, sense)` before an NPC
-  perceives anything.
+- `modules/senses.js`: `canSense(character, sense)` before anyone
+  perceives anything; `registerSenseLayer` for states that change senses.
 
 **Tests**
 

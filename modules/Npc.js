@@ -28,7 +28,7 @@ export class Npc extends Character {
      * @param {object} [template.toldReply] - How they react to being told
      *   something (see modules/npcs/dialogue.js).
      * @param {object} [template.senses] - Senses switched off, like
-     *   { "sight": false } (see modules/npcs/senses.js).
+     *   { "sight": false } (see modules/senses.js).
      * @param {object[]} [template.routine] - Daily posts (see
      *   modules/npcs/routine.js), with each `at` already resolved to a
      *   room id as `roomId` by the loader.

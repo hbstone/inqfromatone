@@ -1016,10 +1016,13 @@ but hearsay is off for him.
 
 ## Senses
 
-What an NPC can perceive right now (`modules/npcs/senses.js`). Each sense
-is named and on unless content switches it off: on the NPC (a blind
-beggar) or on a routine post, one sense at a time, a post overriding the
-NPC's per sense while the NPC is at it.
+What a character can perceive right now (`modules/senses.js`, core, for
+players and NPCs alike). Each sense is named and on unless something
+switches it off: the character's own `senses` (an NPC's content, like a
+blind beggar's), under _layers_ for what's going on with them now, each
+overriding per sense. An NPC's routine post is a layer (registered by
+`modules/npcs/routine.js`): while it's at the post, the post's `senses`
+count.
 
 ```json
 { "from": "night", "at": "start/storage-room", "senses": { "sight": false, "hearing": false } }
@@ -1028,14 +1031,20 @@ NPC's per sense while the NPC is at it.
 - **Known senses:** `sight`, `hearing`, `smell`. Anything else, or a
   non-boolean, fails at startup with the NPC's id.
 - **Who needs what:** sightings need sight, hearsay needs hearing.
-  `canSense(character, sense)` is the one check; players can always.
+  `canSense(character, sense)` is the one check.
+- **Players** have senses too (`character.senses`, all on), but nothing
+  checks them yet: room messages reach everyone. Sleeping is the obvious
+  first use: a `registerSenseLayer` for "asleep", plus messages saying
+  which sense they reach (speech hearing, movement sight), so a sleeper
+  misses what they should.
 - **Smell** has nothing using it yet. It's there so content can already
   say a sleeper still smells smoke, and so scents and perfumes later only
   need to check it.
 
-Booleans for now. Partial senses (dim hearing that only a shout gets
-through, poor sight at night) could replace a boolean with a number later
-without changing content that says `false`.
+Booleans for now. Partial senses could replace a boolean with a number
+later without changing content that says `false`: dim hearing that only
+a shout gets through, or a sleeper catching scraps of talk with words
+missing; poor sight at night.
 
 ## Conditions
 

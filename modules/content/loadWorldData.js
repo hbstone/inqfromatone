@@ -28,7 +28,7 @@ import { Item } from '../Item.js';
 import { Npc } from '../Npc.js';
 import { hasBehavior } from '../npcs/behaviors.js';
 import { validateDialogue } from '../npcs/dialogue.js';
-import { validateSenses } from '../npcs/senses.js';
+import { validateSenses } from '../senses.js';
 import { assertUniqueKeys } from './assertUniqueKeys.js';
 import { mergeByKey, sourceName } from './mergeByKey.js';
 import { defaultContentDirs } from '../packs/game.js';

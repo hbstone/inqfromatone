@@ -40,12 +40,13 @@
 // groundskeeper asleep in the storeroom just snores. Like a post's
 // behaviors, they replace rather than add to the usual ones, sightings
 // and hearsay included. Whether the NPC takes in what's said to it is up
-// to its senses instead (senses.js): the sleeping groundskeeper can't hear.
+// to its senses instead (modules/senses.js): the sleeping groundskeeper
+// can't hear.
 import { getGameTime } from '../gameClock.js';
 import { nameFor } from '../naming.js';
 import { currentRoutineEntry } from './routine.js';
 import { heardAnswer, recallHeard, recallSighting, rememberTold, sightingAnswer } from './knowledge.js';
-import { canSense } from './senses.js';
+import { canSense } from '../senses.js';
 import { route } from './switchboard.js';
 import { validateWhen, whenHolds } from '../conditions.js';
 import { normalizeText, wordsOf } from '../text.js';

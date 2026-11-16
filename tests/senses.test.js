@@ -1,6 +1,7 @@
 import assert from 'assert/strict';
 import { Npc } from '../modules/Npc.js';
-import { canSense, SENSES, validateSenses } from '../modules/npcs/senses.js';
+import { canSense, registerSenseLayer, SENSES, validateSenses } from '../modules/senses.js';
+import '../modules/npcs/routine.js'; // registers the routine-post sense layer
 import { makeCharacter } from './helpers.js';
 
 // Every sense is on unless content switches it off; a post overrides the
@@ -26,7 +27,10 @@ import { makeCharacter } from './helpers.js';
     assert.equal(canSense(npc, 'sight', 22), false, 'still blind: the post only says hearing');
     assert.equal(canSense(npc, 'smell', 22), true, 'still smells smoke');
 
-    assert.equal(canSense(makeCharacter('Alice'), 'sight'), true, 'players always can');
+    const alice = makeCharacter('Alice');
+    assert.equal(canSense(alice, 'sight'), true, 'players have every sense by default');
+    alice.senses = { hearing: false };
+    assert.equal(canSense(alice, 'hearing'), false, 'and use the same check');
 }
 
 // Content is checked: known senses, booleans
@@ -37,4 +41,14 @@ import { makeCharacter } from './helpers.js';
     assert.throws(() => validateSenses({ smel: false }, 'NPC "a"'), /NPC "a": unknown sense "smel"/);
     assert.throws(() => validateSenses({ sight: 'no' }, 'x'), /must be true or false/);
     assert.throws(() => validateSenses(['sight'], 'x'), /must be an object/);
+}
+
+// A layer (a player asleep, say) overrides per sense, for anyone
+{
+    const bob = makeCharacter('Bob');
+    registerSenseLayer((character) => (character.asleep ? { sight: false, hearing: false } : null));
+    assert.equal(canSense(bob, 'sight'), true);
+    bob.asleep = true;
+    assert.equal(canSense(bob, 'sight'), false);
+    assert.equal(canSense(bob, 'smell'), true, 'smell still gets through');
 }

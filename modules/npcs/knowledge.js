@@ -37,7 +37,7 @@ import { keywordsFor, nameFor } from '../naming.js';
 import { wordsOf } from '../text.js';
 import { readJsonFile, writeJsonAtomic } from '../atomicWrite.js';
 import { npcsDir } from '../saveDirs.js';
-import { canSense } from './senses.js';
+import { canSense } from '../senses.js';
 
 // About a game day. A number, not gameClock's MINUTES_PER_DAY: this module is
 // part of an import cycle with gameClock.js (via the content loader), so it
@@ -67,7 +67,7 @@ function subjectKey(character) {
     return character.isNpc ? `npc:${character.templateId}` : `pc:${character.name.toLowerCase()}`;
 }
 
-// NPCs here that notice people and can see right now (see senses.js).
+// NPCs here that notice people and can see right now (see modules/senses.js).
 function watchersIn(room, except) {
     return room.characters.filter((c) => c !== except && isWatching(c));
 }
