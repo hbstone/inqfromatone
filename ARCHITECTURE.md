@@ -957,8 +957,52 @@ and NPCs who are forgetful or uncooperative by nature.
 Not built yet: an NPC noticing people while asleep is still noticing (a
 post or `when` condition could switch it off); someone logging in isn't
 noticed until they move; answers use one generic voice (an NPC's own
-phrasing would be content); and NPCs being _told_ things, the other half
-of the knowledge store.
+phrasing would be content). NPCs being told things is below.
+
+## Knowledge: hearsay
+
+The other half of the knowledge store: an NPC with `"hearsay": true`
+remembers what's said straight to it and repeats it when asked. Speaking
+to one person out loud is a new core verb, `sayto <someone> <message>`
+(`modules/commands/sayto.js`): the room hears it and sees who it was for.
+
+```
+You say to a mustachioed bartender, "The stage is running late."
+A mustachioed bartender nods without looking up from the glass.
+...
+You ask a mustachioed bartender about the stage.
+A mustachioed bartender says, "A bearded man told me a little while ago: 'The stage is running late.'"
+```
+
+- **Only what's said to them.** Not talk they happen to be near, and not
+  whispers: something said in confidence shouldn't go to anyone who asks.
+  Overhearing could be a separate opt-in trait later.
+- **Reaction:** the NPC's `toldReply` (an emote and/or line, checked at
+  startup like topics), else a nod. At a routine post with its own
+  dialogue the NPC takes nothing in and gives that post's `unknownTopic`,
+  if any: the sleeping groundskeeper snores on.
+- **Recall:** every word of the question has to be in what was said; the
+  latest such thing wins. It's quoted with who said it, as the NPC saw
+  them, and when ("You told me" for the asker's own words). In `ask` it
+  comes after a whole-question topic and a person, before a topic word
+  anywhere in the question.
+- **Limits:** forgotten after a game day like sightings; the first 300
+  characters of a long speech; 30 things at once, the least notable (then
+  oldest) going first.
+- **Saved** in the same file as sightings.
+
+Each entry records its kind, who said it, the text, a `notability` and
+when, so the store can later be condensed rather than simply expire: a
+day's memories summarized into what mattered to that NPC, days into
+weeks, so two NPCs who heard the same thing remember it differently
+depending on what else happened to them. Being told something directly
+is the most notable thing an NPC keeps today.
+
+Shared freely, as with sightings, by the NPCs that have it: the
+groundskeeper, and the red-nosed prospector propping up the Silver Spur's
+bar, who's too far gone to care whose secret it was. The bartender keeps
+his word ("I don't repeat what I hear"): he notices who comes and goes,
+but hearsay is off for him.
 
 ## Naming: what each viewer calls someone
 

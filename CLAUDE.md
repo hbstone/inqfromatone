@@ -39,6 +39,8 @@ a message, saving a file), check this list and grep for the obvious name.
   (for `tell`); `modules/connection.js`'s `findInWorldCharacter` is exact
   (for logins). Different on purpose.
 - `modules/presence.js`: `presenceOf`, `presenceLine`.
+- `modules/commands/say.js`: `formatSpeech` (capitalized, ends a sentence),
+  for anything said out loud.
 
 **Movement**
 

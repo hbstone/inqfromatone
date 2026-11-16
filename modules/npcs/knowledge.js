@@ -1,14 +1,25 @@
-// The NPC knowledge store, first slice: sightings (see ROADMAP.md's
-// "Knowledge store" and ARCHITECTURE.md's "Knowledge: sightings"). An NPC
-// with "sightings": true in its content notices who comes and goes in the
-// room it's in, and can answer `ask <npc> about <someone>` from that:
+// The NPC knowledge store (see ROADMAP.md's "Knowledge store" and
+// ARCHITECTURE.md's "Knowledge: sightings" and "Knowledge: hearsay"): what
+// an NPC has seen and been told, kept apart from how it talks so any brain
+// tier can use it.
+//
+// Hearsay: an NPC with "hearsay": true remembers what's said straight to
+// it (`sayto`, see modules/commands/sayto.js) and repeats it when asked
+// about something it mentioned:
+//
+//   A mustachioed bartender says, "A bearded man told me a little while
+//   ago: 'The stage is running late.'"
+//
+// Sightings: an NPC with "sightings": true in its content notices who comes
+// and goes in the room it's in, and can answer `ask <npc> about <someone>`
+// from that:
 //
 //   You ask a mustachioed bartender about the bearded man.
 //   A mustachioed bartender says, "A bearded man? Came in from the south a
 //   little while ago, headed west."
 //
 // Each NPC keeps only its latest sighting of each person, for about a game
-// day (SIGHTING_MEMORY_MINUTES). People are filed by identity but
+// day (MEMORY_MINUTES). People are filed by identity but
 // remembered as the NPC saw them - by short description, under
 // recognition - and the asker can name them that way or by a name they've
 // given them with `remember`. If the NPC saw someone's look change (they
@@ -30,7 +41,25 @@ import { npcsDir } from '../saveDirs.js';
 // About a game day. A number, not gameClock's MINUTES_PER_DAY: this module is
 // part of an import cycle with gameClock.js (via the content loader), so it
 // can only use gameClock's exports inside functions, not at load time.
-export const SIGHTING_MEMORY_MINUTES = 24 * 60;
+export const MEMORY_MINUTES = 24 * 60;
+
+// How much something mattered to the NPC, for deciding what it lets go of
+// first. Only hearsay uses it so far. It's here for the day this store gets
+// condensed (a day's memories into a summary, days into weeks) rather than
+// simply expiring: the notable things make the summary, the rest fade.
+// Higher is more notable; being told something directly will rank above
+// passers-by.
+export const NOTABILITY = { told: 2 };
+
+// At most this many things heard at once, and this much of each: a long
+// speech is remembered by its start, like most speeches.
+export const HEARD_MAX = 30;
+export const HEARD_MAX_LENGTH = 300;
+
+/** Whether an NPC keeps a knowledge store at all. */
+export function keepsKnowledge(npc) {
+    return npc.sightings || npc.hearsay;
+}
 
 // Identity, not looks: a player by real name, an NPC by template id.
 function subjectKey(character) {
@@ -64,7 +93,12 @@ function note(npc, subject, fields, now) {
 }
 
 function forget(npc, now) {
-    const tooOld = (at) => now - at > SIGHTING_MEMORY_MINUTES;
+    const tooOld = (at) => now - at > MEMORY_MINUTES;
+    const heard = npc.knowledge.heard.filter((entry) => !tooOld(entry.at));
+    if (heard.length !== npc.knowledge.heard.length) {
+        npc.knowledge.heard = heard;
+        npc.knowledgeDirty = true;
+    }
     for (const [key, sighting] of Object.entries(npc.knowledge.sightings)) {
         if (tooOld(sighting.at)) {
             delete npc.knowledge.sightings[key];
@@ -171,7 +205,7 @@ export function recallSighting(npc, asked, asker, now = gameMinutes()) {
     return matches.sort((a, b) => b.at - a.at)[0] ?? null;
 }
 
-function whenSeen(at, now) {
+function howLongAgo(at, now) {
     const ago = now - at;
     if (ago < 60) {
         return 'just now';
@@ -197,7 +231,7 @@ export function sightingAnswer(sighting, room, now = gameMinutes()) {
     if (room?.characters.some((c) => subjectKey(c) === sighting.key)) {
         return { emote: 'nods across the room.', says: `${who} Right there.` };
     }
-    const when = whenSeen(sighting.at, now);
+    const when = howLongAgo(sighting.at, now);
     if (sighting.leftTo) {
         const came = sighting.arrivedFrom ? `Came in from the ${sighting.arrivedFrom}` : 'Saw them';
         return { says: `${who} ${came} ${when}, headed ${sighting.leftTo}.` };
@@ -209,15 +243,70 @@ export function sightingAnswer(sighting, room, now = gameMinutes()) {
 }
 
 /**
- * Load each noticing NPC's sightings, dropping any too old to remember.
- * Call once at startup, after loadWorldData.
+ * Remember something said straight to an NPC that keeps hearsay. Only the
+ * latest HEARD_MAX are kept, least notable going first.
+ * @param {import("../Npc.js").Npc} npc
+ * @param {object} speaker
+ * @param {string} message - As it was said.
+ * @param {number} [now] - Game minutes.
+ */
+export function rememberTold(npc, speaker, message, now = gameMinutes()) {
+    const text = message.length > HEARD_MAX_LENGTH ? `${message.slice(0, HEARD_MAX_LENGTH).trimEnd()}...` : message;
+    npc.knowledge.heard.push({
+        kind: 'told',
+        by: { key: subjectKey(speaker), seenAs: nameFor(speaker, npc) },
+        text,
+        notability: NOTABILITY.told,
+        at: now,
+    });
+    while (npc.knowledge.heard.length > HEARD_MAX) {
+        const least = Math.min(...npc.knowledge.heard.map((entry) => entry.notability));
+        npc.knowledge.heard.splice(
+            npc.knowledge.heard.findIndex((entry) => entry.notability === least),
+            1,
+        );
+    }
+    npc.knowledgeDirty = true;
+}
+
+/**
+ * The latest thing an NPC was told that mentions every word of `asked`
+ * ("the stage" finds "The stage is running late").
+ * @returns {object|null} The heard entry.
+ */
+export function recallHeard(npc, asked, now = gameMinutes()) {
+    forget(npc, now);
+    const words = wordsOf(asked);
+    if (words.length === 0) {
+        return null;
+    }
+    const mentions = (entry) => {
+        const said = wordsOf(entry.text);
+        return words.every((word) => said.includes(word));
+    };
+    return npc.knowledge.heard.filter(mentions).sort((a, b) => b.at - a.at)[0] ?? null;
+}
+
+/**
+ * What an NPC says about something it was told: who told it, when, and
+ * what they said. "You told me" if it's the asker's own words.
+ * @returns {{ says: string }}
+ */
+export function heardAnswer(entry, asker, now = gameMinutes()) {
+    const who = asker && subjectKey(asker) === entry.by.key ? 'You' : capitalizeFirst(entry.by.seenAs);
+    return { says: `${who} told me ${howLongAgo(entry.at, now)}: '${entry.text}'` };
+}
+
+/**
+ * Load each NPC's knowledge, dropping anything too old to remember. Call
+ * once at startup, after loadWorldData.
  * @param {import("../World.js").World} world
  * @param {string} [dir] - Overridable for tests.
  */
 export function loadNpcKnowledge(world, dir = npcsDir(), now = gameMinutes()) {
-    for (const npc of world.npcs.filter((n) => n.sightings)) {
+    for (const npc of world.npcs.filter(keepsKnowledge)) {
         const saved = readJsonFile(path.join(dir, `${npc.templateId}.json`));
-        npc.knowledge = { sightings: saved?.sightings ?? {} };
+        npc.knowledge = { sightings: saved?.sightings ?? {}, heard: saved?.heard ?? [] };
         npc.knowledgeDirty = false;
         forget(npc, now);
     }
@@ -230,7 +319,7 @@ export function loadNpcKnowledge(world, dir = npcsDir(), now = gameMinutes()) {
  * @param {string} [dir]
  */
 export function saveNpcKnowledge(world, dir, now = gameMinutes()) {
-    for (const npc of world.npcs.filter((n) => n.sightings)) {
+    for (const npc of world.npcs.filter(keepsKnowledge)) {
         forget(npc, now);
         if (!npc.knowledgeDirty) {
             continue;

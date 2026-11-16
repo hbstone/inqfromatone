@@ -8,7 +8,7 @@ import { endSentence } from '../text.js';
 // message itself: the only two mechanical fixups are capitalizing the
 // first letter and adding a trailing period, and only when it ends in a
 // letter or number. Any other trailing character is left as typed.
-function formatMessage(rawMessage) {
+export function formatSpeech(rawMessage) {
     return endSentence(capitalizeFirst(rawMessage));
 }
 
@@ -18,7 +18,7 @@ export const say = (world, args, character) => {
         return 'Say what?';
     }
 
-    const message = formatMessage(rawMessage);
+    const message = formatSpeech(rawMessage);
     const room = world.getRoomById(character.roomId);
 
     tellRoom(room, (viewer) => `${nameFor(character, viewer)} says, "${message}"`, [character]);

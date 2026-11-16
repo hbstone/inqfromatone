@@ -83,6 +83,52 @@
         ]
     },
     {
+        "key": "patron",
+        "name": "a red-nosed prospector",
+        "keywords": ["red-nosed", "prospector", "patron", "drunk"],
+        "presence": "slumps against the bar, nursing a glass.",
+        "description": "A grizzled prospector with a nose like a ripe plum and dust in every crease of his coat. He's been nursing the same glass since noon, and it's been refilled more times than he'd admit. He hears everything and keeps none of it.",
+        "hearsay": true,
+        "toldReply": { "emote": "leans in far too close, eyes shining.", "says": "Ooh. You don't say." },
+        "topics": [
+            {
+                "keywords": ["secret", "secrets", "gossip", "rumor", "rumors", "news"],
+                "emote": "taps the side of his nose and misses.",
+                "says": "Secrets? Friend, you tell me a secret, it's the town's by suppertime. That's a promise."
+            },
+            {
+                "keywords": ["gold", "claim", "mine", "strike"],
+                "says": "Got a claim out past the mesas. Richest dirt in the territory. Ain't found the gold in it yet, is all."
+            },
+            {
+                "keywords": ["whiskey", "drink", "glass"],
+                "emote": "peers into his glass, surprised to find it empty again.",
+                "says": "Just the one. Same one as before. Mostly."
+            },
+            {
+                "keywords": ["bartender", "barkeep"],
+                "emote": "lowers his voice, which doesn't help.",
+                "says": "Him? Hears everything, says nothing. Unnatural, is what it is."
+            },
+            {
+                "keywords": ["yourself", "you"],
+                "says": "Me? I'm a man of the earth. And the bottle. Mostly the bottle, lately."
+            }
+        ],
+        "unknownTopic": { "emote": "hiccups.", "says": "Nobody's told me 'bout that. Yet." },
+        "behaviors": {
+            "ambient": {
+                "chance": 0.1,
+                "says": ["Didja hear? No? Somebody oughta tell me something."],
+                "emotes": [
+                    "hums a tune that wanders off partway through.",
+                    "nearly slides off his stool, then recovers with great dignity.",
+                    "squints at the cracked mirror and toasts his reflection."
+                ]
+            }
+        }
+    },
+    {
         "key": "dog",
         "name": "a rangy yellow dog",
         "keywords": ["rangy", "yellow", "dog"],
