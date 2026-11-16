@@ -21,7 +21,7 @@
             "south": "main-street"
         },
         "items": ["deck-of-cards", "whiskey-bottle"],
-        "npcs": ["bartender"]
+        "npcs": ["bartender", "patron"]
     },
     {
         "key": "livery",

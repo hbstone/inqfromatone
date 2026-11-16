@@ -70,6 +70,7 @@ try {
         assert.deepEqual(world.npcs.map((n) => n.templateId).sort(), [
             'western/dry-creek/bartender',
             'western/dry-creek/dog',
+            'western/dry-creek/patron',
         ]);
         const street = world.getRoomById(startingRoomKey);
         assert.equal(street.exits.north, 'western/dry-creek/saloon');

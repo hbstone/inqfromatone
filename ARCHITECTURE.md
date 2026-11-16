@@ -998,9 +998,11 @@ weeks, so two NPCs who heard the same thing remember it differently
 depending on what else happened to them. Being told something directly
 is the most notable thing an NPC keeps today.
 
-Shared freely, as with sightings. The bartender says "I don't repeat what
-I hear" and then does: he's the obvious first NPC for a "keeps it to
-himself" trait.
+Shared freely, as with sightings, by the NPCs that have it: the
+groundskeeper, and the red-nosed prospector propping up the Silver Spur's
+bar, who's too far gone to care whose secret it was. The bartender keeps
+his word ("I don't repeat what I hear"): he notices who comes and goes,
+but hearsay is off for him.
 
 ## Naming: what each viewer calls someone
 
