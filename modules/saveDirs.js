@@ -61,3 +61,8 @@ export function npcsDir() {
 export function roomsDir() {
     return path.join(requireGame(), 'rooms');
 }
+
+/** @returns {string} The running game's logs directory (the AI tier's call log). */
+export function logsDir() {
+    return path.join(requireGame(), 'logs');
+}

@@ -22,6 +22,7 @@ import { put } from './put.js';
 import { presence } from '../presence.js';
 import { quit } from './quit.js';
 import { remove } from './remove.js';
+import { aiusage } from './aiusage.js';
 import { ask } from './ask.js';
 import { help } from './help.js';
 import { say } from './say.js';
@@ -70,4 +71,5 @@ registerCommand('commands', commands); // after color, so c/co stay color; com i
 registerCommand('help', help);
 registerCommand('who', who); // wh stays whisper (registered earlier); who is exact
 registerCommand('time', time); // t stays tell; ti is time
+registerCommand('aiusage', aiusage); // staff, once there are roles; a stays ask
 registerCommand('quit', quit, { abbreviate: false }); // a stray `q` shouldn't log you out

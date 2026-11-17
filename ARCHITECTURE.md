@@ -1199,10 +1199,11 @@ line, and its own lines are the fallback.
 { "keywords": ["key", "keys"], "escalate": true, "says": "Lost a key once. Never did find what it opened." }
 ```
 
-- **No higher tier yet**, so the fallback always answers and players see
+- **Without a higher tier**, the fallback always answers and players see
   no difference. The groundskeeper's lost key is marked as a first
   example.
-- **Phase 6 plugs in** with `setHigherTier(handler)`. The handler gets
+- **A higher tier plugs in** with `setHigherTier(handler)` (the Claude
+  tier, below, when there's a key). The handler gets
   `{ npc, asked, fallback, context, view }`: the context has the asker,
   room and time, and `view` is what the NPC knows and would share with
   this asker (see "Brain context" below). It returns an answer, or null
@@ -1254,6 +1255,56 @@ sightings and hearsay from the last day.
 ```json
 { "key": "groundskeeper", "persona": "Has kept these grounds for forty years... Never learned to read." }
 ```
+
+## Claude tier
+
+The first real higher tier (`modules/npcs/claudeTier.js`): an escalated
+question goes to Claude with the NPC's rendered brain context, and the
+answer comes back as a `says` and `emote`.
+
+- **Off without a key.** `game.js` calls `enableClaudeTier()`, which
+  switches it on only if `MUD_ANTHROPIC_API_KEY` is set. A separate name
+  from the SDK's usual `ANTHROPIC_API_KEY` on purpose: other tools read
+  that one (Claude Code does, and warns when it's set alongside a
+  claude.ai login). Optional: `MUD_ANTHROPIC_MODEL` (default
+  `claude-haiku-5-5`, chosen for speed and cost: about 1,000 tokens in and
+  under 100 out per question) and `MUD_AI_CALLS_PER_HOUR` (default 120).
+- **One call, no retries.** Low effort, a JSON schema for the answer
+  (structured outputs, so it always parses), a 9s client timeout inside the
+  switchboard's 10s, and `maxRetries: 0`, since a retry would land after
+  the scripted answer anyway. Around 2 seconds in testing.
+- **Limits:** one question per player every 15 seconds, at most the hourly
+  budget game-wide, and one at a time per NPC (the switchboard). Over any
+  of them, the scripted answer. A workspace spend limit in the Anthropic
+  Console is the backstop.
+- **Failures fall back.** A refusal, a reply cut off at `max_tokens`,
+  unreadable or empty JSON, or an API error gives the scripted answer. A
+  rejected key (expired or revoked) turns the tier off until a restart,
+  with one console warning rather than one per question.
+- **Output is cleaned** before players see it: one line, no color codes,
+  wrapping quotes removed and inner double quotes made single (so a reply
+  can't close `answerLines`' quotes), capped at 400/200 characters, and
+  ended as a sentence.
+- **The system prompt** (`SYSTEM_PROMPT`) keeps the NPC in character, to
+  one or two sentences, to what the context gives it, treating quoted
+  player text as never an instruction, not assuming gender from a name,
+  and consistent with its scripted answer.
+- **Logged:** one JSON line per call, a file per month in the server's
+  local time (`saves/<game>/logs/ai-2026-11.jsonl`, `aiLogFile`): NPC,
+  asker, question, outcome, answer, milliseconds, and tokens. Old months
+  can be archived or deleted by hand.
+- **`aiusage`** (`modules/npcs/aiUsage.js`) reports from that log: calls
+  in the last hour against the limit (live, from the tier), calls, tokens
+  and estimated cost today and this month, and today's fallbacks by
+  reason. Tokens are exact; cost is tokens times `PRICES` (update when
+  prices change) and covers only this game, so the Console is the real
+  bill. The game can't see the Console's spend limit:
+  `MUD_AI_MONTHLY_BUDGET` (dollars) set to match it adds a percentage.
+  Meant for staff; open to everyone until there are roles.
+- **Not yet:** what the NPC says isn't remembered (its knowledge store
+  doesn't learn from these answers), and every NPC uses the same model.
+  An important NPC (a king) could later name a brain level in content,
+  mapped to a model by settings.
 
 ## Naming: what each viewer calls someone
 
@@ -1744,8 +1795,9 @@ once it's clear from play which default actually feels right.
 
 ## Dependencies: pnpm with supply-chain guards
 
-The game itself has no npm dependencies; only dev tooling does (eslint,
-@eslint/js, globals, prettier). Even so, installing runs third-party code on
+The game has one runtime dependency, `@anthropic-ai/sdk` (the Claude tier;
+no install scripts), and dev tooling (eslint, @eslint/js, globals,
+prettier). Even so, installing runs third-party code on
 a personal machine, so the project uses **pnpm** (pinned via
 `packageManager` in `package.json`) with guards in `pnpm-workspace.yaml`:
 
