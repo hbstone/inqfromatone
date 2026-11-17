@@ -672,6 +672,20 @@ error message - instead of crashing the process. Same reasoning
 exit(1) for a supervisor to restart, per Node's guidance that the process
 isn't safe to keep running.
 
+That makes anything asynchronous a hazard: one rejected promise nobody
+caught (a failed LLM call, say) would restart the server. `guardAsync` is
+`guard` for work that finishes later; its promise never rejects, so
+anything awaited on the engine's behalf goes through it.
+
+Commands run through `modules/commands/runCommand.js`, for players
+(`game.js`'s `handleCommand`, once logged in) and NPCs alike. It needs no
+socket: the result goes back to the caller, which shows it to the player
+or hands it to the NPC's brain. An optional `allowed` list of command names
+limits what a character may run, checked against what the input resolves
+to so an abbreviation can't get around it; that's the roadmap's "scoped
+tool access" for higher brain tiers. The same path will serve staff
+taking over an NPC some day.
+
 ## Scheduler and game clock
 
 **One scheduler, no scattered timers.** `modules/scheduler.js` is the
@@ -1193,6 +1207,16 @@ line, and its own lines are the fallback.
   store; the context has the asker, room and time) and returns an answer,
   or null to fall back: over budget, unavailable, nothing to add. So an
   escalated question always gets an answer.
+- **Answered later.** A higher tier can take seconds, so an escalated
+  question routes to `{ pending }`, a promise of the answer. `ask` shows
+  the question at once and the answer when it settles, if the asker and
+  NPC are both still in the room (otherwise it's dropped). The promise
+  never rejects: a throw, a rejection, a reply that isn't a says/emote
+  answer, or no reply within `ESCALATION_TIMEOUT_MS` (10s) all give the
+  fallback. Only `says` and `emote` come through from the higher tier.
+- **One question at a time per NPC.** Asked again while it's still
+  thinking, it gives the fallback straight away, which also keeps a
+  player spamming `ask` from stacking up calls.
 - **The roadmap's other triggers** are conditions on the same topic: who's
   asking (a pack's `askerTagged`, say) or quest state go in its `when`.
 - **What's routed:** scripted topics. Sightings and hearsay answer from

@@ -3,6 +3,8 @@ import { World } from '../modules/World.js';
 import { Npc } from '../modules/Npc.js';
 import { ask } from '../modules/commands/ask.js';
 import { answerFor, validateDialogue } from '../modules/npcs/dialogue.js';
+import { setHigherTier } from '../modules/npcs/switchboard.js';
+import { reset as resetScheduler } from '../modules/scheduler.js';
 import { makeCharacter, lastMessage } from './helpers.js';
 
 const BARTENDER = {
@@ -134,3 +136,43 @@ function setUp() {
 }
 
 console.log('All tests passed');
+
+// An escalated question: the room sees it now and the answer when the
+// higher tier gives it - unless the asker or the NPC has left by then
+{
+    const ESCALATING = {
+        id: 'test/town/prospector',
+        name: 'an old prospector',
+        keywords: ['prospector'],
+        topics: [{ keywords: ['key'], escalate: true, says: 'Lost one.' }],
+    };
+    const answers = [];
+    setHigherTier(() => new Promise((resolve) => answers.push(resolve)));
+    try {
+        const { world, alice, baeron } = setUp();
+        const room = world.getRoomById(alice.roomId);
+        const prospector = new Npc(ESCALATING, room.id);
+        room.addCharacter(prospector);
+
+        assert.equal(
+            ask(world, ['prospector', 'about', 'the', 'key'], alice),
+            'You ask an old prospector about the key.',
+        );
+        assert.equal(lastMessage(baeron), 'Alice asks an old prospector about the key.');
+        answers.shift()({ emote: 'squints.', says: 'Brass, it was.' });
+        await new Promise(setImmediate);
+        const later = 'An old prospector squints.\nAn old prospector says, "Brass, it was."';
+        assert.equal(lastMessage(alice), later);
+        assert.equal(lastMessage(baeron), later);
+
+        ask(world, ['prospector', 'about', 'the', 'key'], alice);
+        room.removeCharacter(alice);
+        alice.roomId = null;
+        answers.shift()({ says: 'Too late.' });
+        await new Promise(setImmediate);
+        assert.equal(lastMessage(baeron), 'Alice asks an old prospector about the key.', 'asker left: no answer');
+    } finally {
+        setHigherTier(null);
+        resetScheduler();
+    }
+}
