@@ -47,12 +47,10 @@ export const ASKER_COOLDOWN_MS = 15_000;
 export const SAYS_MAX = 400;
 export const EMOTE_MAX = 200;
 
-const HOUR_MS = 60 * 60 * 1000;
-// Room for a little thinking plus a short JSON answer; a reply that hits it
-// was going wrong anyway.
-const MAX_TOKENS = 2048;
+const HOUR_MS = 60 * 60 * 1000; // for hourly budget
+const MAX_TOKENS = 2048; // room for a little thinking and a JSON answer
 
-export const SYSTEM_PROMPT = `You voice one non-player character in a text roleplaying game (a MUD), answering a question a player just asked them out loud. The user message describes who you are, where and when, who is asking, and what you know.
+export const SYSTEM_PROMPT = `You voice one non-player character in a text roleplaying game (a MUD), answering a question a player's character just asked them out loud. The user message describes who you are, where and when, who is asking, and what you know.
 
 How to answer:
 - Stay in character. Answer as this person would, in their own voice, in one or two short sentences of plain speech: no narration, no markdown.
