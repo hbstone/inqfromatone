@@ -217,6 +217,11 @@ staff-only verbs exist.)
 - Currency, then bribes and purchases as NPC sentiment; intimidation as a
   check; investigator-type roles as conditions.
 - A prompt players can customize (hp, room, time of day, statuses).
+- Redraw the prompt after output a player didn't type for: other people's
+  says and moves, NPC chatter, combat rounds, phase messages, an NPC's
+  late answer to `ask`. Today only a player's own command gets a fresh
+  prompt. Probably one place (`tellRoom`/`sendTo`, or batched per pulse so
+  a burst of lines gets one prompt).
 
 Realistically, for solo/part-time work, Phases 1-4 are the bulk of the
 calendar time and determine whether Phases 5-6 are pleasant or painful. Avoid
