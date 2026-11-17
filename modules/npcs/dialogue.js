@@ -65,7 +65,7 @@ import { heardAnswer, recallHeard, recallSighting, rememberTold, sightingAnswer 
 import { canSense } from '../senses.js';
 import { route } from './switchboard.js';
 import { validateWhen, whenHolds } from '../conditions.js';
-import { subjectKey } from './relationships.js';
+import { willShare } from './relationships.js';
 import { normalizeText, wordsOf } from '../text.js';
 
 const DEFAULT_UNKNOWN = { emote: "doesn't seem to know anything about that." };
@@ -121,16 +121,6 @@ function validateDiscretion(discretion, where) {
     if (discretion.refusal !== undefined) {
         assertAnswer(discretion.refusal, `${where} refusal`);
     }
-}
-
-// Whether a discreet NPC will tell the asker what it knows about `key`
-// (whoever it saw, or whoever told it something).
-function willShare(npc, key, context) {
-    if (!npc.discretion || (context.asker && subjectKey(context.asker) === key)) {
-        return true;
-    }
-    const whens = [npc.discretion.sharesWhen ?? []].flat();
-    return whens.some((when) => whenHolds(when, { ...context, subject: key }));
 }
 
 function validateTopics({ topics, unknownTopic }, owner) {

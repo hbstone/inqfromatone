@@ -116,7 +116,13 @@ what)`, which names the file in errors.
 - `modules/npcs/behaviors.js`: `pick` (random choice, testable).
 - `modules/npcs/relationships.js`: `subjectKey` (who someone is to an
   NPC), `adjustSentiment`, `seesAndRemembers` (would this NPC notice what
-  was done in front of it), `acquaintanceOf`.
+  was done in front of it), `acquaintanceOf`, `willShare` (would a
+  discreet NPC tell this asker about someone).
+- `modules/npcs/knowledge.js`: `howLongAgo` ("just now", "earlier
+  today").
+- `modules/npcs/brainContext.js`: `playerText` before any player-written
+  text goes to a model; `brainContext`/`renderBrainContext` for what an
+  NPC knows and would share.
 - `modules/senses.js`: `canSense(character, sense)` before anyone
   perceives anything; `registerSenseLayer` for states that change senses.
 
