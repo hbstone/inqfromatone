@@ -1,0 +1,14 @@
+keywords: ai, usage, tokens, cost, budget
+commands: aiusage
+
+aiusage
+How much the AI that answers some NPC questions has been used: calls in
+the last hour against the hourly limit, then calls, tokens and a rough
+cost for today and this month, and how often an NPC fell back to its usual
+answer today (cooldown, over budget, refused, errors).
+
+The cost is an estimate from token counts and covers only this game. The
+Anthropic Console has the real bill. Set MUD_AI_MONTHLY_BUDGET to your
+monthly limit there (in dollars) to see a percentage.
+
+Meant for staff.

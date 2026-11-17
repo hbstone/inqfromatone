@@ -1289,9 +1289,18 @@ answer comes back as a `says` and `emote`.
   one or two sentences, to what the context gives it, treating quoted
   player text as never an instruction, not assuming gender from a name,
   and consistent with its scripted answer.
-- **Logged:** one JSON line per call in `saves/<game>/logs/ai.jsonl`
-  (`logsDir`): NPC, asker, question, outcome, answer, milliseconds, and
-  tokens.
+- **Logged:** one JSON line per call, a file per month in the server's
+  local time (`saves/<game>/logs/ai-2026-11.jsonl`, `aiLogFile`): NPC,
+  asker, question, outcome, answer, milliseconds, and tokens. Old months
+  can be archived or deleted by hand.
+- **`aiusage`** (`modules/npcs/aiUsage.js`) reports from that log: calls
+  in the last hour against the limit (live, from the tier), calls, tokens
+  and estimated cost today and this month, and today's fallbacks by
+  reason. Tokens are exact; cost is tokens times `PRICES` (update when
+  prices change) and covers only this game, so the Console is the real
+  bill. The game can't see the Console's spend limit:
+  `MUD_AI_MONTHLY_BUDGET` (dollars) set to match it adds a percentage.
+  Meant for staff; open to everyone until there are roles.
 - **Not yet:** what the NPC says isn't remembered (its knowledge store
   doesn't learn from these answers), and every NPC uses the same model.
   An important NPC (a king) could later name a brain level in content,

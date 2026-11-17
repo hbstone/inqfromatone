@@ -12,7 +12,9 @@ import {
     createClaudeTier,
     enableClaudeTier,
     fileLog,
+    aiTierStatus,
 } from '../modules/npcs/claudeTier.js';
+import { readAiLog } from '../modules/npcs/aiUsage.js';
 import { makeCharacter } from './helpers.js';
 
 const TIME = { hour: 12, phase: 'day' };
@@ -63,7 +65,7 @@ function setUp(reply, options = {}) {
             context: { asker },
             view: brainContext(npc, { asker, time: TIME, now: 0 }),
         });
-    return { client, logged, ask, npc, advance: (ms) => (clock += ms) };
+    return { tier, client, logged, ask, npc, advance: (ms) => (clock += ms) };
 }
 
 // A call: the model, system prompt, low effort and the answer's shape are
@@ -170,25 +172,55 @@ function setUp(reply, options = {}) {
     }
 }
 
-// Off without a key; the log is JSON lines in a folder it makes itself
+// Off without a key; the log is JSON lines, a file per month (local time),
+// in a folder it makes itself
 {
     const logLine = console.log;
     console.log = () => {};
     try {
         assert.equal(enableClaudeTier({}), false);
+        assert.equal(aiTierStatus(), null);
     } finally {
         console.log = logLine;
     }
 
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-tier-'));
-    const file = path.join(dir, 'logs', 'ai.jsonl');
-    const log = fileLog(file);
-    log({ outcome: 'answered' });
-    log({ outcome: 'refused' });
-    const lines = fs.readFileSync(file, 'utf8').trim().split('\n').map(JSON.parse);
-    assert.deepEqual(
-        lines.map((l) => l.outcome),
-        ['answered', 'refused'],
-    );
+    const logs = path.join(dir, 'logs');
+    const log = fileLog(logs);
+    const at = (y, m, d) => new Date(y, m - 1, d, 12).toISOString();
+    log({ at: at(2026, 11, 3), outcome: 'answered' });
+    log({ at: at(2026, 11, 30), outcome: 'refused' });
+    log({ at: at(2026, 12, 1), outcome: 'answered' });
+    const outcomes = (file) => readAiLog(path.join(logs, file)).map((l) => l.outcome);
+    assert.deepEqual(outcomes('ai-2026-11.jsonl'), ['answered', 'refused']);
+    assert.deepEqual(outcomes('ai-2026-12.jsonl'), ['answered']);
     fs.rmSync(dir, { recursive: true, force: true });
+}
+
+// The tier reports calls in the last hour, and whether a rejected key
+// switched it off
+{
+    let fail = false;
+    const { tier, ask, advance } = setUp(() => {
+        if (fail) {
+            throw new Anthropic.AuthenticationError(401, { type: 'error' }, 'invalid key', new Headers());
+        }
+        return replying({ emote: '', says: 'Hm.' });
+    });
+    assert.deepEqual(tier.status(), { model: DEFAULT_MODEL, callsPerHour: 120, callsLastHour: 0, disabled: false });
+    await ask(makeCharacter('A'));
+    await ask(makeCharacter('B'));
+    assert.equal(tier.status().callsLastHour, 2);
+    advance(60 * 60 * 1000);
+    assert.equal(tier.status().callsLastHour, 0);
+
+    const warn = console.warn;
+    console.warn = () => {};
+    try {
+        fail = true;
+        await ask(makeCharacter('C'));
+        assert.equal(tier.status().disabled, true);
+    } finally {
+        console.warn = warn;
+    }
 }

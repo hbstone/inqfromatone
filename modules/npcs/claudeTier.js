@@ -19,7 +19,8 @@
 // the tier off until the server restarts, with one warning in the console,
 // rather than failing on every question.
 //
-// Every call is logged, one JSON line each, to saves/<game>/logs/ai.jsonl:
+// Every call is logged, one JSON line each, to a file per month
+// (saves/<game>/logs/ai-2026-11.jsonl, see aiUsage.js):
 // who asked which NPC what, what came back, how long it took and the tokens
 // it used.
 //
@@ -31,6 +32,7 @@ import path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import { stripColors } from '../color.js';
 import { logsDir } from '../saveDirs.js';
+import { aiLogFile } from './aiUsage.js';
 import { endSentence } from '../text.js';
 import { renderBrainContext } from './brainContext.js';
 import { subjectKey } from './relationships.js';
@@ -90,12 +92,14 @@ function clean(text, max) {
 }
 
 /**
- * Append each log entry as a line of JSON, creating the folder if needed.
- * A failure to log is reported, never fatal.
- * @param {string} file
+ * Append each log entry as a line of JSON to its month's file in `dir`
+ * (aiLogFile), creating the folder if needed. A failure to log is
+ * reported, never fatal.
+ * @param {string} dir
  */
-export function fileLog(file) {
+export function fileLog(dir) {
     return (entry) => {
+        const file = aiLogFile(dir, new Date(entry.at));
         try {
             fs.mkdirSync(path.dirname(file), { recursive: true });
             fs.appendFileSync(file, `${JSON.stringify(entry)}\n`);
@@ -125,7 +129,7 @@ export function createClaudeTier({
     let calls = []; // when each call in the last hour started
     const lastAsked = new Map(); // asker's subject key -> when they last got a call
 
-    return async function claudeTier({ npc, asked, fallback, context = {}, view }) {
+    async function claudeTier({ npc, asked, fallback, context = {}, view }) {
         const started = now();
         const asker = context.asker ? subjectKey(context.asker) : null;
         const entry = (outcome, extra = {}) =>
@@ -193,7 +197,27 @@ export function createClaudeTier({
         }
         done('answered', { answer });
         return answer;
-    };
+    }
+
+    // For the `aiusage` report: calls in the last hour, and whether a
+    // rejected key turned the tier off.
+    claudeTier.status = () => ({
+        model,
+        callsPerHour,
+        callsLastHour: calls.filter((at) => now() - at < HOUR_MS).length,
+        disabled,
+    });
+    return claudeTier;
+}
+
+let active = null; // the tier enableClaudeTier switched on
+
+/**
+ * The running tier's status (see claudeTier.status), or null if it's off.
+ * @returns {{ model: string, callsPerHour: number, callsLastHour: number, disabled: boolean }|null}
+ */
+export function aiTierStatus() {
+    return active?.status() ?? null;
 }
 
 /**
@@ -213,7 +237,8 @@ export function enableClaudeTier(env = process.env) {
     // No retries and a timeout inside the switchboard's: a retry would only
     // land after the NPC had already given its scripted answer.
     const client = new Anthropic({ apiKey, timeout: ESCALATION_TIMEOUT_MS - 1000, maxRetries: 0 });
-    setHigherTier(createClaudeTier({ client, model, callsPerHour, log: fileLog(path.join(logsDir(), 'ai.jsonl')) }));
+    active = createClaudeTier({ client, model, callsPerHour, log: fileLog(logsDir()) });
+    setHigherTier(active);
     console.log(`AI NPC tier on: ${model}, at most ${callsPerHour} calls an hour.`);
     return true;
 }
