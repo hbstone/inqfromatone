@@ -81,7 +81,7 @@ a message, saving a file), check this list and grep for the obvious name.
 what)`, which names the file in errors.
 - Saves: `modules/atomicWrite.js`'s `readJsonFile` (missing means null)
   and `writeJsonAtomic`; folders from `modules/saveDirs.js`
-  (`charactersDir`, `roomsDir`, `npcsDir`).
+  (`charactersDir`, `roomsDir`, `npcsDir`, `logsDir`).
 
 **Content**
 

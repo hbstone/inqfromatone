@@ -206,6 +206,10 @@ staff-only verbs exist.)
 
 **Not yet scheduled** (ideas agreed on, waiting for their moment):
 
+- Brain levels per NPC: an important NPC (a king, say) names a level in
+  content (`"brain": "deep"`), and settings map each level to a model, a
+  context budget and a timeout, so most NPCs stay on the fast, cheap model
+  and content never names a model directly.
 - NPC memory summarized over time: a day's memories condensed into what
   mattered to that NPC, days into weeks, months, years. Two NPCs remember
   the same event differently, and a busy one may forget it.
