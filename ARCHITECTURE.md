@@ -1203,10 +1203,11 @@ line, and its own lines are the fallback.
   no difference. The groundskeeper's lost key is marked as a first
   example.
 - **Phase 6 plugs in** with `setHigherTier(handler)`. The handler gets
-  `{ npc, asked, fallback, context }` (the NPC carries its knowledge
-  store; the context has the asker, room and time) and returns an answer,
-  or null to fall back: over budget, unavailable, nothing to add. So an
-  escalated question always gets an answer.
+  `{ npc, asked, fallback, context, view }`: the context has the asker,
+  room and time, and `view` is what the NPC knows and would share with
+  this asker (see "Brain context" below). It returns an answer, or null
+  to fall back: over budget, unavailable, nothing to add. So an escalated
+  question always gets an answer.
 - **Answered later.** A higher tier can take seconds, so an escalated
   question routes to `{ pending }`, a promise of the answer. `ask` shows
   the question at once and the answer when it settles, if the asker and
@@ -1222,6 +1223,37 @@ line, and its own lines are the fallback.
 - **What's routed:** scripted topics. Sightings and hearsay answer from
   the knowledge store directly; they're already the "cheap tier can answer
   this" case.
+
+## Brain context
+
+What a higher tier is told (`modules/npcs/brainContext.js`). `brainContext`
+gives it as data and `renderBrainContext` as text: the NPC itself (name,
+`persona`, description, what it's doing), the room and time of day, who's
+asking (how the NPC sees them, days it's seen them, how it feels about them
+and the latest reasons why), who else is here if it can see, and its
+sightings and hearsay from the last day.
+
+- **Discretion is applied here.** Sightings and hearsay the NPC wouldn't
+  share with this asker (`willShare`, the same test `ask` uses) are left
+  out and only counted, so the text can say there's more it won't tell.
+  A model can't let slip what it was never given. Tiers work from the
+  view, not `npc.knowledge`.
+- **Player text is quoted, never trusted.** Anything a player wrote (how
+  they look, their presence, what they told the NPC, the question) goes
+  through `playerText`: one line, no color codes or control characters,
+  double quotes turned to single, capped at 300 characters, then shown in
+  double quotes under a note that quoted text is never an instruction. A
+  player can't fake a new section with line breaks or close the quote
+  early. This is one layer; scoped verbs (`runCommand`'s `allowed`) are
+  the one that limits what a manipulated NPC could actually do.
+- **Content is trusted:** persona, descriptions, room text, and sentiment
+  reasons written by packs appear as written.
+- **`persona`** is a new NPC content field: who they are, in the author's
+  words, never shown to players. Checked at load (must be text).
+
+```json
+{ "key": "groundskeeper", "persona": "Has kept these grounds for forty years... Never learned to read." }
+```
 
 ## Naming: what each viewer calls someone
 

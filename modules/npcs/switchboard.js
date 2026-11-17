@@ -14,9 +14,12 @@
 // modules/conditions.js).
 //
 // No higher tier exists yet (Phase 6), so the fallback always answers. When
-// one does, it's installed with setHigherTier; it gets the NPC (knowledge
-// store included), the question and the fallback, and returns an answer or
-// null to fall back (over budget, unavailable, nothing to add).
+// one does, it's installed with setHigherTier; it gets the NPC, the
+// question, the fallback, and `view`: what the NPC knows and would share
+// with this asker (see brainContext.js, which can also render it as text).
+// A tier should work from the view, not npc.knowledge, which holds what
+// discretion keeps back too. It returns an answer, or null to fall back
+// (over budget, unavailable, nothing to add).
 //
 // A higher tier takes time (an LLM call is seconds), so an escalated
 // question is answered later: route hands back { pending }, a promise of
@@ -27,6 +30,7 @@
 // thinking, it gives the fallback straight away.
 import { guardAsync } from '../guard.js';
 import { after } from '../scheduler.js';
+import { brainContext } from './brainContext.js';
 
 export const ESCALATION_TIMEOUT_MS = 10_000;
 
@@ -34,7 +38,7 @@ let higherTier = null;
 
 /**
  * Install the handler for escalated questions, or null to remove it.
- * @param {((request: { npc: object, asked: string, fallback: object, context: object }) =>
+ * @param {((request: { npc: object, asked: string, fallback: object, context: object, view: object }) =>
  *   (object|null|Promise<object|null>))|null} handler
  */
 export function setHigherTier(handler) {
@@ -70,15 +74,14 @@ function escalate(handler, npc, asked, fallback, context) {
             console.warn(`Higher tier took too long answering ${npc.templateId} about "${asked}"; fell back.`);
             finish(fallback);
         });
-        guardAsync(`higher tier for ${npc.templateId}`, () => handler({ npc, asked, fallback, context }), null).then(
-            (better) => {
-                const answer = asAnswer(better);
-                if (better && !answer) {
-                    console.warn(`Higher tier gave ${npc.templateId} something that isn't an answer; fell back.`);
-                }
-                finish(answer ?? fallback);
-            },
-        );
+        const request = () => handler({ npc, asked, fallback, context, view: brainContext(npc, context) });
+        guardAsync(`higher tier for ${npc.templateId}`, request, null).then((better) => {
+            const answer = asAnswer(better);
+            if (better && !answer) {
+                console.warn(`Higher tier gave ${npc.templateId} something that isn't an answer; fell back.`);
+            }
+            finish(answer ?? fallback);
+        });
     });
 }
 

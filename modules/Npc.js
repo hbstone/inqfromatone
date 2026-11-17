@@ -16,6 +16,9 @@ export class Npc extends Character {
      * @param {string[]} [template.keywords] - Defaults to the words of the
      *   name, minus articles.
      * @param {string} [template.description] - Shown when looked at.
+     * @param {string} [template.persona] - Who they are, in the author's
+     *   words, for a higher brain tier (see modules/npcs/brainContext.js).
+     *   Never shown to players.
      * @param {object} [template.behaviors] - behavior name -> its settings.
      * @param {string} [template.presence] - What they're shown doing
      *   (see modules/presence.js), unless a routine post says otherwise.
@@ -44,6 +47,7 @@ export class Npc extends Character {
             name,
             keywords,
             description = '',
+            persona = null,
             behaviors = {},
             routine = null,
             presence = null,
@@ -65,6 +69,7 @@ export class Npc extends Character {
             this.keywords = this.keywords.filter((k) => !ARTICLES.has(k));
         }
         this.isNpc = true;
+        this.persona = persona;
         this.templateId = id;
         this.behaviors = behaviors;
         this.topics = topics ?? [];

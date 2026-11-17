@@ -235,7 +235,8 @@ export function recallSighting(npc, asked, asker, now = gameMinutes()) {
     return matches.sort((a, b) => b.at - a.at)[0] ?? null;
 }
 
-function howLongAgo(at, now) {
+/** "just now", "a little while ago", "earlier today" or "yesterday". */
+export function howLongAgo(at, now) {
     const ago = now - at;
     if (ago < 60) {
         return 'just now';

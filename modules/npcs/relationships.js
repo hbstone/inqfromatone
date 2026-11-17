@@ -21,7 +21,7 @@
 // stranger to an NPC that knows them: familiarity sees through disguises
 // for now.
 import { gameMinutes, MINUTES_PER_DAY } from '../gameClock.js';
-import { registerCondition } from '../conditions.js';
+import { registerCondition, whenHolds } from '../conditions.js';
 import { canSense } from '../senses.js';
 
 export const SENTIMENT_MIN = -10;
@@ -101,6 +101,24 @@ export function adjustSentiment(npc, subject, delta, reason, { now = gameMinutes
     known.sentimentLog = known.sentimentLog.slice(-SENTIMENT_LOG_MAX);
     npc.knowledgeDirty = true;
     return true;
+}
+
+/**
+ * Whether a discreet NPC (its content's "discretion", see
+ * modules/npcs/dialogue.js) will tell the asker what it knows about `key`:
+ * whoever it saw, or whoever told it something. Asking about yourself is
+ * always answered.
+ * @param {import("../Npc.js").Npc} npc
+ * @param {string} key - A subjectKey.
+ * @param {{ asker?: object }} context - As for conditions (see
+ *   modules/conditions.js).
+ */
+export function willShare(npc, key, context) {
+    if (!npc.discretion || (context.asker && subjectKey(context.asker) === key)) {
+        return true;
+    }
+    const whens = [npc.discretion.sharesWhen ?? []].flat();
+    return whens.some((when) => whenHolds(when, { ...context, subject: key }));
 }
 
 /**

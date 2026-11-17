@@ -171,6 +171,9 @@ export function loadWorldData(world, contentDirs = defaultContentDirs(), { start
             const npcId = `${zoneId}/${npcData.key}`;
             validateDialogue(npcData, npcId);
             validateSenses(npcData.senses, `NPC "${npcId}"`);
+            if (npcData.persona !== undefined && !(typeof npcData.persona === 'string' && npcData.persona.trim())) {
+                throw new Error(`NPC "${npcId}"'s "persona" must be some text.`);
+            }
             (npcData.routine ?? []).forEach((entry, index) =>
                 validateSenses(entry.senses, `NPC "${npcId}" routine post ${index + 1}`),
             );

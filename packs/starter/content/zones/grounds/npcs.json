@@ -5,6 +5,7 @@
         "keywords": ["old", "groundskeeper", "keeper"],
         "presence": "rakes leaves into tidy piles.",
         "description": "A stooped, weathered man in a patched coat, never far from his rake. He looks like he's tended these flagstones longer than anyone can remember.",
+        "persona": "Has kept these grounds for forty years and outlasted three owners. Slow-spoken, dry, kind underneath it. Trusts weather and his knee more than people. Doesn't gossip about folk he likes, but enjoys complaining about the cat. Never learned to read.",
         "sightings": true,
         "hearsay": true,
         "toldReply": { "emote": "leans on his rake and hears you out.", "says": "Is that so." },
