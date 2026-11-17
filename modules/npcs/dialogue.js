@@ -170,7 +170,9 @@ function currentDialogue(npc, hour) {
  * @param {{ asker?: object, room?: object, time?: object, hour?: number, now?: number }} [context] -
  *   Who's asking and where (for sightings and conditions); time (the game
  *   clock's), hour and now (game minutes) are overridable for tests.
- * @returns {{ says?: string, emote?: string }}
+ * @returns {{ says?: string, emote?: string }|{ pending: Promise<{ says?: string, emote?: string }> }}
+ *   The answer, or for an escalated question, the promise of one (see
+ *   switchboard.js).
  */
 export function answerFor(npc, asked, { asker, room, time = getGameTime(), hour = time.hour, now } = {}) {
     const dialogue = currentDialogue(npc, hour);

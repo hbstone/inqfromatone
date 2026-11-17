@@ -20,3 +20,23 @@ export function guard(label, fn, fallback = undefined) {
         return fallback;
     }
 }
+
+/**
+ * guard for work that finishes later (an LLM call, say): fn may return a
+ * value or a promise, and may throw or reject. The promise this returns
+ * never rejects - a failure is logged and becomes the fallback - because
+ * a rejection nobody catches is fatal (see server.js's unhandledRejection).
+ * @template T
+ * @param {string} label
+ * @param {() => T|Promise<T>} fn
+ * @param {T} [fallback]
+ * @returns {Promise<T>}
+ */
+export async function guardAsync(label, fn, fallback = undefined) {
+    try {
+        return await fn();
+    } catch (err) {
+        console.error(`Error in ${label}:`, err);
+        return fallback;
+    }
+}

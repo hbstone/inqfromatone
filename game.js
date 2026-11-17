@@ -1,11 +1,10 @@
 import { World } from './modules/World.js';
-import { resolveCommand, explainCommand } from './modules/commands/registry.js';
+import { runCommand, COMMAND_ERROR } from './modules/commands/runCommand.js';
 import './modules/commands/index.js'; // registers the built-in verbs, see index.js
 import './modules/checks/index.js'; // registers the default check resolver, see index.js
 import './modules/npcs/index.js'; // registers the built-in NPC behaviors (before content loads, so it can check behavior names)
 import { startNpcBehaviors } from './modules/npcs/behaviors.js';
 import { loadNpcKnowledge, watchForSightings } from './modules/npcs/knowledge.js';
-import { emit } from './modules/events.js';
 import { loadWorldData } from './modules/content/loadWorldData.js';
 import { loadStatDefinitions } from './modules/content/loadStatDefinitions.js';
 import { disconnectCharacter } from './modules/commands/quit.js';
@@ -60,8 +59,6 @@ export const saveWorldOnShutdown = (message) => {
     saveWorld(world);
 };
 
-const COMMAND_ERROR = "Something went wrong running that command. It's been logged.";
-
 export const handleCommand = (socket, input) => {
     const character = socket.character;
 
@@ -73,32 +70,7 @@ export const handleCommand = (socket, input) => {
         );
     }
 
-    const [typed, ...args] = input.trim().split(/\s+/);
-
-    // `n?` (or `n?anything`, `n? more words`): say what the first word
-    // would run, without running it - see explainCommand. Only a `?` in
-    // the first word counts, so `say really?` is still just a say.
-    const questionMark = typed.indexOf('?');
-    if (questionMark !== -1) {
-        return explainCommand(typed.slice(0, questionMark));
-    }
-
-    // Case-insensitive, abbreviations allowed (`n`, `L`) - see registry.js.
-    const resolved = resolveCommand(typed);
-    if (resolved) {
-        const { name: command, handler } = resolved;
-        // A bug in one command costs that one command, not the server -
-        // see modules/guard.js.
-        const result = guard(
-            `command "${input}" from ${character.name}`,
-            () => handler(world, args, character, socket),
-            COMMAND_ERROR,
-        );
-        emit('command', { character, command, args, result, world });
-        return result;
-    }
-
-    return "I don't understand that command.";
+    return runCommand(world, character, input);
 };
 
 // Called whenever a socket closes. For an ungraceful disconnect (no

@@ -60,6 +60,10 @@ export const disconnectCharacter = (world, character, departureMessage, saveDirs
 };
 
 export const quit = (world, args, character, socket) => {
+    // An NPC running commands (see runCommand.js) has no game to leave.
+    if (character.isNpc || !socket) {
+        return "There's no quitting for you.";
+    }
     for (const check of quitBlockers) {
         const reason = check(character);
         if (reason) {

@@ -107,7 +107,12 @@ what)`, which names the file in errors.
 
 **Odds and ends**
 
-- `modules/guard.js`: `guard` (one failure doesn't take down the rest).
+- `modules/guard.js`: `guard` (one failure doesn't take down the rest),
+  `guardAsync` for anything that finishes later (a stray rejection exits
+  the server).
+- `modules/commands/runCommand.js`: `runCommand(world, character, input,
+{ allowed })`, a typed line run as anyone, player or NPC, no socket
+  needed.
 - `modules/npcs/behaviors.js`: `pick` (random choice, testable).
 - `modules/npcs/relationships.js`: `subjectKey` (who someone is to an
   NPC), `adjustSentiment`, `seesAndRemembers` (would this NPC notice what
