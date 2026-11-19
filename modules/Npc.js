@@ -80,7 +80,7 @@ export class Npc extends Character {
         this.senses = senses ?? {};
         this.discretion = discretion ?? null;
         this.components = structuredClone(components ?? {});
-        this.knowledge = { sightings: {}, heard: [], acquaintances: {} }; // loaded from saves at startup, see modules/npcs/knowledge.js
+        this.knowledge = { sightings: {}, heard: [], said: [], acquaintances: {} }; // loaded from saves at startup, see modules/npcs/knowledge.js
         this.knowledgeDirty = false;
         this.basePresence = presence;
         this.routine = routine?.length ? routine : null;
