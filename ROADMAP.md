@@ -225,7 +225,19 @@ staff-only verbs exist.)
   says and moves, NPC chatter, combat rounds, phase messages, an NPC's
   late answer to `ask`. Today only a player's own command gets a fresh
   prompt. Probably one place (`tellRoom`/`sendTo`, or batched per pulse so
-  a burst of lines gets one prompt).
+  a burst of lines gets one prompt). The player gets their prompt back
+  straight after their own command and can keep acting; whatever arrives
+  later brings another, as when another player speaks. More output will
+  arrive this way as timed actions appear (crafting, travel).
+- A short wait before every NPC answer, like a person's: no sooner than
+  about 1-2.5 seconds (a little random) after the question, so a scripted
+  answer waits and an AI one that took longer doesn't wait more. Today
+  timing gives the AI tier away (instant means scripted), including when
+  it declines fast (over budget, cooling down). All NPC answers (topics,
+  sightings, hearsay, refusals, the nod after `sayto`); the question still
+  shows at once. Several questions in a row should be answered in order,
+  likely a short queue per NPC instead of today's fallback while busy.
+  Pairs well with the prompt redraw, but neither needs the other.
 
 Realistically, for solo/part-time work, Phases 1-4 are the bulk of the
 calendar time and determine whether Phases 5-6 are pleasant or painful. Avoid
