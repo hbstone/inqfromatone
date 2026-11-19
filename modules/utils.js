@@ -1,4 +1,5 @@
 import { promptStatusesFor } from './promptStatus.js';
+import { after } from './scheduler.js';
 import { renderColors, stripColors, capitalizeFirst } from './color.js';
 
 // A character can turn color off (see modules/commands/color.js); a
@@ -7,6 +8,10 @@ import { renderColors, stripColors, capitalizeFirst } from './color.js';
 function isColorEnabled(socket) {
     return socket.character?.colorEnabled !== false;
 }
+
+// How soon after unprompted output its prompt is drawn: the next scheduler
+// pulse (see redrawPromptSoon).
+export const PROMPT_REDRAW_MS = 1;
 
 const IAC = 0xff; // Telnet "Interpret As Command" marker (RFC 854)
 const SB = 0xfa; // Begin subnegotiation (e.g. NAWS window-size updates)
@@ -149,6 +154,25 @@ export function writeToSocket(socket, message) {
     // character's broadcast, ...) so output reads as a clearly separate
     // block - same idea as writePrompt's leading blank line before "> ".
     socket.write('\r\n' + colored.replace(/\n/g, '\r\n') + '\r\n');
+    redrawPromptSoon(socket);
+}
+
+// Output a player didn't type for (someone else's say, an NPC's late
+// answer, a combat round, the sun coming up) gets a fresh prompt too, as
+// another player's line would. The player already had a prompt after their
+// own command and could keep typing; this one says the screen is theirs
+// again. Waiting for the scheduler's next pulse means a burst of lines
+// (a fight round, several people arriving) gets one prompt, not one each,
+// and a prompt written meanwhile (writePrompt, after the player's own
+// command) cancels it, so a command's output still gets exactly one.
+function redrawPromptSoon(socket) {
+    if (socket.promptRedraw) {
+        return;
+    }
+    socket.promptRedraw = after('prompt redraw', PROMPT_REDRAW_MS, () => {
+        socket.promptRedraw = null;
+        writePrompt(socket);
+    });
 }
 
 /**
@@ -165,6 +189,8 @@ export function writeToSocket(socket, message) {
  * @param {net.Socket} socket
  */
 export function writePrompt(socket) {
+    socket.promptRedraw?.cancel();
+    socket.promptRedraw = null;
     if (isClosed(socket)) {
         return;
     }
