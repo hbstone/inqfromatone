@@ -152,4 +152,6 @@ Give it a help topic: a `.txt` in `help/` (core) or the pack's
   top-level `const`.
 - **Windows:** Python's `open()` defaults to cp1252 here, so pass
   `encoding='utf-8'`. Put long edit scripts in a file rather than an inline
-  shell heredoc. Run `pnpm format` before committing.
+  shell heredoc. Files written with Write/Edit are formatted by a hook
+  (`.claude/hooks/format-edited.js`); anything changed by a shell command
+  still needs `pnpm format` before committing.
