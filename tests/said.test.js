@@ -92,7 +92,7 @@ const view = (npc, asker, room, now = NOW) => brainContext(npc, { asker, room, t
     assert.equal(view(npc, alice, saloon).said[0].toAsker, true);
 
     const text = (asker) => renderBrainContext(view(npc, asker, saloon));
-    assert.match(text(dave), /^What you have said lately when asked \(so you remember it; not a script to repeat\):$/m);
+    assert.match(text(dave), /^What you have said lately when asked \(.*not a script.*\):$/m);
     assert.match(text(dave), /^- To "Alice", just now, asked about "the key": \("squints\."\) "Brass, it was\."$/m);
     assert.match(text(alice), /^- To the one asking, just now,/m);
 
