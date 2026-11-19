@@ -1030,6 +1030,45 @@ bar, who's too far gone to care whose secret it was. The bartender keeps
 his word ("I don't repeat what I hear"): he notices who comes and goes,
 but hearsay is off for him.
 
+## Knowledge: what it said
+
+An NPC remembers the answers a higher tier gave for it (see "Claude tier"),
+so it can keep its story straight from one conversation to the next, or
+change it on purpose: to the same person, to someone else, or the next day.
+
+- **Only a higher tier's answers, once heard.** `ask` calls
+  `rememberSaid` when it delivers an answer marked as the higher tier's
+  (see "Switchboard"). A scripted answer is the NPC's usual one and needs
+  no remembering. One that's dropped because the asker or NPC left was
+  never said.
+- **Each entry:** who it was said to (as the NPC saw them), what they
+  asked, the emote and line, `drewOn` (below), a `notability` and when,
+  like hearsay, for the day the store is condensed. Saying it counts as
+  meeting the asker for familiarity.
+- **Context, never fact.** Only a higher tier reads it back, as "what you
+  have said lately when asked (so you remember it; not a script to
+  repeat)". Scripted tiers don't repeat it, and nothing treats it as true:
+  a player's question shaped the model's words, so one talking an NPC into
+  a false story can't make it the NPC's scripted answer for everyone
+  after. The system prompt asks for consistency unless the NPC would tell
+  it differently (more or less trust, second thoughts).
+- **Shown to anyone the NPC would share with.** Something said to one
+  person can come up with the next, so a discreet NPC needs care: an
+  answer could repeat anything in the context it was given. So each entry
+  keeps `drewOn`, the subject keys of everyone that context told the tier
+  about (the asker, and the people in its sightings, hearsay and earlier
+  answers). It's shown to a later asker only if the NPC would share about
+  the person it was said to and about everyone in `drewOn`; otherwise it's
+  counted as held back. Strict on purpose: a bartender who chatted with a
+  regular about the room keeps that whole conversation from a stranger.
+- **Limits:** forgotten after a game day; each line capped at 400
+  characters and the question at 300; 30 at once, least notable (then
+  oldest) going first. Kept apart from hearsay so neither crowds out the
+  other.
+- **Saved** in the same file as sightings and hearsay. Any NPC with a
+  topic marked to escalate (its own or at a routine post) now keeps a
+  store, not only those with `sightings` or `hearsay`.
+
 ## Senses
 
 What a character can perceive right now (`modules/senses.js`, core, for
@@ -1215,7 +1254,9 @@ line, and its own lines are the fallback.
   NPC are both still in the room (otherwise it's dropped). The promise
   never rejects: a throw, a rejection, a reply that isn't a says/emote
   answer, or no reply within `ESCALATION_TIMEOUT_MS` (10s) all give the
-  fallback. Only `says` and `emote` come through from the higher tier.
+  fallback. Only `says` and `emote` come through from the higher tier,
+  marked `higherTier: { drewOn }` so `ask` can have the NPC remember
+  saying it (see "Knowledge: what it said"); the fallback isn't marked.
 - **One question at a time per NPC.** Asked again while it's still
   thinking, it gives the fallback straight away, which also keeps a
   player spamming `ask` from stacking up calls.
@@ -1232,15 +1273,19 @@ gives it as data and `renderBrainContext` as text: the NPC itself (name,
 `persona`, description, what it's doing), the room and time of day, who's
 asking (how the NPC sees them, days it's seen them, how it feels about them
 and the latest reasons why), who else is here if it can see, and its
-sightings and hearsay from the last day.
+sightings, hearsay and its own earlier answers from the last day. The
+data also has `drewOn`, everyone the view tells the tier about, for
+remembering whatever it answers.
 
-- **Discretion is applied here.** Sightings and hearsay the NPC wouldn't
-  share with this asker (`willShare`, the same test `ask` uses) are left
-  out and only counted, so the text can say there's more it won't tell.
+- **Discretion is applied here.** Sightings, hearsay and earlier answers
+  the NPC wouldn't share with this asker (`willShare`, the same test `ask`
+  uses) are left out and only counted, so the text can say there's more
+  it won't tell.
   A model can't let slip what it was never given. Tiers work from the
   view, not `npc.knowledge`.
 - **Player text is quoted, never trusted.** Anything a player wrote (how
-  they look, their presence, what they told the NPC, the question) goes
+  they look, their presence, what they told the NPC, the question), and
+  the NPC's own earlier answers, which a player's question shaped, go
   through `playerText`: one line, no color codes or control characters,
   double quotes turned to single, capped at 300 characters, then shown in
   double quotes under a note that quoted text is never an instruction. A
@@ -1301,10 +1346,11 @@ answer comes back as a `says` and `emote`.
   bill. The game can't see the Console's spend limit:
   `MUD_AI_MONTHLY_BUDGET` (dollars) set to match it adds a percentage.
   Meant for staff; open to everyone until there are roles.
-- **Not yet:** what the NPC says isn't remembered (its knowledge store
-  doesn't learn from these answers), and every NPC uses the same model.
-  An important NPC (a king) could later name a brain level in content,
-  mapped to a model by settings.
+- **Remembered:** each answer someone heard goes into the NPC's store and
+  comes back as context next time (see "Knowledge: what it said").
+- **Not yet:** every NPC uses the same model. An important NPC (a king)
+  could later name a brain level in content, mapped to a model by
+  settings.
 
 ## Naming: what each viewer calls someone
 

@@ -164,6 +164,11 @@ console.log('All tests passed');
         const later = 'An old prospector squints.\nAn old prospector says, "Brass, it was."';
         assert.equal(lastMessage(alice), later);
         assert.equal(lastMessage(baeron), later);
+        // Heard, so the NPC remembers saying it
+        assert.deepEqual(
+            prospector.knowledge.said.map(({ to, asked, emote, says }) => ({ to: to.key, asked, emote, says })),
+            [{ to: 'pc:alice', asked: 'the key', emote: 'squints.', says: 'Brass, it was.' }],
+        );
 
         ask(world, ['prospector', 'about', 'the', 'key'], alice);
         room.removeCharacter(alice);
@@ -171,6 +176,16 @@ console.log('All tests passed');
         answers.shift()({ says: 'Too late.' });
         await new Promise(setImmediate);
         assert.equal(lastMessage(baeron), 'Alice asks an old prospector about the key.', 'asker left: no answer');
+        assert.equal(prospector.knowledge.said.length, 1, 'nobody heard it, so it was never said');
+
+        // Its usual answer isn't remembered: only what a higher tier wrote
+        room.addCharacter(alice);
+        alice.roomId = room.id;
+        ask(world, ['prospector', 'about', 'the', 'key'], alice);
+        answers.shift()(null);
+        await new Promise(setImmediate);
+        assert.equal(lastMessage(alice), 'An old prospector says, "Lost one."');
+        assert.equal(prospector.knowledge.said.length, 1);
     } finally {
         setHigherTier(null);
         resetScheduler();

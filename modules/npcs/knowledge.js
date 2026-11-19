@@ -26,6 +26,13 @@
 // passed by again, or changed it right there), the earlier looks still
 // count for the day: "A wiry lad? Looks more like a lanky adolescent now."
 //
+// What it said: an NPC that answers through a higher brain tier (a topic
+// marked "escalate", see switchboard.js) remembers each answer that tier
+// gave and someone heard: to whom, what they asked, what it said. Only a
+// higher tier reads it back (see brainContext.js), as something the NPC
+// said, never a fact: the model's words were shaped by whoever asked, so
+// scripted answers don't repeat them.
+//
 // Shared freely for now: anyone can ask about anyone. Ways around it will
 // matter later (sneaking, bribes, how well the NPC knows the asker,
 // forgetful or uncooperative NPCs).
@@ -49,18 +56,44 @@ export const MEMORY_MINUTES = 24 * 60;
 // first. Only hearsay uses it so far. It's here for the day this store gets
 // condensed (a day's memories into a summary, days into weeks) rather than
 // simply expiring: the notable things make the summary, the rest fade.
-// Higher is more notable; being told something directly will rank above
-// passers-by.
-export const NOTABILITY = { told: 2 };
+// Higher is more notable; being told something directly, or a conversation,
+// will rank above passers-by.
+export const NOTABILITY = { told: 2, said: 2 };
 
 // At most this many things heard at once, and this much of each: a long
 // speech is remembered by its start, like most speeches.
 export const HEARD_MAX = 30;
 export const HEARD_MAX_LENGTH = 300;
 
+// At most this many of its own answers, each line capped like a higher
+// tier's (claudeTier.js's SAYS_MAX).
+export const SAID_MAX = 30;
+export const SAID_MAX_LENGTH = 400;
+
+// Whether any of the NPC's dialogue, its own or at a routine post, can go
+// to a higher tier.
+function escalates(npc) {
+    return [npc, ...(npc.routine ?? [])].some((dialogue) =>
+        [...(dialogue.topics ?? []), dialogue.unknownTopic].some((topic) => topic?.escalate),
+    );
+}
+
 /** Whether an NPC keeps a knowledge store at all. */
 export function keepsKnowledge(npc) {
-    return npc.sightings || npc.hearsay;
+    return npc.sightings || npc.hearsay || escalates(npc);
+}
+
+const cap = (text, max) => (text.length > max ? `${text.slice(0, max).trimEnd()}...` : text);
+
+// Keep the latest `max` entries, the least notable going first.
+function trim(entries, max) {
+    while (entries.length > max) {
+        const least = Math.min(...entries.map((entry) => entry.notability));
+        entries.splice(
+            entries.findIndex((entry) => entry.notability === least),
+            1,
+        );
+    }
 }
 
 // NPCs here that notice people and can see right now (see modules/senses.js).
@@ -98,10 +131,12 @@ function note(npc, subject, fields, now) {
 
 function forget(npc, now) {
     const tooOld = (at) => now - at > MEMORY_MINUTES;
-    const heard = npc.knowledge.heard.filter((entry) => !tooOld(entry.at));
-    if (heard.length !== npc.knowledge.heard.length) {
-        npc.knowledge.heard = heard;
-        npc.knowledgeDirty = true;
+    for (const list of ['heard', 'said']) {
+        const kept = (npc.knowledge[list] ?? []).filter((entry) => !tooOld(entry.at));
+        if (kept.length !== (npc.knowledge[list] ?? []).length) {
+            npc.knowledge[list] = kept;
+            npc.knowledgeDirty = true;
+        }
     }
     for (const [key, sighting] of Object.entries(npc.knowledge.sightings)) {
         if (tooOld(sighting.at)) {
@@ -284,22 +319,44 @@ export function sightingAnswer(sighting, room, now = gameMinutes()) {
  * @param {number} [now] - Game minutes.
  */
 export function rememberTold(npc, speaker, message, now = gameMinutes()) {
-    const text = message.length > HEARD_MAX_LENGTH ? `${message.slice(0, HEARD_MAX_LENGTH).trimEnd()}...` : message;
     npc.knowledge.heard.push({
         kind: 'told',
         by: { key: subjectKey(speaker), seenAs: nameFor(speaker, npc) },
-        text,
+        text: cap(message, HEARD_MAX_LENGTH),
         notability: NOTABILITY.told,
         at: now,
     });
     meet(npc, speaker, now);
-    while (npc.knowledge.heard.length > HEARD_MAX) {
-        const least = Math.min(...npc.knowledge.heard.map((entry) => entry.notability));
-        npc.knowledge.heard.splice(
-            npc.knowledge.heard.findIndex((entry) => entry.notability === least),
-            1,
-        );
-    }
+    trim(npc.knowledge.heard, HEARD_MAX);
+    npc.knowledgeDirty = true;
+}
+
+/**
+ * Remember an answer a higher tier gave for the NPC, once someone heard it.
+ * Only the latest SAID_MAX are kept, least notable going first.
+ * @param {import("../Npc.js").Npc} npc
+ * @param {object} asker
+ * @param {string} asked - What they asked about, as typed.
+ * @param {{ says?: string, emote?: string }} answer
+ * @param {string[]} [drewOn] - Subject keys of everyone the NPC's context
+ *   for the answer told it about (see brainContext.js), so it only comes
+ *   up again with someone it would tell all that to.
+ * @param {number} [now] - Game minutes.
+ */
+export function rememberSaid(npc, asker, asked, answer, drewOn = [], now = gameMinutes()) {
+    npc.knowledge.said ??= [];
+    npc.knowledge.said.push({
+        kind: 'said',
+        to: { key: subjectKey(asker), seenAs: nameFor(asker, npc) },
+        asked: cap(asked, HEARD_MAX_LENGTH),
+        ...(answer.emote ? { emote: cap(answer.emote, SAID_MAX_LENGTH) } : {}),
+        ...(answer.says ? { says: cap(answer.says, SAID_MAX_LENGTH) } : {}),
+        drewOn: [...new Set(drewOn)],
+        notability: NOTABILITY.said,
+        at: now,
+    });
+    meet(npc, asker, now);
+    trim(npc.knowledge.said, SAID_MAX);
     npc.knowledgeDirty = true;
 }
 
@@ -343,6 +400,7 @@ export function loadNpcKnowledge(world, dir = npcsDir(), now = gameMinutes()) {
         npc.knowledge = {
             sightings: saved?.sightings ?? {},
             heard: saved?.heard ?? [],
+            said: saved?.said ?? [],
             acquaintances: saved?.acquaintances ?? {}, // kept for good, see relationships.js
         };
         npc.knowledgeDirty = false;

@@ -5,11 +5,13 @@
 // A question the NPC escalates to a higher brain tier (see
 // modules/npcs/switchboard.js) is answered when that tier is done: the room
 // sees the question now and the answer a moment later, as long as the NPC
-// and the asker are both still there to have the conversation.
+// and the asker are both still there to have the conversation. Then the
+// NPC remembers what it said (see modules/npcs/knowledge.js).
 import { capitalizeFirst } from '../color.js';
 import { guard } from '../guard.js';
 import { findCharacter, nameFor, tellRoom } from '../naming.js';
 import { answerFor, answerLines } from '../npcs/dialogue.js';
+import { rememberSaid } from '../npcs/knowledge.js';
 
 const USAGE = 'Usage: ask <someone> about <topic>';
 
@@ -43,10 +45,14 @@ export const ask = (world, args, character) => {
         [question, ...(answer ? answerLines(target, answer, viewer) : [])].map(capitalizeFirst).join('\n');
 
     // An answer that took a while: to everyone in the room, asker included.
+    // One the higher tier wrote, the NPC remembers saying.
     function deliverLater(later) {
         const here = (c) => c.roomId === room.id && room.characters.includes(c);
         if (here(target) && here(character)) {
             tellRoom(room, (viewer) => answerLines(target, later, viewer).map(capitalizeFirst).join('\n'));
+            if (later.higherTier) {
+                rememberSaid(target, character, topic, later, later.higherTier.drewOn);
+            }
         }
     }
 

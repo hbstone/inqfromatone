@@ -28,6 +28,11 @@
 // failure, a timeout, or something that isn't an answer all become the
 // fallback. One question at a time per NPC: asked again while it's still
 // thinking, it gives the fallback straight away.
+//
+// An answer from the higher tier comes back marked `higherTier: { drewOn }`
+// (who the view told it about), so the caller can have the NPC remember
+// saying it once someone's heard it (knowledge.js's rememberSaid). The
+// fallback isn't marked: the NPC's usual answer needs no remembering.
 import { guardAsync } from '../guard.js';
 import { after } from '../scheduler.js';
 import { brainContext } from './brainContext.js';
@@ -74,13 +79,17 @@ function escalate(handler, npc, asked, fallback, context) {
             console.warn(`Higher tier took too long answering ${npc.templateId} about "${asked}"; fell back.`);
             finish(fallback);
         });
-        const request = () => handler({ npc, asked, fallback, context, view: brainContext(npc, context) });
+        let view;
+        const request = () => {
+            view = brainContext(npc, context);
+            return handler({ npc, asked, fallback, context, view });
+        };
         guardAsync(`higher tier for ${npc.templateId}`, request, null).then((better) => {
             const answer = asAnswer(better);
             if (better && !answer) {
                 console.warn(`Higher tier gave ${npc.templateId} something that isn't an answer; fell back.`);
             }
-            finish(answer ?? fallback);
+            finish(answer ? { ...answer, higherTier: { drewOn: view.drewOn } } : fallback);
         });
     });
 }

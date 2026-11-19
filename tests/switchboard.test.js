@@ -73,11 +73,19 @@ const PROSPECTOR = {
         const alice = makeCharacter('Alice');
         const reply = answerFor(npc, 'the key', { asker: alice, time: DAY });
         assert.ok(reply.pending, 'answered later');
-        assert.deepEqual(await reply.pending, { says: 'A brass one. Opened the old chapel, I reckon.' });
+        const better = await reply.pending;
+        assert.equal(better.says, 'A brass one. Opened the old chapel, I reckon.');
+        assert.deepEqual(
+            better.higherTier.drewOn,
+            ['pc:alice'],
+            "marked as the higher tier's, with who it was told about",
+        );
         assert.equal(requests[0].npc, npc);
         assert.equal(requests[0].fallback.says, 'Lost a key once.');
         assert.equal(requests[0].context.asker, alice);
-        assert.equal((await answerFor(npc, 'key to the door', { time: DAY }).pending).says, 'Lost a key once.');
+        const fellBack = await answerFor(npc, 'key to the door', { time: DAY }).pending;
+        assert.equal(fellBack.says, 'Lost a key once.');
+        assert.equal(fellBack.higherTier, undefined, "the fallback isn't marked");
         assert.equal(answerFor(npc, 'whiskey', { time: NIGHT }).says, 'Just the one.');
         assert.equal(requests.length, 2, 'only escalated topics go up');
     } finally {
@@ -110,7 +118,9 @@ const PROSPECTOR = {
             assert.equal((await answerFor(npc, 'key', { time: DAY }).pending).says, 'Lost a key once.');
         }
         setHigherTier(() => ({ says: 'Brass.', escalate: true, extra: 1 }));
-        assert.deepEqual(await answerFor(npc, 'key', { time: DAY }).pending, { says: 'Brass.' });
+        const brass = await answerFor(npc, 'key', { time: DAY }).pending;
+        assert.deepEqual(Object.keys(brass).sort(), ['higherTier', 'says']);
+        assert.equal(brass.says, 'Brass.');
 
         resetScheduler();
         setHigherTier(() => new Promise(() => {})); // never answers
