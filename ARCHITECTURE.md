@@ -1046,9 +1046,9 @@ change it on purpose: to the same person, to someone else, or the next day.
   like hearsay, for the day the store is condensed. Saying it counts as
   meeting the asker for familiarity.
 - **Context, never fact.** Only a higher tier reads it back, as "what you
-  have said lately when asked (so you remember it; not a script to
-  repeat)". Scripted tiers don't repeat it, and nothing treats it as true:
-  a player's question shaped the model's words, so one talking an NPC into
+  have said lately when asked (for context; not a script to repeat)".
+  Scripted tiers don't repeat it, and nothing treats it as true: a
+  player's question shaped the model's words, so one talking an NPC into
   a false story can't make it the NPC's scripted answer for everyone
   after. The system prompt asks for consistency unless the NPC would tell
   it differently (more or less trust, second thoughts).
