@@ -112,7 +112,15 @@ try {
         assert.equal(quit(world, [], stayer, fakeSocket()), "You're busy!");
         assert.ok(room.characters.includes(stayer), 'a refused quit leaves them in the world');
         busy = false;
-        quit(world, [], stayer, { ...fakeSocket(), end() {} });
+        // quit saves to the running game's folder, which tests never set, so
+        // that save refuses (see modules/saveDirs.js) and logs it. Expected.
+        const logError = console.error;
+        console.error = () => {};
+        try {
+            quit(world, [], stayer, { ...fakeSocket(), end() {} });
+        } finally {
+            console.error = logError;
+        }
         assert.ok(!room.characters.includes(stayer), 'allowed once nothing blocks it');
     }
 } finally {
