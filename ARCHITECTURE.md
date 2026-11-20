@@ -1717,6 +1717,27 @@ limits on connections per IP, and a timeout for connections that never
 finish logging in. Real network-level DDoS is a hosting/firewall
 concern, not something this process can handle.
 
+## Prompts
+
+A player gets a prompt (`writePrompt` in `modules/utils.js`, with any
+prompt statuses) after their own command's output, and after output they
+didn't type for: someone else's say or arrival, NPC chatter, a combat
+round, a phase message, an NPC's late answer to `ask`. Like a
+conversation between players: you act and get your prompt back at once,
+free to keep going (`look`, check your pockets) while you wait; when
+something arrives later, it brings another.
+
+- **One place:** `writeToSocket` schedules a redraw for that connection
+  (`redrawPromptSoon`), and `writePrompt` cancels any pending one. So a
+  command's own output still ends with exactly one prompt, and nothing
+  that sends messages (`sendTo`, `tellRoom`, packs) has to think about it.
+- **One per burst:** the redraw waits for the scheduler's next pulse
+  (`PROMPT_REDRAW_MS`, so at most 100ms), so a fight round or several
+  people arriving at once get one prompt, not one per line.
+- Skipped for a connection that's closed by then (a `quit`'s goodbye).
+- The server can't see a half-typed line, so a redraw lands mid-typing,
+  as in most MUDs. What's typed so far stays in the client's input.
+
 ## Currency/economy: deferred to Phase 3, decision notes for later
 
 Discussed but not built. Most of Phase 2's list (combat, stats, equipment,
