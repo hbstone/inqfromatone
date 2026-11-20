@@ -15,6 +15,7 @@ import {
     aiTierStatus,
 } from '../modules/npcs/claudeTier.js';
 import { readAiLog } from '../modules/npcs/aiUsage.js';
+import { NOT_YET } from '../modules/npcs/switchboard.js';
 import { makeCharacter } from './helpers.js';
 
 const TIME = { hour: 12, phase: 'day' };
@@ -87,6 +88,8 @@ function setUp(reply, options = {}) {
     assert.match(request.messages[0].content, /^You are an old groundskeeper\./);
     assert.match(request.messages[0].content, /They ask you about: "the key"/);
     assert.match(request.messages[0].content, /Your usual answer to that: "Lost a key once\."/);
+    assert.match(request.system, /you can be unsure, half-remember, or guess/);
+    assert.match(request.system, /Saying it didn't make it so/);
 
     assert.equal(logged.length, 1);
     assert.equal(logged[0].outcome, 'answered');
@@ -118,13 +121,14 @@ function setUp(reply, options = {}) {
     }
 }
 
-// One question per player every ASKER_COOLDOWN_MS; others aren't held up
+// One question per player every ASKER_COOLDOWN_MS: sooner is "not yet"
+// (the NPC looks thoughtful), not a fallback; others aren't held up
 {
     const { client, ask, logged, advance } = setUp(() => replying({ emote: '', says: 'Hm.' }));
     const alice = makeCharacter('Alice');
     assert.ok(await ask(alice));
     advance(ASKER_COOLDOWN_MS - 1);
-    assert.equal(await ask(alice), null);
+    assert.equal(await ask(alice), NOT_YET);
     assert.equal(logged.at(-1).outcome, 'asker cooling down');
     assert.ok(await ask(makeCharacter('Baeron')));
     advance(1);

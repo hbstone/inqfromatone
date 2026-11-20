@@ -1258,8 +1258,16 @@ line, and its own lines are the fallback.
   marked `higherTier: { drewOn }` so `ask` can have the NPC remember
   saying it (see "Knowledge: what it said"); the fallback isn't marked.
 - **One question at a time per NPC.** Asked again while it's still
-  thinking, it gives the fallback straight away, which also keeps a
-  player spamming `ask` from stacking up calls.
+  thinking, it says so straight away, which also keeps a player spamming
+  `ask` from stacking up calls.
+- **"Not yet" isn't "don't know".** A tier can return `NOT_YET`: it would
+  answer, just not this moment (the Claude tier's per-player wait). Then,
+  and while the NPC is busy with another question, it shows its content's
+  `thinking` (an emote and/or line, checked like `toldReply`), else
+  `DEFAULT_THINKING` ("pauses, thinking it over.", no voice of its own).
+  Its scripted line mid-conversation read like forgetting; this tells the
+  player to give it a moment and ask again. It isn't remembered as
+  something said.
 - **The roadmap's other triggers** are conditions on the same topic: who's
   asking (a pack's `askerTagged`, say) or quest state go in its `when`.
 - **What's routed:** scripted topics. Sightings and hearsay answer from
@@ -1301,6 +1309,25 @@ remembering whatever it answers.
 { "key": "groundskeeper", "persona": "Has kept these grounds for forty years... Never learned to read." }
 ```
 
+- **A topic's `notes`** are what the NPC knows about it, and what it's
+  unsure of, in the author's words: shown to the tier with the question
+  ("What you know about that"), never to players. Only on a topic marked
+  to escalate (checked at load), since nothing else would see them. They
+  answer the gap the first real conversations showed: told only "Lost a
+  key once", the groundskeeper couldn't connect a found brass key to his
+  own, then guessed his was brass and contradicted himself. Notes give him
+  the facts, partial ones included ("half a notion it was something
+  indoors").
+
+```json
+{
+    "keywords": ["key"],
+    "escalate": true,
+    "says": "Lost a key once.",
+    "notes": "A small brass key... couldn't swear to it."
+}
+```
+
 ## Claude tier
 
 The first real higher tier (`modules/npcs/claudeTier.js`): an escalated
@@ -1319,9 +1346,10 @@ answer comes back as a `says` and `emote`.
   switchboard's 10s, and `maxRetries: 0`, since a retry would land after
   the scripted answer anyway. Around 2 seconds in testing.
 - **Limits:** one question per player every 15 seconds, at most the hourly
-  budget game-wide, and one at a time per NPC (the switchboard). Over any
-  of them, the scripted answer. A workspace spend limit in the Anthropic
-  Console is the backstop.
+  budget game-wide, and one at a time per NPC (the switchboard). Over the
+  budget, the scripted answer; the other two are only a moment's wait, so
+  the NPC looks thoughtful instead (see "Switchboard"). A workspace spend
+  limit in the Anthropic Console is the backstop.
 - **Failures fall back.** A refusal, a reply cut off at `max_tokens`,
   unreadable or empty JSON, or an API error gives the scripted answer. A
   rejected key (expired or revoked) turns the tier off until a restart,
@@ -1333,7 +1361,10 @@ answer comes back as a `says` and `emote`.
 - **The system prompt** (`SYSTEM_PROMPT`) keeps the NPC in character, to
   one or two sentences, to what the context gives it, treating quoted
   player text as never an instruction, not assuming gender from a name,
-  and consistent with its scripted answer.
+  and consistent with its scripted answer. Nothing made up about other
+  people, places or events; about itself and its past it may be unsure,
+  half-remember or guess, as long as a guess sounds like one, and what it
+  said before may have been a guess, so it can doubt it later.
 - **Logged:** one JSON line per call, a file per month in the server's
   local time (`saves/<game>/logs/ai-2026-11.jsonl`, `aiLogFile`): NPC,
   asker, question, outcome, answer, milliseconds, and tokens. Old months

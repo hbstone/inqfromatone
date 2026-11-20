@@ -49,7 +49,18 @@
 // while that holds, so a later topic with the same keywords, or none, can
 // answer the rest of the time. And a topic or unknownTopic marked
 // "escalate": true is one a higher brain tier should answer when there is
-// one; its own lines are the fallback (see switchboard.js).
+// one; its own lines are the fallback (see switchboard.js). Such a topic
+// can carry "notes": what the NPC knows about it, and what it's unsure of,
+// in the author's words. Only the higher tier sees them, never players:
+//
+//   { "keywords": ["key"], "escalate": true, "says": "Lost a key once.",
+//     "notes": "Small, brass. Lost it twenty years back. Half-sure it opened
+//               something in the old chapel, but has never said so." }
+//
+// An NPC's "thinking" (an emote and/or line, default a thoughtful pause) is
+// what it does when the higher tier can't take a question just yet: it's
+// still answering another, or the asker has to wait a moment before the
+// next.
 //
 // A routine post (see routine.js) can give its own topics and/or
 // unknownTopic, which replace the NPC's while they're at that post: a
@@ -97,8 +108,10 @@ function assertAnswer(answer, where) {
 export function validateDialogue(npcData, npcId) {
     validateTopics(npcData, `NPC "${npcId}"`);
     validateDiscretion(npcData.discretion, `NPC "${npcId}"'s "discretion"`);
-    if (npcData.toldReply !== undefined) {
-        assertAnswer(npcData.toldReply, `NPC "${npcId}"'s "toldReply"`);
+    for (const field of ['toldReply', 'thinking']) {
+        if (npcData[field] !== undefined) {
+            assertAnswer(npcData[field], `NPC "${npcId}"'s "${field}"`);
+        }
     }
     (npcData.routine ?? []).forEach((entry, index) =>
         validateTopics(entry, `NPC "${npcId}" routine post ${index + 1}`),
@@ -135,11 +148,26 @@ function validateTopics({ topics, unknownTopic }, owner) {
                 throw new Error(`${where} needs a non-empty "keywords" list.`);
             }
             assertAnswer(topic, where);
+            assertNotes(topic, where);
             validateWhen(topic.when, where);
         });
     }
     if (unknownTopic !== undefined) {
         assertAnswer(unknownTopic, `${owner}'s "unknownTopic"`);
+        assertNotes(unknownTopic, `${owner}'s "unknownTopic"`);
+    }
+}
+
+// "notes" are for a higher tier only, so a topic with them has to escalate.
+function assertNotes(topic, where) {
+    if (topic.notes === undefined) {
+        return;
+    }
+    if (typeof topic.notes !== 'string' || topic.notes.trim() === '') {
+        throw new Error(`${where}: "notes" must be text.`);
+    }
+    if (topic.escalate !== true) {
+        throw new Error(`${where}: "notes" only reach a higher tier, so the topic needs "escalate": true.`);
     }
 }
 

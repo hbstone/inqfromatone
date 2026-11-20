@@ -1,8 +1,9 @@
 import assert from 'assert/strict';
 import { Npc } from '../modules/Npc.js';
 import { registerCondition, validateWhen, whenHolds } from '../modules/conditions.js';
-import { answerFor, validateDialogue } from '../modules/npcs/dialogue.js';
-import { ESCALATION_TIMEOUT_MS, setHigherTier } from '../modules/npcs/switchboard.js';
+import { answerFor, answerLines, validateDialogue } from '../modules/npcs/dialogue.js';
+import { brainContext, renderBrainContext } from '../modules/npcs/brainContext.js';
+import { DEFAULT_THINKING, ESCALATION_TIMEOUT_MS, NOT_YET, setHigherTier } from '../modules/npcs/switchboard.js';
 import { advance, reset as resetScheduler } from '../modules/scheduler.js';
 import { makeCharacter } from './helpers.js';
 
@@ -136,20 +137,75 @@ const PROSPECTOR = {
     }
 }
 
-// One question at a time: asked again while still thinking, the NPC gives
-// the fallback straight away
+// One question at a time: asked again while still thinking, the NPC says
+// so straight away (its "thinking", else DEFAULT_THINKING), rather than
+// giving its scripted line
 {
     const npc = new Npc(PROSPECTOR, 'test/town/saloon');
     let answer;
     setHigherTier(() => new Promise((resolve) => (answer = resolve)));
     try {
         const first = answerFor(npc, 'key', { time: DAY });
-        assert.equal(answerFor(npc, 'key', { time: DAY }).says, 'Lost a key once.');
+        assert.equal(answerFor(npc, 'key', { time: DAY }), DEFAULT_THINKING);
         answer({ says: 'Brass.' });
         assert.equal((await first.pending).says, 'Brass.');
         assert.ok(answerFor(npc, 'key', { time: DAY }).pending, 'asked again once it answered');
+
+        const ponderer = new Npc({ ...PROSPECTOR, thinking: { emote: 'squints at the ceiling.' } }, 'x');
+        answerFor(ponderer, 'key', { time: DAY });
+        assert.equal(answerFor(ponderer, 'key', { time: DAY }).emote, 'squints at the ceiling.');
     } finally {
         setHigherTier(null);
         resetScheduler();
     }
+}
+
+// "Not yet" from the higher tier (the asker has to wait a moment): the NPC
+// looks thoughtful, and that isn't remembered as something it said
+{
+    const npc = new Npc(PROSPECTOR, 'test/town/saloon');
+    setHigherTier(() => NOT_YET);
+    try {
+        const reply = await answerFor(npc, 'key', { time: DAY }).pending;
+        assert.equal(reply, DEFAULT_THINKING);
+        assert.equal(reply.higherTier, undefined);
+        assert.equal(npc.escalating, false);
+    } finally {
+        setHigherTier(null);
+        resetScheduler();
+    }
+}
+
+// Notes: text, and only on a topic that escalates, since only a higher tier
+// sees them; "thinking" is checked like any answer
+{
+    const check = (topic) => () =>
+        validateDialogue({ topics: [{ keywords: ['key'], says: 'Lost one.', ...topic }] }, 'test/n');
+    assert.doesNotThrow(check({ escalate: true, notes: 'Brass. Lost it years back.' }));
+    assert.throws(check({ notes: 'Brass.' }), /topic 1: "notes" only reach a higher tier.*"escalate": true/);
+    assert.throws(check({ escalate: true, notes: ' ' }), /"notes" must be text/);
+    assert.throws(
+        () => validateDialogue({ unknownTopic: { says: 'Hm?', notes: 'x' } }, 'test/n'),
+        /"unknownTopic": "notes" only reach/,
+    );
+    assert.throws(() => validateDialogue({ thinking: { says: '' } }, 'test/n'), /"thinking" needs a "says"/);
+}
+
+// Notes reach the higher tier with the question; players never see them
+{
+    const npc = new Npc(
+        {
+            ...PROSPECTOR,
+            topics: [{ keywords: ['key'], escalate: true, says: 'Lost one.', notes: 'Small and brass.' }],
+        },
+        'test/town/saloon',
+    );
+    const text = renderBrainContext(brainContext(npc, { time: DAY, now: 0 }), {
+        asked: 'the key',
+        fallback: npc.topics[0],
+    });
+    assert.match(text, /^What you know about that \(the asker hasn't been told any of it\): Small and brass\.$/m);
+    assert.deepEqual(answerLines(npc, npc.topics[0], makeCharacter('Alice')), [
+        'a red-nosed prospector says, "Lost one."',
+    ]);
 }
