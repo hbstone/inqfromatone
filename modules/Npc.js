@@ -30,6 +30,8 @@ export class Npc extends Character {
      *   what's said to them (see modules/npcs/knowledge.js).
      * @param {object} [template.toldReply] - How they react to being told
      *   something (see modules/npcs/dialogue.js).
+     * @param {object} [template.thinking] - What they do while a higher
+     *   brain tier can't answer just yet (see modules/npcs/switchboard.js).
      * @param {object} [template.senses] - Senses switched off, like
      *   { "sight": false } (see modules/senses.js).
      * @param {object} [template.discretion] - Who they'll pass on what
@@ -56,6 +58,7 @@ export class Npc extends Character {
             sightings,
             hearsay,
             toldReply,
+            thinking,
             senses,
             components,
             discretion,
@@ -77,6 +80,7 @@ export class Npc extends Character {
         this.sightings = sightings === true;
         this.hearsay = hearsay === true;
         this.toldReply = toldReply ?? null;
+        this.thinking = thinking ?? null;
         this.senses = senses ?? {};
         this.discretion = discretion ?? null;
         this.components = structuredClone(components ?? {});

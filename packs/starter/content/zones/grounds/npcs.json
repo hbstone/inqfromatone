@@ -35,7 +35,8 @@
                 "keywords": ["key", "keys"],
                 "escalate": true,
                 "emote": "pats his coat pockets, then shakes his head.",
-                "says": "Lost a key once. Never did find what it opened."
+                "says": "Lost a key once. Never did find what it opened.",
+                "notes": "A small brass key, worn smooth from years in his pocket. He lost it somewhere about the grounds, twenty-odd years back, and never learned what it opened: he has half a notion it was something indoors, but couldn't swear to it. If someone says they've found a brass key, he's curious and would like a look, though he can't be sure it's his."
             },
             {
                 "keywords": ["storeroom", "storage room", "sacks", "crates"],

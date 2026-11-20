@@ -23,8 +23,8 @@
 // trusted than they are. It's shown as what the NPC said, to whom, so a
 // tier can stay consistent with it, or not, as the NPC would.
 //
-// Content (persona, descriptions, room text, sentiment reasons from packs)
-// is trusted and shown as written.
+// Content (persona, descriptions, room text, sentiment reasons from packs,
+// a topic's notes) is trusted and shown as written.
 import { getGameTime, gameMinutes } from '../gameClock.js';
 import { stripColors } from '../color.js';
 import { nameFor } from '../naming.js';
@@ -224,10 +224,10 @@ function sightingLine(s) {
 
 /**
  * brainContext as text for a model, with every bit of player-written text
- * quoted (see playerText). Ends with the question and the scripted answer,
- * when given.
+ * quoted (see playerText). Ends with the question, the topic's notes and the
+ * scripted answer, when given.
  * @param {ReturnType<typeof brainContext>} view
- * @param {{ asked?: string, fallback?: { says?: string, emote?: string } }} [question]
+ * @param {{ asked?: string, fallback?: { says?: string, emote?: string, notes?: string } }} [question]
  * @returns {string}
  */
 export function renderBrainContext(view, { asked, fallback } = {}) {
@@ -293,6 +293,9 @@ export function renderBrainContext(view, { asked, fallback } = {}) {
 
     if (asked !== undefined) {
         lines.push('', `They ask you about: ${quoted(asked)}`);
+    }
+    if (fallback?.notes) {
+        lines.push(`What you know about that (the asker hasn't been told any of it): ${fallback.notes}`);
     }
     if (fallback) {
         const said = [fallback.emote && `(${fallback.emote})`, fallback.says && `"${fallback.says}"`].filter(Boolean);

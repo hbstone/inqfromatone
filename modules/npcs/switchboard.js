@@ -18,8 +18,9 @@
 // question, the fallback, and `view`: what the NPC knows and would share
 // with this asker (see brainContext.js, which can also render it as text).
 // A tier should work from the view, not npc.knowledge, which holds what
-// discretion keeps back too. It returns an answer, or null to fall back
-// (over budget, unavailable, nothing to add).
+// discretion keeps back too. It returns an answer, null to fall back (over
+// budget, unavailable, nothing to add), or NOT_YET: it would answer, just
+// not this moment (the asker has to wait a little between questions).
 //
 // A higher tier takes time (an LLM call is seconds), so an escalated
 // question is answered later: route hands back { pending }, a promise of
@@ -27,7 +28,12 @@
 // never rejects and never takes longer than ESCALATION_TIMEOUT_MS: a
 // failure, a timeout, or something that isn't an answer all become the
 // fallback. One question at a time per NPC: asked again while it's still
-// thinking, it gives the fallback straight away.
+// thinking, it says so straight away.
+//
+// "Not yet" isn't "I don't know": rather than its scripted line, which
+// mid-conversation reads like forgetting, the NPC shows it's thinking (its
+// content's "thinking", else DEFAULT_THINKING), so the player knows to
+// give it a moment and ask again.
 //
 // An answer from the higher tier comes back marked `higherTier: { drewOn }`
 // (who the view told it about), so the caller can have the NPC remember
@@ -38,6 +44,14 @@ import { after } from '../scheduler.js';
 import { brainContext } from './brainContext.js';
 
 export const ESCALATION_TIMEOUT_MS = 10_000;
+
+// What a higher tier returns for "ask me again in a moment".
+export const NOT_YET = Object.freeze({ notYet: true });
+
+// No voice of its own, so it suits any NPC.
+export const DEFAULT_THINKING = Object.freeze({ emote: 'pauses, thinking it over.' });
+
+const thinking = (npc) => npc.thinking ?? DEFAULT_THINKING;
 
 let higherTier = null;
 
@@ -85,6 +99,10 @@ function escalate(handler, npc, asked, fallback, context) {
             return handler({ npc, asked, fallback, context, view });
         };
         guardAsync(`higher tier for ${npc.templateId}`, request, null).then((better) => {
+            if (better?.notYet === true) {
+                finish(thinking(npc));
+                return;
+            }
             const answer = asAnswer(better);
             if (better && !answer) {
                 console.warn(`Higher tier gave ${npc.templateId} something that isn't an answer; fell back.`);
@@ -104,8 +122,11 @@ function escalate(handler, npc, asked, fallback, context) {
  * @returns {{ says?: string, emote?: string }|{ pending: Promise<{ says?: string, emote?: string }> }}
  */
 export function route(npc, asked, answer, context = {}) {
-    if (answer.escalate && higherTier && !npc.escalating) {
-        return { pending: escalate(higherTier, npc, asked, answer, context) };
+    if (!answer.escalate || !higherTier) {
+        return answer;
     }
-    return answer;
+    if (npc.escalating) {
+        return thinking(npc); // still answering someone
+    }
+    return { pending: escalate(higherTier, npc, asked, answer, context) };
 }
